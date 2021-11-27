@@ -1,5 +1,7 @@
 {
   "block.iron_oak.iron_oak_log": "Iron Infused Oak Log",
   "block.iron_oak.iron_oak_sapling": "Iron Infused Oak Sapling",
-  "item.iron_oak.iron_bone_meal": "Iron Infused Bone Meal"
+  "item.iron_oak.iron_ash": "Iron Infused Ash",
+  "item.iron_oak.iron_bone_meal": "Iron Infused Bone Meal",
+  "item.iron_oak.iron_shred": "Raw Iron Shred"
 }

@@ -39,5 +39,5 @@ infused logs* inside a fire bowl will produce *iron infused ash*.
   B = Bucket
 ```
 
-Now you can use a *cauldron* to wash the *iron infused ash* and get *iron shreds*. Once you have collected 9 shreds you
-can craft a *raw iron*. 
+Now you can use water to wash the *iron infused ash* to receive *iron shreds*. Once you have collected 9 shreds you
+can craft a *raw iron*. Alternatively, you smelt the iron shred into nuggets. 

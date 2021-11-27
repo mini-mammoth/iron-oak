@@ -7,6 +7,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.PillarBlock;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.intprovider.ConstantIntProvider;
@@ -37,14 +38,19 @@ public class IronOak implements ModInitializer {
 
     public static final Block IRON_OAK_SAPLING = new IronOakSaplingBlock(FabricBlockSettings.copyOf(Blocks.OAK_SAPLING));
 
+    public static final Item IRON_ASH = new IronAsh(new FabricItemSettings().group(ItemGroup.MISC));
+    public static final Item IRON_SHRED = new Item(new FabricItemSettings().group(ItemGroup.MISC));
+
     @Override
     public void onInitialize() {
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_oak_log"), IRON_OAK_LOG);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_oak_sapling"), IRON_OAK_SAPLING);
 
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_ash"), IRON_ASH);
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_bone_meal"), new IronBoneMeal(new FabricItemSettings().group(ItemGroup.MISC)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_oak_log"), new BlockItem(IRON_OAK_LOG, new FabricItemSettings().group(ItemGroup.MISC)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_oak_sapling"), new BlockItem(IRON_OAK_SAPLING, new FabricItemSettings().group(ItemGroup.MISC)));
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_shred"), IRON_SHRED);
 
         Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, new Identifier(MOD_ID, "iron_oak_tree"), IRON_OAK_TREE);
     }
