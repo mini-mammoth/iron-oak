@@ -2,7 +2,7 @@
   "type": "minecraft:smelting",
   "group": "iron_nugget",
   "ingredient": {
-    "item": "iron_oak:iron_shard"
+    "item": "iron_oak:iron_shred"
   },
   "result": "minecraft:iron_nugget",
   "experience": 0.1,
