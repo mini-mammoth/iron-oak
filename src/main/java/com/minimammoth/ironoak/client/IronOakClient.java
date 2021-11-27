@@ -12,5 +12,6 @@ public class IronOakClient implements ClientModInitializer {
         // This is required to see the sapling transparent like all other saplings. If not set the background will
         // appear black.
         BlockRenderLayerMap.INSTANCE.putBlock(IronOak.IRON_OAK_SAPLING, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(IronOak.FIRE_BOWL, RenderLayer.getCutout());
     }
 }

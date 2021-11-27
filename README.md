@@ -11,7 +11,7 @@ To create your first *iron infused oak sapling* you have to create *iron infused
 
 ```
   BBB
-  BIB -> 8x Iron Infused Bone Meal 
+  BIB -> 4x Iron Infused Bone Meal 
   BBB
   
   B = Bone Meal

@@ -24,6 +24,8 @@ import net.minecraft.world.gen.trunk.StraightTrunkPlacer;
 public class IronOak implements ModInitializer {
     private static final String MOD_ID = "iron_oak";
 
+    public static final Block FIRE_BOWL = new FireBowlBlock(FabricBlockSettings.copyOf(Blocks.CAULDRON));
+
     public static final Block IRON_OAK_LOG = new PillarBlock(FabricBlockSettings.copyOf(Blocks.OAK_LOG));
 
     public static final ConfiguredFeature<?, ?> IRON_OAK_TREE = Feature.TREE
@@ -43,9 +45,11 @@ public class IronOak implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "fire_bowl"), FIRE_BOWL);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_oak_log"), IRON_OAK_LOG);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_oak_sapling"), IRON_OAK_SAPLING);
 
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "fire_bowl"), new BlockItem(FIRE_BOWL, new FabricItemSettings().group(ItemGroup.MISC)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_ash"), IRON_ASH);
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_bone_meal"), new IronBoneMeal(new FabricItemSettings().group(ItemGroup.MISC)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_oak_log"), new BlockItem(IRON_OAK_LOG, new FabricItemSettings().group(ItemGroup.MISC)));

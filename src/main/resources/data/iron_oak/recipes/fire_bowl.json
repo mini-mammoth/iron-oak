@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I I",
+    "I#I",
+    "IBI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "#": {
+      "item": "minecraft:iron_bars"
+    },
+    "B": {
+      "item": "minecraft:bucket"
+    }
+  },
+  "result": {
+    "item": "iron_oak:fire_bowl",
+    "count": 1
+  }
+}
