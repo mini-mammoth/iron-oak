@@ -42,6 +42,7 @@ public class IronOak implements ModInitializer {
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_oak_log"), IRON_OAK_LOG);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_oak_sapling"), IRON_OAK_SAPLING);
 
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_bone_meal"), new IronBoneMeal(new FabricItemSettings().group(ItemGroup.MISC)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_oak_log"), new BlockItem(IRON_OAK_LOG, new FabricItemSettings().group(ItemGroup.MISC)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_oak_sapling"), new BlockItem(IRON_OAK_SAPLING, new FabricItemSettings().group(ItemGroup.MISC)));
 
