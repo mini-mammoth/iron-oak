@@ -1,7 +1,110 @@
 {
-  "variants": {
-    "": {
-      "model": "iron_oak:block/fire_bowl"
+  "multipart": [
+    {
+      "apply": {
+        "model": "iron_oak:block/fire_bowl"
+      }
+    },
+    {
+      "when": {
+        "lit": true
+      },
+      "apply": [
+        {
+          "model": "iron_oak:block/fire_floor0"
+        },
+        {
+          "model": "iron_oak:block/fire_floor1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "lit": true
+      },
+      "apply": [
+        {
+          "model": "iron_oak:block/fire_side0"
+        },
+        {
+          "model": "iron_oak:block/fire_side1"
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt0"
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "lit": true
+      },
+      "apply": [
+        {
+          "model": "iron_oak:block/fire_side0",
+          "y": 90
+        },
+        {
+          "model": "iron_oak:block/fire_side1",
+          "y": 90
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt0",
+          "y": 90
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt1",
+          "y": 90
+        }
+      ]
+    },
+    {
+      "when": {
+        "lit": true
+      },
+      "apply": [
+        {
+          "model": "iron_oak:block/fire_side0",
+          "y": 180
+        },
+        {
+          "model": "iron_oak:block/fire_side1",
+          "y": 180
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt0",
+          "y": 180
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt1",
+          "y": 180
+        }
+      ]
+    },
+    {
+      "when": {
+        "lit": true
+      },
+      "apply": [
+        {
+          "model": "iron_oak:block/fire_side0",
+          "y": 270
+        },
+        {
+          "model": "iron_oak:block/fire_side1",
+          "y": 270
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt0",
+          "y": 270
+        },
+        {
+          "model": "iron_oak:block/fire_side_alt1",
+          "y": 270
+        }
+      ]
     }
-  }
+  ]
 }

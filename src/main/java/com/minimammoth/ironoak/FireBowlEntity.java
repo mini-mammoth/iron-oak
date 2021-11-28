@@ -3,13 +3,16 @@ package com.minimammoth.ironoak;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class FireBowlEntity extends BlockEntity {
-    public final SimpleInventory inventory = new SimpleInventory(1);
+    private ItemStack input = ItemStack.EMPTY;
+    private ItemStack output = ItemStack.EMPTY;
 
     public FireBowlEntity(BlockPos pos, BlockState state) {
         super(IronOak.FIRE_BOWL_ENTITY, pos, state);
@@ -28,7 +31,8 @@ public class FireBowlEntity extends BlockEntity {
     protected void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
 
-        nbt.put("item", inventory.toNbtList());
+        nbt.put("input", input.getNbt());
+        nbt.put("output", output.getNbt());
     }
 
     /**
@@ -38,8 +42,12 @@ public class FireBowlEntity extends BlockEntity {
     public void readNbt(NbtCompound nbt) {
         super.readNbt(nbt);
 
-        if (nbt.contains("item", NbtElement.LIST_TYPE)) {
-            inventory.readNbtList(nbt.getList("item", NbtElement.COMPOUND_TYPE));
+        if (nbt.contains("input", NbtElement.COMPOUND_TYPE)) {
+            input = ItemStack.fromNbt(nbt.getCompound("input"));
+        }
+
+        if (nbt.contains("output", NbtElement.COMPOUND_TYPE)) {
+            output = ItemStack.fromNbt(nbt.getCompound("output"));
         }
     }
 
@@ -49,5 +57,22 @@ public class FireBowlEntity extends BlockEntity {
     @Override
     public NbtCompound toInitialChunkDataNbt() {
         return createNbt();
+    }
+
+    public ItemStack getInput() {
+        return input;
+    }
+
+    public void setInput(ItemStack input) {
+        this.input = input;
+    }
+
+    public ItemStack getOutput() {
+        return output;
+    }
+
+    public void spawnContainingItems() {
+        // Drop all stored items
+        ItemScatterer.spawn(world, pos, new SimpleInventory(input, output));
     }
 }

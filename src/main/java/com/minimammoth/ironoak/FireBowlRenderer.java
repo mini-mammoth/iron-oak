@@ -23,13 +23,12 @@ public class FireBowlRenderer implements BlockEntityRenderer<FireBowlEntity> {
 
         matrices.push();
 
-        if (!entity.inventory.isEmpty()) {
-            var itemStack = entity.inventory.getStack(0);
-
+        var input = entity.getInput();
+        if (!input.isEmpty()) {
             matrices.translate(0.5, 0.2, 0.5);
             matrices.scale(2.0f, 2.0f, 2.0f);
 
-            renderer.renderItem(itemStack, ModelTransformation.Mode.GROUND, light, overlay, matrices, vertexConsumers, 100);
+            renderer.renderItem(input, ModelTransformation.Mode.GROUND, light, overlay, matrices, vertexConsumers, 100);
         }
 
         matrices.pop();
