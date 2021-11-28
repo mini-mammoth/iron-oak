@@ -4,6 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.block.FluidFillable;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
@@ -19,7 +20,6 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -49,7 +49,7 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
     public static final VoxelShape SHAPE = createCuboidShape(0, 0, 0, 16, 12, 16);
     public static final float FIRE_DAME = 1.0f;
 
-    private static final BooleanProperty LIT = Properties.LIT;
+    public static final BooleanProperty LIT = Properties.LIT;
     private static final BooleanProperty WATERLOGGED = Properties.WATERLOGGED;
 
     public FireBowlBlock(Settings settings) {
@@ -86,40 +86,43 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
         return new FireBowlEntity(pos, state);
     }
 
-    @Override
+    @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return checkType(type, IronOak.FIRE_BOWL_ENTITY, (world1, pos, state1, be) -> be.tick(world1, pos, state1));
+        if (world.isClient) {
+            return Boolean.TRUE.equals(state.get(LIT)) ? checkType(type, IronOak.FIRE_BOWL_ENTITY, FireBowlEntity::clientTick) : null;
+        } else {
+            return Boolean.TRUE.equals(state.get(LIT)) ? checkType(type, IronOak.FIRE_BOWL_ENTITY, FireBowlEntity::litServerTick) : checkType(type, IronOak.FIRE_BOWL_ENTITY, FireBowlEntity::unlitServerTick);
+        }
     }
 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         ItemStack stackInHand = player.getStackInHand(hand);
 
-        // Shift right click to remove stored items
-        if (player.isSneaking()) {
+        // Right click with empty hand to remove stored items
+        if (stackInHand.isEmpty() && hand == Hand.MAIN_HAND) {
             if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
                 return ActionResult.PASS;
             }
 
-            if (entity.getInput().isEmpty()) {
+            // Touching the fire bowl while it's on will hurt you.
+            if (doFireDamage(state, player)) {
                 return ActionResult.FAIL;
             }
 
-            var storedStack = entity.getInput();
-            if (!player.giveItemStack(storedStack)) {
-                player.dropItem(storedStack, true);
+            if (entity.getInput().isEmpty() && entity.getOutput().isEmpty()) {
+                return ActionResult.FAIL;
             }
-            entity.setInput(ItemStack.EMPTY);
+
+            entity.spawnContainingItems();
 
             world.playSound(player, pos, SoundEvents.ENTITY_ITEM_FRAME_REMOVE_ITEM, SoundCategory.PLAYERS, 1f, 1f);
-
-            entity.markDirty();
 
             return ActionResult.success(world.isClient);
         }
 
         // You can place any log into the fire bowl. But only one at a time.
-        if (!stackInHand.isEmpty() && ItemTags.LOGS_THAT_BURN.contains(stackInHand.getItem())) {
+        if (!stackInHand.isEmpty() && stackInHand.isIn(ItemTags.LOGS_THAT_BURN)) {
             if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
                 return ActionResult.FAIL;
             }
@@ -163,11 +166,22 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
 
     @Override
     public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
+        doFireDamage(state, entity);
+        super.onEntityCollision(state, world, pos, entity);
+    }
+
+    /**
+     * Checks all conditions (lit, immunity) and applies fire damage if they met.
+     *
+     * @return True, if fire damage is applied.
+     */
+    private boolean doFireDamage(BlockState state, Entity entity) {
         if (!entity.isFireImmune() && Boolean.TRUE.equals(state.get(LIT)) && entity instanceof LivingEntity && !EnchantmentHelper.hasFrostWalker((LivingEntity) entity)) {
             entity.damage(DamageSource.IN_FIRE, FIRE_DAME);
+            return true;
         }
 
-        super.onEntityCollision(state, world, pos, entity);
+        return false;
     }
 
     @Nullable
@@ -195,7 +209,7 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
     public static void extinguish(@Nullable Entity entity, WorldAccess world, BlockPos pos) {
         if (world.isClient()) {
             for (int i = 0; i < 20; ++i) {
-                spawnSmokeParticle((World) world, pos, true);
+                CampfireBlock.spawnSmokeParticle((World) world, pos, false, true);
             }
         }
 
@@ -236,15 +250,6 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
         BlockPos blockPos = hit.getBlockPos();
         if (!world.isClient && projectile.isOnFire() && projectile.canModifyAt(world, blockPos) && Boolean.TRUE.equals(state.get(LIT))) {
             world.setBlockState(blockPos, state.with(Properties.LIT, true), 11);
-        }
-    }
-
-    public static void spawnSmokeParticle(World world, BlockPos pos, boolean lotsOfSmoke) {
-        Random random = world.getRandom();
-        DefaultParticleType defaultParticleType = ParticleTypes.CAMPFIRE_COSY_SMOKE;
-        world.addImportantParticle(defaultParticleType, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.07D, 0.0D);
-        if (lotsOfSmoke) {
-            world.addParticle(ParticleTypes.SMOKE, pos.getX() + 0.5D + random.nextDouble() / 4.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + 0.4D, pos.getZ() + 0.5D + random.nextDouble() / 4.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.005D, 0.0D);
         }
     }
 }
