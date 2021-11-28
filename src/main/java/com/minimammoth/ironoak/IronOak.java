@@ -11,6 +11,9 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.recipe.CookingRecipeSerializer;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.recipe.RecipeType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.intprovider.ConstantIntProvider;
 import net.minecraft.util.registry.BuiltinRegistries;
@@ -46,6 +49,9 @@ public class IronOak implements ModInitializer {
     public static final Item IRON_ASH = new IronAsh(new FabricItemSettings().group(ItemGroup.MISC));
     public static final Item IRON_SHRED = new Item(new FabricItemSettings().group(ItemGroup.MISC));
 
+    public static final RecipeType<BurningRecipe> BURNING_RECIPE_TYPE;
+    public static final RecipeSerializer<BurningRecipe> BURNING_RECIPE_SERIALIZER;
+
     @Override
     public void onInitialize() {
         FIRE_BOWL_ENTITY = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "fire_bowl"), FabricBlockEntityTypeBuilder.create(FireBowlEntity::new, FIRE_BOWL).build(null));
@@ -62,5 +68,16 @@ public class IronOak implements ModInitializer {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_shred"), IRON_SHRED);
 
         Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, new Identifier(MOD_ID, "iron_oak_tree"), IRON_OAK_TREE);
+    }
+
+    static {
+        BURNING_RECIPE_TYPE = Registry.register(Registry.RECIPE_TYPE, new Identifier(MOD_ID, "burning"), new RecipeType<BurningRecipe>() {
+            @Override
+            public String toString() {
+                return "burning";
+            }
+        });
+
+        BURNING_RECIPE_SERIALIZER = Registry.register(Registry.RECIPE_SERIALIZER, new Identifier(MOD_ID, "burning"), new CookingRecipeSerializer<>(BurningRecipe::new, 200));
     }
 }

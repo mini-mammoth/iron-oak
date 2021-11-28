@@ -23,6 +23,7 @@
   "mixins": [
     "iron-oak.mixins.json"
   ],
+  "accessWidener": "iron_oak.accesswidener",
   "depends": {
     "fabricloader": ">=0.12.5",
     "fabric": "*",

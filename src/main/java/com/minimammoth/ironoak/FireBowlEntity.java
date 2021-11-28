@@ -4,6 +4,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.inventory.Inventories;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -21,13 +22,15 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.Random;
 
 public class FireBowlEntity extends BlockEntity {
     private ItemStack input = ItemStack.EMPTY;
     private ItemStack output = ItemStack.EMPTY;
     private int cookingTime = 0;
-    private static final int COOKING_TOTAL_TIME = 150;
+    private int cookingTotalTime = 200;
+    private static final int DEFAULT_COOKING_TOTAL_TIME = 150;
 
     private int unlitTime = 0;
     private static final int UNLIT_TOTAL_TIME = 100;
@@ -105,9 +108,10 @@ public class FireBowlEntity extends BlockEntity {
         return input;
     }
 
-    public void setInput(ItemStack input) {
+    public void setInput(ItemStack input, int cookingTotalTime) {
         this.input = input;
-        cookingTime = 0;
+        this.cookingTime = 0;
+        this.cookingTotalTime = cookingTotalTime;
     }
 
     public ItemStack getOutput() {
@@ -138,9 +142,14 @@ public class FireBowlEntity extends BlockEntity {
 
         if (!input.isEmpty()) {
             fireBowl.cookingTime++;
-            if (fireBowl.cookingTime >= COOKING_TOTAL_TIME) {
-                fireBowl.setInput(ItemStack.EMPTY);
-                var result = new ItemStack(IronOak.IRON_ASH, 1);
+            if (fireBowl.cookingTime >= fireBowl.cookingTotalTime) {
+                fireBowl.setInput(ItemStack.EMPTY, DEFAULT_COOKING_TOTAL_TIME);
+
+                Inventory inventory = new SimpleInventory(input);
+                var result = world.getRecipeManager()
+                        .getFirstMatch(IronOak.BURNING_RECIPE_TYPE, inventory, world)
+                        .map(campfireCookingRecipe -> campfireCookingRecipe.craft(inventory))
+                        .orElse(input);
 
                 if (output.isEmpty()) {
                     fireBowl.output = result.copy();
@@ -173,8 +182,12 @@ public class FireBowlEntity extends BlockEntity {
      */
     public static void unlitServerTick(World world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
         if (fireBowl.cookingTime > 0) {
-            fireBowl.cookingTime = MathHelper.clamp(fireBowl.cookingTime - 2, 0, COOKING_TOTAL_TIME);
+            fireBowl.cookingTime = MathHelper.clamp(fireBowl.cookingTime - 2, 0, fireBowl.cookingTotalTime);
             fireBowl.markDirty();
         }
+    }
+
+    public Optional<BurningRecipe> getRecipeFor(ItemStack item) {
+        return !input.isEmpty() ? Optional.empty() : this.world.getRecipeManager().getFirstMatch(IronOak.BURNING_RECIPE_TYPE, new SimpleInventory(item), this.world);
     }
 }

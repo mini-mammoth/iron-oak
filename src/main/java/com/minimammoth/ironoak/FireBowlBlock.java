@@ -27,7 +27,6 @@ import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.ItemTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -121,27 +120,31 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
             return ActionResult.success(world.isClient);
         }
 
+
         // You can place any log into the fire bowl. But only one at a time.
-        if (!stackInHand.isEmpty() && stackInHand.isIn(ItemTags.LOGS_THAT_BURN)) {
+        if (!stackInHand.isEmpty()) {
             if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
                 return ActionResult.FAIL;
             }
 
-            var stackToStore = stackInHand.copy();
-            stackToStore.setCount(1);
+            var recipe = entity.getRecipeFor(stackInHand);
+            if (recipe.isPresent()) {
+                var stackToStore = stackInHand.copy();
+                stackToStore.setCount(1);
 
-            // Use isEmpty instead of canInsert to ensure that we only have exactly one wood block to process
-            if (!entity.getInput().isEmpty()) {
-                return ActionResult.FAIL;
+                // Use isEmpty instead of canInsert to ensure that we only have exactly one wood block to process
+                if (!entity.getInput().isEmpty()) {
+                    return ActionResult.FAIL;
+                }
+
+                entity.setInput(stackToStore, recipe.get().getCookTime());
+                world.playSound(player, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 1f, 1f);
+                stackInHand.decrement(1);
+
+                entity.markDirty();
+
+                return ActionResult.success(world.isClient);
             }
-
-            entity.setInput(stackToStore);
-            world.playSound(player, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 1f, 1f);
-            stackInHand.decrement(1);
-
-            entity.markDirty();
-
-            return ActionResult.success(world.isClient);
         }
 
         return ActionResult.PASS;
