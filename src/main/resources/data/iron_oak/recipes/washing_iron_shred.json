@@ -1,0 +1,8 @@
+{
+  "type": "iron_oak:washing",
+  "ingredient": {
+    "item": "iron_oak:iron_ash"
+  },
+  "result": "iron_oak:iron_shred",
+  "experience": 0.2
+}

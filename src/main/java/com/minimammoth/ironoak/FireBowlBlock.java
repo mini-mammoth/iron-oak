@@ -1,5 +1,6 @@
 package com.minimammoth.ironoak;
 
+import com.minimammoth.ironoak.init.ModEntityTypes;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -85,12 +86,15 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
         return new FireBowlEntity(pos, state);
     }
 
+    @Override
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
         if (world.isClient) {
-            return Boolean.TRUE.equals(state.get(LIT)) ? checkType(type, IronOak.FIRE_BOWL_ENTITY, FireBowlEntity::clientTick) : null;
+            return Boolean.TRUE.equals(state.get(LIT)) ? checkType(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::clientTick) : null;
         } else {
-            return Boolean.TRUE.equals(state.get(LIT)) ? checkType(type, IronOak.FIRE_BOWL_ENTITY, FireBowlEntity::litServerTick) : checkType(type, IronOak.FIRE_BOWL_ENTITY, FireBowlEntity::unlitServerTick);
+            return Boolean.TRUE.equals(state.get(LIT))
+                    ? checkType(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::litServerTick)
+                    : checkType(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::unlitServerTick);
         }
     }
 
@@ -98,12 +102,12 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         ItemStack stackInHand = player.getStackInHand(hand);
 
+        if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
+            return ActionResult.PASS;
+        }
+
         // Right click with empty hand to remove stored items
         if (stackInHand.isEmpty() && hand == Hand.MAIN_HAND) {
-            if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
-                return ActionResult.PASS;
-            }
-
             // Touching the fire bowl while it's on will hurt you.
             if (doFireDamage(state, player)) {
                 return ActionResult.FAIL;
@@ -123,10 +127,6 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
 
         // You can place any log into the fire bowl. But only one at a time.
         if (!stackInHand.isEmpty()) {
-            if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
-                return ActionResult.FAIL;
-            }
-
             var recipe = entity.getRecipeFor(stackInHand);
             if (recipe.isPresent()) {
                 var stackToStore = stackInHand.copy();
