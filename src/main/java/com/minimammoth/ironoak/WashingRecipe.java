@@ -8,20 +8,20 @@ import net.minecraft.recipe.Ingredient;
 import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.util.Identifier;
 
-public class BurningRecipe extends AbstractCookingRecipe {
-    public static final String KEY = "burning";
+public class WashingRecipe extends AbstractCookingRecipe {
+    public static String KEY = "washing";
 
-    public BurningRecipe(Identifier id, String group, Ingredient input, ItemStack output, float experience, int cookTime) {
-        super(ModRecipes.BURNING_RECIPE_TYPE, id, group, input, output, experience, cookTime);
+    public WashingRecipe(Identifier id, String group, Ingredient input, ItemStack output, float experience, int cookTime) {
+        super(ModRecipes.WASHING_RECIPE_TYPE, id, group, input, output, experience, cookTime);
     }
 
     @Override
     public ItemStack createIcon() {
-        return new ItemStack(ModItems.IRON_ASH);
+        return new ItemStack(ModItems.IRON_SHRED);
     }
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return ModRecipes.BURNING_RECIPE_SERIALIZER;
+        return ModRecipes.WASHING_RECIPE_SERIALIZER;
     }
 }
