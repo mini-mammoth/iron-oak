@@ -1,5 +1,7 @@
 package com.minimammoth.ironoak;
 
+import com.minimammoth.ironoak.init.ModEntityTypes;
+import com.minimammoth.ironoak.init.ModRecipes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.block.entity.BlockEntity;
@@ -37,7 +39,7 @@ public class FireBowlEntity extends BlockEntity {
 
 
     public FireBowlEntity(BlockPos pos, BlockState state) {
-        super(IronOak.FIRE_BOWL_ENTITY, pos, state);
+        super(ModEntityTypes.FIRE_BOWL_ENTITY, pos, state);
     }
 
     /**
@@ -147,7 +149,7 @@ public class FireBowlEntity extends BlockEntity {
 
                 Inventory inventory = new SimpleInventory(input);
                 var result = world.getRecipeManager()
-                        .getFirstMatch(IronOak.BURNING_RECIPE_TYPE, inventory, world)
+                        .getFirstMatch(ModRecipes.BURNING_RECIPE_TYPE, inventory, world)
                         .map(campfireCookingRecipe -> campfireCookingRecipe.craft(inventory))
                         .orElse(input);
 
@@ -188,6 +190,6 @@ public class FireBowlEntity extends BlockEntity {
     }
 
     public Optional<BurningRecipe> getRecipeFor(ItemStack item) {
-        return !input.isEmpty() ? Optional.empty() : this.world.getRecipeManager().getFirstMatch(IronOak.BURNING_RECIPE_TYPE, new SimpleInventory(item), this.world);
+        return !input.isEmpty() ? Optional.empty() : this.world.getRecipeManager().getFirstMatch(ModRecipes.BURNING_RECIPE_TYPE, new SimpleInventory(item), this.world);
     }
 }

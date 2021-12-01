@@ -1,5 +1,6 @@
 package com.minimammoth.ironoak;
 
+import com.minimammoth.ironoak.init.ModBlocks;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BoneMealItem;
 import net.minecraft.item.ItemUsageContext;
@@ -33,7 +34,7 @@ public class IronBoneMeal extends BoneMealItem {
         var state = world.getBlockState(pos);
 
         if (state.getBlock() == Blocks.OAK_SAPLING) {
-            world.setBlockState(pos, IronOak.IRON_OAK_SAPLING.getDefaultState());
+            world.setBlockState(pos, ModBlocks.IRON_OAK_SAPLING.getDefaultState());
 
             BoneMealItem.createParticles(world, pos, 15);
             world.playSound(context.getPlayer(), pos, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.3f, 1.0f);

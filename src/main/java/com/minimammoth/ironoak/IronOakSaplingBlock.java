@@ -1,5 +1,6 @@
 package com.minimammoth.ironoak;
 
+import com.minimammoth.ironoak.init.ModConfiguredFeatures;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.block.sapling.SaplingGenerator;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
@@ -8,12 +9,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Random;
 
 public class IronOakSaplingBlock extends SaplingBlock {
-    protected IronOakSaplingBlock(Settings settings) {
+    public IronOakSaplingBlock(Settings settings) {
         super(new SaplingGenerator() {
             @Nullable
             @Override
             protected ConfiguredFeature<?, ?> getTreeFeature(Random random, boolean bees) {
-                return IronOak.IRON_OAK_TREE;
+                return ModConfiguredFeatures.IRON_OAK_TREE;
             }
         }, settings);
     }

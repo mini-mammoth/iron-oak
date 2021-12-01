@@ -1,5 +1,6 @@
 package com.minimammoth.ironoak;
 
+import com.minimammoth.ironoak.init.ModItems;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -38,7 +39,7 @@ public class IronAsh extends Item {
             player.incrementStat(Stats.USED.getOrCreateStat(this));
             itemStack.decrement(1);
 
-            var ironShard = new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(IronOak.IRON_SHRED, 1));
+            var ironShard = new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(ModItems.IRON_SHRED, 1));
             ironShard.setPickupDelay(40);
             ironShard.setThrower(player.getUuid());
 
