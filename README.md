@@ -30,6 +30,10 @@ produce *iron infused ash*.
 
 ![Create Iron Ash](docs/create_iron_ash.gif)
 
+> **Automation** -
+> The bowl will still burn for several seconds after a log is processed. This allows you to add some hopper to automate your
+> ash processing.
+
 Now you can use water to wash the *iron infused ash* to receive *iron shreds*.
 
 ![Wash Iron Shreds](docs/create_iron_shred.gif)
