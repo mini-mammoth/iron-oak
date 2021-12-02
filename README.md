@@ -5,6 +5,8 @@ the dark.
 
 ## Processing
 
+> This also works with copper and gold.
+
 To create your first *iron infused oak sapling* you have to create *iron infused bone meal*.
 
 ![Crafting Iron Bone Meal](docs/crafting_iron_bone_meal.png)

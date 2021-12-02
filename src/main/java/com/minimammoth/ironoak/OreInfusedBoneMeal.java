@@ -1,6 +1,6 @@
 package com.minimammoth.ironoak;
 
-import com.minimammoth.ironoak.init.ModBlocks;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BoneMealItem;
 import net.minecraft.item.ItemUsageContext;
@@ -12,8 +12,8 @@ import net.minecraft.util.ActionResult;
  * If {@code IronBoneMeal} is used on an oak sapling, it has a chance to convert the sapling into an iron oak sapling.
  * If used anywhere else it acts like normal {@code BoneMeal}.
  */
-public class IronBoneMeal extends BoneMealItem {
-    public IronBoneMeal(Settings settings) {
+public abstract class OreInfusedBoneMeal extends BoneMealItem {
+    protected OreInfusedBoneMeal(Settings settings) {
         super(settings);
     }
 
@@ -26,7 +26,7 @@ public class IronBoneMeal extends BoneMealItem {
         return super.useOnBlock(context);
     }
 
-    private static boolean useOnOakSapling(ItemUsageContext context) {
+    private boolean useOnOakSapling(ItemUsageContext context) {
         var stack = context.getStack();
         var pos = context.getBlockPos();
         var world = context.getWorld();
@@ -34,7 +34,7 @@ public class IronBoneMeal extends BoneMealItem {
         var state = world.getBlockState(pos);
 
         if (state.getBlock() == Blocks.OAK_SAPLING) {
-            world.setBlockState(pos, ModBlocks.IRON_OAK_SAPLING.getDefaultState());
+            world.setBlockState(pos, this.getOreSapling());
 
             BoneMealItem.createParticles(world, pos, 15);
             world.playSound(context.getPlayer(), pos, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.3f, 1.0f);
@@ -46,4 +46,6 @@ public class IronBoneMeal extends BoneMealItem {
 
         return false;
     }
+
+    protected abstract BlockState getOreSapling();
 }

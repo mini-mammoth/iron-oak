@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "iron_oak:gold_shred"
+    }
+  },
+  "result": {
+    "item": "minecraft:raw_gold",
+    "count": 1
+  }
+}

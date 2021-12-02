@@ -19,6 +19,26 @@ public class ModConfiguredFeatures {
     private ModConfiguredFeatures() {
     }
 
+    public static final ConfiguredFeature<?, ?> COPPER_OAK_TREE = Feature.TREE
+            // Configure the feature using the builder
+            .configure(new TreeFeatureConfig.Builder(
+                    BlockStateProvider.of(ModBlocks.COPPER_OAK_LOG), // Trunk block provider
+                    new StraightTrunkPlacer(4, 2, 0), // places a straight trunk
+                    BlockStateProvider.of(Blocks.OAK_LEAVES), // Foliage block provider
+                    new BlobFoliagePlacer(ConstantIntProvider.create(2), ConstantIntProvider.create(0), 3), // places leaves as a blob (radius, offset from trunk, height)
+                    new TwoLayersFeatureSize(1, 0, 1) // The width of the tree at different layers; used to see how tall the tree can be without clipping into blocks
+            ).ignoreVines().build());
+
+    public static final ConfiguredFeature<?, ?> GOLD_OAK_TREE = Feature.TREE
+            // Configure the feature using the builder
+            .configure(new TreeFeatureConfig.Builder(
+                    BlockStateProvider.of(ModBlocks.GOLD_OAK_LOG), // Trunk block provider
+                    new StraightTrunkPlacer(4, 2, 0), // places a straight trunk
+                    BlockStateProvider.of(Blocks.OAK_LEAVES), // Foliage block provider
+                    new BlobFoliagePlacer(ConstantIntProvider.create(2), ConstantIntProvider.create(0), 3), // places leaves as a blob (radius, offset from trunk, height)
+                    new TwoLayersFeatureSize(1, 0, 1) // The width of the tree at different layers; used to see how tall the tree can be without clipping into blocks
+            ).ignoreVines().build());
+
     public static final ConfiguredFeature<?, ?> IRON_OAK_TREE = Feature.TREE
             // Configure the feature using the builder
             .configure(new TreeFeatureConfig.Builder(
@@ -30,6 +50,8 @@ public class ModConfiguredFeatures {
             ).ignoreVines().build());
 
     public static void onInitialize() {
+        Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, new Identifier(MOD_ID, "copper_oak_tree"), COPPER_OAK_TREE);
+        Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, new Identifier(MOD_ID, "gold_oak_tree"), GOLD_OAK_TREE);
         Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, new Identifier(MOD_ID, "iron_oak_tree"), IRON_OAK_TREE);
     }
 }
