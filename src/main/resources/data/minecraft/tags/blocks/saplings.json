@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
+    "iron_oak:copper_oak_sapling",
+    "iron_oak:gold_oak_sapling",
     "iron_oak:iron_oak_sapling"
   ]
 }

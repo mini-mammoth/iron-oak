@@ -17,10 +17,10 @@ import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
 /**
- * Drop {@code IronAsh} into clear water to receive {@code IronSheds}.
+ * Drop {@code OreInfusedAsh} into water to apply a washing recipe.
  */
-public class IronAsh extends Item {
-    public IronAsh(Settings settings) {
+public class OreInfusedAsh extends Item {
+    public OreInfusedAsh(Settings settings) {
         super(settings);
     }
 

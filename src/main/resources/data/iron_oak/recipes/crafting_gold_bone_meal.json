@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "#R#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:bone_meal"
+    },
+    "R": {
+      "item": "minecraft:raw_gold"
+    }
+  },
+  "result": {
+    "item": "iron_oak:gold_bone_meal",
+    "count": 4
+  }
+}

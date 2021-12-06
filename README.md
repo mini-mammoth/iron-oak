@@ -3,7 +3,11 @@
 This mod aims to add several ore infused oak trees. This allows you to plant and farm ingot instead of mining them in
 the dark.
 
+![Teaser](docs/teaser.png)
+
 ## Processing
+
+> This also works with copper and gold.
 
 To create your first *iron infused oak sapling* you have to create *iron infused bone meal*.
 
@@ -39,3 +43,17 @@ Once you have collected 9 shreds you can craft a *raw iron*.
 Alternatively, you smelt the iron shred into nuggets.
 
 ![Burn Iron Nuggets](docs/iron_shred_furnace.png)
+
+## Automation
+
+### Fire Bowl
+
+The *fire bowl* will still burn for several seconds after a log is processed. This allows you to add some hopper to
+automate your ash processing. But you have to ensure that you will not run out of logs. Otherwise, you have to ignite
+the bowl again.
+
+![Automate Fire Bowl](docs/automate_fire_bowl.png)
+
+### Ore Washing
+
+*Coming soon*
