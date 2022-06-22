@@ -5,6 +5,13 @@ the dark.
 
 ![Teaser](docs/teaser.png)
 
+**Compatibility**
+
+| Version | Minecraft Version |
+|---------|-------------------|
+| 1.2.x   | 1.19.x            |
+| 1.1.2   | 1.18.2            |
+
 ## Processing
 
 > This also works with copper and gold.
