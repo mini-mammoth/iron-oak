@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "iron_oak:copper_dark_oak_log",
+    "iron_oak:gold_dark_oak_log",
+    "iron_oak:iron_dark_oak_log"
+  ]
+}

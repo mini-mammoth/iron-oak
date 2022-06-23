@@ -10,8 +10,8 @@ import (
 )
 
 type Tags struct {
-	Replace bool `json:"replace"`
-	Values []string `json:"values"`
+	Replace bool     `json:"replace"`
+	Values  []string `json:"values"`
 }
 
 func main() {
@@ -26,10 +26,17 @@ func main() {
 
 	trees := []string{
 		"oak",
+		"acacia",
+		"spruce",
+		"birch",
+		"jungle",
+		"dark_oak",
 	}
 
 	blockSaplingTags := Tags{}
 	itemSaplingTags := Tags{}
+
+	oreLogTags := map[string]Tags{}
 
 	for _, tree := range trees {
 		blockLogTags := Tags{}
@@ -39,16 +46,20 @@ func main() {
 			log.Printf("Generating %s %s", ore, tree)
 
 			generateLog(ore, tree)
-			translations[fmt.Sprintf("block.iron_oak.%[1]s_%[2]s_log", ore, tree)] = strings.Title(fmt.Sprintf("%s infused %s log", ore, tree))
+			translations[fmt.Sprintf("block.iron_oak.%[1]s_%[2]s_log", ore, tree)] = strings.Title(fmt.Sprintf("%s infused %s log", strings.ReplaceAll(ore, "_", " "), strings.ReplaceAll(tree, "_", " ")))
 
 			generateSapling(ore, tree)
-			translations[fmt.Sprintf("block.iron_oak.%[1]s_%[2]s_sapling", ore, tree)] = strings.Title(fmt.Sprintf("%s infused %s sapling", ore, tree))
+			translations[fmt.Sprintf("block.iron_oak.%[1]s_%[2]s_sapling", ore, tree)] = strings.Title(fmt.Sprintf("%s infused %s sapling", strings.ReplaceAll(ore, "_", " "), strings.ReplaceAll(tree, "_", " ")))
 
 			blockLogTags.Values = append(blockLogTags.Values, fmt.Sprintf("iron_oak:%[1]s_%[2]s_log", ore, tree))
 			itemLogTags.Values = append(itemLogTags.Values, fmt.Sprintf("iron_oak:%[1]s_%[2]s_log", ore, tree))
 
 			blockSaplingTags.Values = append(blockSaplingTags.Values, fmt.Sprintf("iron_oak:%[1]s_%[2]s_sapling", ore, tree))
 			itemSaplingTags.Values = append(itemSaplingTags.Values, fmt.Sprintf("iron_oak:%[1]s_%[2]s_sapling", ore, tree))
+
+			oreLogTag := oreLogTags[ore]
+			oreLogTag.Values = append(oreLogTag.Values, fmt.Sprintf("iron_oak:%[1]s_%[2]s_log", ore, tree))
+			oreLogTags[ore] = oreLogTag
 		}
 
 		log.Printf("Generating tags for %s", tree)
@@ -62,7 +73,14 @@ func main() {
 	makeJsonFile(fmt.Sprintf("data/minecraft/tags/blocks/saplings.json"), blockSaplingTags)
 	makeJsonFile(fmt.Sprintf("data/minecraft/tags/items/saplings.json"), itemSaplingTags)
 
-	makeJsonFile( fmt.Sprintf("assets/iron_oak/lang/%s.json", lang), translations)
+	for _, ore := range ores {
+		makeJsonFile(fmt.Sprintf("data/iron_oak/tags/blocks/%s_infused_logs.json", ore), oreLogTags[ore])
+		makeJsonFile(fmt.Sprintf("data/iron_oak/tags/items/%s_infused_logs.json", ore), oreLogTags[ore])
+	}
+
+	log.Printf("Generating language file")
+
+	makeJsonFile(fmt.Sprintf("assets/iron_oak/lang/%s.json", lang), translations)
 }
 
 // Generates everything required for a log

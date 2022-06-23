@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "iron_oak:gold_oak_log",
+    "iron_oak:gold_acacia_log",
+    "iron_oak:gold_spruce_log",
+    "iron_oak:gold_birch_log",
+    "iron_oak:gold_jungle_log",
+    "iron_oak:gold_dark_oak_log"
+  ]
+}

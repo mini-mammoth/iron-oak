@@ -3,6 +3,21 @@
   "values": [
     "iron_oak:copper_oak_sapling",
     "iron_oak:gold_oak_sapling",
-    "iron_oak:iron_oak_sapling"
+    "iron_oak:iron_oak_sapling",
+    "iron_oak:copper_acacia_sapling",
+    "iron_oak:gold_acacia_sapling",
+    "iron_oak:iron_acacia_sapling",
+    "iron_oak:copper_spruce_sapling",
+    "iron_oak:gold_spruce_sapling",
+    "iron_oak:iron_spruce_sapling",
+    "iron_oak:copper_birch_sapling",
+    "iron_oak:gold_birch_sapling",
+    "iron_oak:iron_birch_sapling",
+    "iron_oak:copper_jungle_sapling",
+    "iron_oak:gold_jungle_sapling",
+    "iron_oak:iron_jungle_sapling",
+    "iron_oak:copper_dark_oak_sapling",
+    "iron_oak:gold_dark_oak_sapling",
+    "iron_oak:iron_dark_oak_sapling"
   ]
 }
