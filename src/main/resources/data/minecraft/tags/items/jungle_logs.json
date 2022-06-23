@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "iron_oak:copper_jungle_log",
+    "iron_oak:gold_jungle_log",
+    "iron_oak:iron_jungle_log"
+  ]
+}
