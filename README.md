@@ -9,7 +9,7 @@ the dark.
 
 | Version | Minecraft Version |
 |---------|-------------------|
-| 1.2.x   | 1.19.x            |
+| 1.2.x   | 1.18.2, 1.19.x    |
 | 1.1.2   | 1.18.2            |
 
 ## Processing
