@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "iron_oak:block/redstone_oak_leaves"
+  }
+}

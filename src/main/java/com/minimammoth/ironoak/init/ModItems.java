@@ -108,6 +108,7 @@ public class ModItems {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "gold_oak_log"), new BlockItem(ModBlocks.GOLD_OAK_LOG, new FabricItemSettings().group(DEFAULT_ITEM_GROUP)));
         IRON_OAK_SAPLING = Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_oak_sapling"), new BlockItem(ModBlocks.IRON_OAK_SAPLING, new FabricItemSettings().group(DEFAULT_ITEM_GROUP)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_oak_log"), new BlockItem(ModBlocks.IRON_OAK_LOG, new FabricItemSettings().group(DEFAULT_ITEM_GROUP)));
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "redstone_oak_leaves"), new BlockItem(ModBlocks.REDSTONE_OAK_LEAVES, new FabricItemSettings().group(DEFAULT_ITEM_GROUP)));
 
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "copper_acacia_sapling"), COPPER_ACACIA_SAPLING);
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "copper_acacia_log"), new BlockItem(ModBlocks.COPPER_ACACIA_LOG, new FabricItemSettings().group(DEFAULT_ITEM_GROUP)));
