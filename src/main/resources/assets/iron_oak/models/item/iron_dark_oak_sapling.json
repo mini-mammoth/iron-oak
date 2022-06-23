@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "iron_oak:block/iron_dark_oak_sapling"
+  }
+}

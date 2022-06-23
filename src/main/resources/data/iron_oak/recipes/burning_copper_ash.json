@@ -1,7 +1,7 @@
 {
   "type": "iron_oak:burning",
   "ingredient": {
-    "item": "iron_oak:copper_oak_log"
+    "tag": "iron_oak:copper_infused_logs"
   },
   "result": "iron_oak:copper_ash",
   "experience": 0.2

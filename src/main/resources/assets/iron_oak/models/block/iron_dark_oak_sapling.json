@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "iron_oak:block/iron_dark_oak_sapling"
+  }
+}
