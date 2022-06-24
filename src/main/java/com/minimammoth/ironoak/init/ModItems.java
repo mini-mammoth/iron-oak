@@ -89,6 +89,7 @@ public class ModItems {
 
     public static void onInitialize() {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "fire_bowl"), new BlockItem(ModBlocks.FIRE_BOWL, new FabricItemSettings().maxCount(1).group(DEFAULT_ITEM_GROUP)));
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "dry_rack"), new BlockItem(ModBlocks.DRY_RACK, new FabricItemSettings().maxCount(16).group(DEFAULT_ITEM_GROUP)));
 
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "copper_bone_meal"), COPPER_BONE_MEAL);
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "copper_ash"), COPPER_ASH);

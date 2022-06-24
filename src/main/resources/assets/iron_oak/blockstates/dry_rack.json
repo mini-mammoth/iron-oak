@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "iron_oak:block/dry_rack"
+    },
+    "type=double": {
+      "model": "iron_oak:block/dry_rack_double"
+    },
+    "type=top": {
+      "model": "iron_oak:block/dry_rack_top"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 package com.minimammoth.ironoak.init;
 
+import com.minimammoth.ironoak.DryRackBlock;
 import com.minimammoth.ironoak.FireBowlBlock;
 import com.minimammoth.ironoak.OreInfusedSaplingBlock;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
@@ -24,6 +25,7 @@ public class ModBlocks {
     }
 
     public static final Block FIRE_BOWL = new FireBowlBlock(FabricBlockSettings.copyOf(Blocks.CAULDRON));
+    public static final Block DRY_RACK = new DryRackBlock(FabricBlockSettings.copyOf(Blocks.OAK_PLANKS));
 
     public static final Block COPPER_OAK_LOG = new PillarBlock(FabricBlockSettings.copyOf(Blocks.OAK_LOG));
     public static final Block COPPER_OAK_SAPLING = new OreInfusedSaplingBlock(() -> ModConfiguredFeatures.COPPER_OAK_TREE, FabricBlockSettings.copyOf(Blocks.OAK_SAPLING));
@@ -83,6 +85,7 @@ public class ModBlocks {
 
     public static void onInitialize() {
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "fire_bowl"), FIRE_BOWL);
+        Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "dry_rack"), DRY_RACK);
 
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "copper_oak_log"), COPPER_OAK_LOG);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "copper_oak_sapling"), COPPER_OAK_SAPLING);

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I I",
+    " # ",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:stick"
+    },
+    "#": {
+      "item": "minecraft:oak_slab"
+    }
+  },
+  "result": {
+    "item": "iron_oak:dry_rack",
+    "count": 1
+  }
+}

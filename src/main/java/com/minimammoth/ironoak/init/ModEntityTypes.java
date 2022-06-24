@@ -1,5 +1,6 @@
 package com.minimammoth.ironoak.init;
 
+import com.minimammoth.ironoak.DryRackEntity;
 import com.minimammoth.ironoak.FireBowlEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.entity.BlockEntityType;
@@ -14,8 +15,13 @@ public class ModEntityTypes {
 
     public static BlockEntityType<FireBowlEntity> FIRE_BOWL_ENTITY;
 
+    public static BlockEntityType<DryRackEntity> DRY_RACK_ENTITY;
+
     public static void onInitialize() {
         FIRE_BOWL_ENTITY = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "fire_bowl"),
                 FabricBlockEntityTypeBuilder.create(FireBowlEntity::new, ModBlocks.FIRE_BOWL).build(null));
+
+        DRY_RACK_ENTITY = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "dry_rack"),
+                FabricBlockEntityTypeBuilder.create(DryRackEntity::new, ModBlocks.DRY_RACK).build(null));
     }
 }
