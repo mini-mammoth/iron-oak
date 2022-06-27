@@ -1,0 +1,9 @@
+{
+  "type": "iron_oak:drying",
+  "ingredient": {
+    "tag": "iron_oak:redstone_infused_leaves"
+  },
+  "result": "iron_oak:dried_redstone_leaves",
+  "experience": 0.2
+}
+

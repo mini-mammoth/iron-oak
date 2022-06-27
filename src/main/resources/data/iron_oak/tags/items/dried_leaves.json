@@ -1,6 +1,6 @@
 {
   "replace": false,
   "values": [
-    "#iron_oak:redstone_infused_leaves"
+    "iron_oak:dried_redstone_leaves"
   ]
 }

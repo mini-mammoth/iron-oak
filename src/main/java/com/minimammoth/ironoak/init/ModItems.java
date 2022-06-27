@@ -4,12 +4,15 @@ import com.minimammoth.ironoak.OreInfusedAsh;
 import com.minimammoth.ironoak.OreInfusedBoneMeal;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.registry.CompostingChanceRegistry;
+import net.fabricmc.fabric.api.registry.FuelRegistry;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
@@ -86,6 +89,7 @@ public class ModItems {
     private static final Item COPPER_DARK_OAK_SAPLING = new BlockItem(ModBlocks.COPPER_DARK_OAK_SAPLING, new FabricItemSettings().group(DEFAULT_ITEM_GROUP));
     private static final Item GOLD_DARK_OAK_SAPLING = new BlockItem(ModBlocks.GOLD_DARK_OAK_SAPLING, new FabricItemSettings().group(DEFAULT_ITEM_GROUP));
 
+    private static final Item DRIED_REDSTONE_LEAVES = new Item(new FabricItemSettings().group(DEFAULT_ITEM_GROUP));
 
     public static void onInitialize() {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "fire_bowl"), new BlockItem(ModBlocks.FIRE_BOWL, new FabricItemSettings().maxCount(1).group(DEFAULT_ITEM_GROUP)));
@@ -145,5 +149,13 @@ public class ModItems {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "gold_dark_oak_log"), new BlockItem(ModBlocks.GOLD_DARK_OAK_LOG, new FabricItemSettings().group(DEFAULT_ITEM_GROUP)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_dark_oak_sapling"), IRON_DARK_OAK_SAPLING);
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "iron_dark_oak_log"), new BlockItem(ModBlocks.IRON_DARK_OAK_LOG, new FabricItemSettings().group(DEFAULT_ITEM_GROUP)));
+
+
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "dried_redstone_leaves"), DRIED_REDSTONE_LEAVES);
+
+//        FuelRegistry.INSTANCE.add(TagKey.of(Registry.ITEM_KEY, new Identifier(MOD_ID, "dried_leaves")), 5);
+        FuelRegistry.INSTANCE.add(DRIED_REDSTONE_LEAVES, 5);
+//        CompostingChanceRegistry.INSTANCE.add(TagKey.of(Registry.ITEM_KEY, new Identifier(MOD_ID, "dried_leaves")), 0.3f);
+        CompostingChanceRegistry.INSTANCE.add(DRIED_REDSTONE_LEAVES, 0.3f);
     }
 }
