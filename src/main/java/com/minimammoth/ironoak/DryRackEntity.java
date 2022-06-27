@@ -21,6 +21,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -136,7 +137,17 @@ public class DryRackEntity extends BlockEntity implements ImplementedInventory {
             return;
         }
 
-        dryRack.cookingTime++;
+        if (world.hasRain(pos) && dryRack.cookingTime > 0) {
+            // If your rack gets wet, the cooking time increases
+            dryRack.cookingTime = MathHelper.clamp(dryRack.cookingTime - 2, 0, dryRack.cookingTotalTime);
+            dryRack.markDirty();
+        } else if (world.isSkyVisible(pos)) {
+            // Outside in the sun, it dries twices as fast
+            dryRack.cookingTime += 2;
+        } else {
+            dryRack.cookingTime++;
+        }
+
         if (dryRack.cookingTime >= dryRack.cookingTotalTime) {
             dryRack.setInput(ItemStack.EMPTY, DryingRecipe.DEFAULT_COOKING_TOTAL_TIME);
 
