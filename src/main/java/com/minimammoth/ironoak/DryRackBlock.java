@@ -73,6 +73,15 @@ public class DryRackBlock extends BlockWithEntity {
 
     @Override
     public boolean canReplace(BlockState state, ItemPlacementContext context) {
+        if (canReplaceWithDoubleRack(state, context)) {
+            // For now this is disabled. We can reenable this feature as soon as we implement cooking for both
+            return false;
+        }
+
+        return false;
+    }
+
+    private boolean canReplaceWithDoubleRack(BlockState state, ItemPlacementContext context) {
         // Inspired from SlabBlock used to detect if two racks can merged into a double one
         ItemStack itemStack = context.getStack();
         var slabType = state.get(TYPE);
