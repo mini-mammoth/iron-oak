@@ -2,6 +2,7 @@ package com.minimammoth.ironoak.init;
 
 import com.minimammoth.ironoak.OreInfusedAsh;
 import com.minimammoth.ironoak.OreInfusedBoneMeal;
+import com.minimammoth.ironoak.OreInfusedLeaves;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.registry.CompostingChanceRegistry;
@@ -94,6 +95,7 @@ public class ModItems {
     public static void onInitialize() {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "fire_bowl"), new BlockItem(ModBlocks.FIRE_BOWL, new FabricItemSettings().maxCount(1).group(DEFAULT_ITEM_GROUP)));
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "dry_rack"), new BlockItem(ModBlocks.DRY_RACK, new FabricItemSettings().maxCount(16).group(DEFAULT_ITEM_GROUP)));
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "separator"), new BlockItem(ModBlocks.SEPARATOR, new FabricItemSettings().maxCount(1).group(DEFAULT_ITEM_GROUP)));
 
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "copper_bone_meal"), COPPER_BONE_MEAL);
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "copper_ash"), COPPER_ASH);

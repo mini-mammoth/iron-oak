@@ -3,6 +3,7 @@ package com.minimammoth.ironoak.client;
 import com.minimammoth.ironoak.DryRackEntity;
 import com.minimammoth.ironoak.DryRackRenderer;
 import com.minimammoth.ironoak.FireBowlRenderer;
+import com.minimammoth.ironoak.SeparatorRenderer;
 import com.minimammoth.ironoak.init.ModBlocks;
 import com.minimammoth.ironoak.init.ModEntityTypes;
 import net.fabricmc.api.ClientModInitializer;
@@ -47,9 +48,11 @@ public class IronOakClient implements ClientModInitializer {
 
         BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FIRE_BOWL, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.DRY_RACK, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.SEPARATOR, RenderLayer.getCutout());
 
         BlockEntityRendererRegistry.register(ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlRenderer::new);
         BlockEntityRendererRegistry.register(ModEntityTypes.DRY_RACK_ENTITY, DryRackRenderer::new);
+        BlockEntityRendererRegistry.register(ModEntityTypes.SEPARATOR_ENTITY, SeparatorRenderer::new);
 
         /**
          * Borrowed from {@link BlockColors}

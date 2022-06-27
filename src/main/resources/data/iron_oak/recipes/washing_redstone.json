@@ -1,0 +1,8 @@
+{
+  "type": "iron_oak:washing",
+  "ingredient": {
+    "item": "iron_oak:dried_redstone_leaves"
+  },
+  "result": "minecraft:redstone",
+  "experience": 0.2
+}

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "iron_oak:dry_rack"
+    "iron_oak:dry_rack",
+    "iron_oak:separator"
   ]
 }
