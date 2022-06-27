@@ -2,6 +2,7 @@ package com.minimammoth.ironoak;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.block.enums.SlabType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
@@ -29,6 +30,11 @@ public class DryRackRenderer implements BlockEntityRenderer<DryRackEntity> {
             matrices.push();
 
             matrices.translate(0.5, 0.3, 0.5);
+
+            if (entity.getCachedState().get(DryRackBlock.TYPE) == SlabType.TOP) {
+                matrices.translate(0, .5, 0);
+            }
+
             matrices.multiply(Quaternion.fromEulerXyz((float) (Math.PI / 2f), 0f, 0f));
 
             if (input.getItem() instanceof BlockItem) {
@@ -47,6 +53,11 @@ public class DryRackRenderer implements BlockEntityRenderer<DryRackEntity> {
             matrices.push();
 
             matrices.translate(0.5, 0.3, 0.5);
+            
+            if (entity.getCachedState().get(DryRackBlock.TYPE) == SlabType.TOP) {
+                matrices.translate(0, .5, 0);
+            }
+
             matrices.scale(0.6f, 0.6f, 0.6f);
             matrices.multiply(Quaternion.fromEulerXyz((float) (Math.PI / 2f), 0f, 0f));
 
