@@ -11,6 +11,8 @@ import net.minecraft.util.Identifier;
 public class WashingRecipe extends AbstractCookingRecipe {
     public static String KEY = "washing";
 
+    public static final int DEFAULT_COOKING_TOTAL_TIME = 200;
+
     public WashingRecipe(Identifier id, String group, Ingredient input, ItemStack output, float experience, int cookTime) {
         super(ModRecipes.WASHING_RECIPE_TYPE, id, group, input, output, experience, cookTime);
     }

@@ -32,7 +32,7 @@ public class ModRecipes {
                 return BurningRecipe.KEY;
             }
         });
-        BURNING_RECIPE_SERIALIZER = Registry.register(Registry.RECIPE_SERIALIZER, new Identifier(MOD_ID, BurningRecipe.KEY), new CookingRecipeSerializer<>(BurningRecipe::new, 200));
+        BURNING_RECIPE_SERIALIZER = Registry.register(Registry.RECIPE_SERIALIZER, new Identifier(MOD_ID, BurningRecipe.KEY), new CookingRecipeSerializer<>(BurningRecipe::new, BurningRecipe.DEFAULT_COOKING_TOTAL_TIME));
 
         DRYING_RECIPE_TYPE = Registry.register(Registry.RECIPE_TYPE, new Identifier(MOD_ID, DryingRecipe.KEY), new RecipeType<DryingRecipe>() {
             @Override
@@ -40,7 +40,7 @@ public class ModRecipes {
                 return DryingRecipe.KEY;
             }
         });
-        DRYING_RECIPE_SERIALIZER = Registry.register(Registry.RECIPE_SERIALIZER, new Identifier(MOD_ID, DryingRecipe.KEY), new CookingRecipeSerializer<>(DryingRecipe::new, 200));
+        DRYING_RECIPE_SERIALIZER = Registry.register(Registry.RECIPE_SERIALIZER, new Identifier(MOD_ID, DryingRecipe.KEY), new CookingRecipeSerializer<>(DryingRecipe::new, DryingRecipe.DEFAULT_COOKING_TOTAL_TIME));
 
         WASHING_RECIPE_TYPE = Registry.register(Registry.RECIPE_TYPE, new Identifier(MOD_ID, WashingRecipe.KEY), new RecipeType<WashingRecipe>() {
             @Override
@@ -48,7 +48,7 @@ public class ModRecipes {
                 return DryingRecipe.KEY;
             }
         });
-        WASHING_RECIPE_SERIALIZER = Registry.register(Registry.RECIPE_SERIALIZER, new Identifier(MOD_ID, WashingRecipe.KEY), new CookingRecipeSerializer<>(WashingRecipe::new, 200));
+        WASHING_RECIPE_SERIALIZER = Registry.register(Registry.RECIPE_SERIALIZER, new Identifier(MOD_ID, WashingRecipe.KEY), new CookingRecipeSerializer<>(WashingRecipe::new, WashingRecipe.DEFAULT_COOKING_TOTAL_TIME));
     }
 
     public static void onInitialize() {

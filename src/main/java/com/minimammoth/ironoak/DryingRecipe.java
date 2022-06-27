@@ -10,6 +10,7 @@ import net.minecraft.util.Identifier;
 
 public class DryingRecipe extends AbstractCookingRecipe {
     public static final String KEY = "drying";
+    public static final int DEFAULT_COOKING_TOTAL_TIME = 500;
 
     public DryingRecipe(Identifier id, String group, Ingredient input, ItemStack output, float experience, int cookTime) {
         super(ModRecipes.DRYING_RECIPE_TYPE, id, group, input, output, experience, cookTime);
@@ -22,6 +23,6 @@ public class DryingRecipe extends AbstractCookingRecipe {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return ModRecipes.BURNING_RECIPE_SERIALIZER;
+        return ModRecipes.DRYING_RECIPE_SERIALIZER;
     }
 }

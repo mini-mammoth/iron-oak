@@ -11,6 +11,8 @@ import net.minecraft.util.Identifier;
 public class BurningRecipe extends AbstractCookingRecipe {
     public static final String KEY = "burning";
 
+    public static final int DEFAULT_COOKING_TOTAL_TIME = 200;
+
     public BurningRecipe(Identifier id, String group, Ingredient input, ItemStack output, float experience, int cookTime) {
         super(ModRecipes.BURNING_RECIPE_TYPE, id, group, input, output, experience, cookTime);
     }

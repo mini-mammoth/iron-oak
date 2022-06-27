@@ -33,8 +33,7 @@ public class DryRackEntity extends BlockEntity implements ImplementedInventory {
     private static final int OUTPUT_SLOT = 1;
 
     private int cookingTime = 0;
-    private int cookingTotalTime = 200;
-    private static final int DEFAULT_COOKING_TOTAL_TIME = 150;
+    private int cookingTotalTime = DryingRecipe.DEFAULT_COOKING_TOTAL_TIME;
 
     public DryRackEntity(BlockPos pos, BlockState state) {
         super(ModEntityTypes.DRY_RACK_ENTITY, pos, state);
@@ -139,7 +138,7 @@ public class DryRackEntity extends BlockEntity implements ImplementedInventory {
 
         dryRack.cookingTime++;
         if (dryRack.cookingTime >= dryRack.cookingTotalTime) {
-            dryRack.setInput(ItemStack.EMPTY, DEFAULT_COOKING_TOTAL_TIME);
+            dryRack.setInput(ItemStack.EMPTY, DryingRecipe.DEFAULT_COOKING_TOTAL_TIME);
 
             Inventory inventory = new SimpleInventory(input);
             var result = world.getRecipeManager()
