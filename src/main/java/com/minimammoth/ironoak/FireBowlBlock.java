@@ -34,6 +34,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
@@ -46,7 +47,7 @@ import java.util.Optional;
  * See related {@code FireBowlEntity} and {@code FireBowlRenderer}
  */
 public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
-    public static final VoxelShape SHAPE = createCuboidShape(0, 0, 0, 16, 12, 16);
+    public static final VoxelShape SHAPE = makeShape();
     public static final float FIRE_DAME = 1.0f;
 
     public static final BooleanProperty LIT = Properties.LIT;
@@ -254,5 +255,20 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
         if (!world.isClient && projectile.isOnFire() && projectile.canModifyAt(world, blockPos) && Boolean.TRUE.equals(state.get(LIT))) {
             world.setBlockState(blockPos, state.with(Properties.LIT, true), 11);
         }
+    }
+
+    /**
+     * Generated Shape Outline from BlockBench Model
+     */
+    public static VoxelShape makeShape() {
+        VoxelShape shape = VoxelShapes.empty();
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.125, 0.125, 0, 0.875, 0.75, 0.125));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0, 0.125, 0.125, 0.125, 0.75, 0.875));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.125, 0.125, 0.875, 0.875, 0.75, 1));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.875, 0.125, 0.125, 1, 0.75, 0.875));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.125, 0, 0.125, 0.875, 0.25, 0.875));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.125, 0.375, 0.125, 0.875, 0.375, 0.875));
+
+        return shape;
     }
 }

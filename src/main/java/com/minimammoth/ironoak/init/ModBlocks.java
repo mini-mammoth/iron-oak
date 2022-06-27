@@ -1,13 +1,23 @@
 package com.minimammoth.ironoak.init;
 
+import com.minimammoth.ironoak.DryRackBlock;
 import com.minimammoth.ironoak.FireBowlBlock;
 import com.minimammoth.ironoak.OreInfusedSaplingBlock;
+import com.minimammoth.ironoak.SeparatorBlock;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.LeavesBlock;
+import net.minecraft.block.Material;
 import net.minecraft.block.PillarBlock;
+import net.minecraft.entity.EntityType;
+import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.BlockView;
 
 import static com.minimammoth.ironoak.IronOak.MOD_ID;
 
@@ -16,6 +26,8 @@ public class ModBlocks {
     }
 
     public static final Block FIRE_BOWL = new FireBowlBlock(FabricBlockSettings.copyOf(Blocks.CAULDRON));
+    public static final Block DRY_RACK = new DryRackBlock(FabricBlockSettings.copyOf(Blocks.OAK_PLANKS));
+    public static final Block SEPARATOR = new SeparatorBlock(FabricBlockSettings.copyOf(Blocks.OAK_PLANKS));
 
     public static final Block COPPER_OAK_LOG = new PillarBlock(FabricBlockSettings.copyOf(Blocks.OAK_LOG));
     public static final Block COPPER_OAK_SAPLING = new OreInfusedSaplingBlock(() -> ModConfiguredFeatures.COPPER_OAK_TREE, FabricBlockSettings.copyOf(Blocks.OAK_SAPLING));
@@ -25,6 +37,8 @@ public class ModBlocks {
 
     public static final Block IRON_OAK_LOG = new PillarBlock(FabricBlockSettings.copyOf(Blocks.OAK_LOG));
     public static final Block IRON_OAK_SAPLING = new OreInfusedSaplingBlock(() -> ModConfiguredFeatures.IRON_OAK_TREE, FabricBlockSettings.copyOf(Blocks.OAK_SAPLING));
+
+    public static final Block REDSTONE_OAK_LEAVES = createLeavesBlock(BlockSoundGroup.GRASS);
 
     public static final Block COPPER_ACACIA_LOG = new PillarBlock(FabricBlockSettings.copyOf(Blocks.ACACIA_LOG));
     public static final Block COPPER_ACACIA_SAPLING = new OreInfusedSaplingBlock(() -> ModConfiguredFeatures.COPPER_ACACIA_TREE, FabricBlockSettings.copyOf(Blocks.ACACIA_SAPLING));
@@ -73,6 +87,8 @@ public class ModBlocks {
 
     public static void onInitialize() {
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "fire_bowl"), FIRE_BOWL);
+        Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "dry_rack"), DRY_RACK);
+        Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "separator"), SEPARATOR);
 
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "copper_oak_log"), COPPER_OAK_LOG);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "copper_oak_sapling"), COPPER_OAK_SAPLING);
@@ -115,5 +131,23 @@ public class ModBlocks {
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "gold_dark_oak_sapling"), GOLD_DARK_OAK_SAPLING);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_dark_oak_log"), IRON_DARK_OAK_LOG);
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "iron_dark_oak_sapling"), IRON_DARK_OAK_SAPLING);
+
+        Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "redstone_oak_leaves"), REDSTONE_OAK_LEAVES);
+    }
+
+    private static LeavesBlock createLeavesBlock(BlockSoundGroup soundGroup) {
+        return new LeavesBlock(AbstractBlock.Settings.of(Material.LEAVES).strength(0.2F).ticksRandomly().sounds(soundGroup).nonOpaque().allowsSpawning(ModBlocks::canSpawnOnLeaves).suffocates(ModBlocks::never).blockVision(ModBlocks::never));
+    }
+
+    private static Boolean never(BlockState state, BlockView world, BlockPos pos) {
+        return false;
+    }
+
+    private static Boolean always(BlockState state, BlockView world, BlockPos pos) {
+        return true;
+    }
+
+    private static Boolean canSpawnOnLeaves(BlockState state, BlockView world, BlockPos pos, EntityType<?> type) {
+        return type == EntityType.OCELOT || type == EntityType.PARROT;
     }
 }
