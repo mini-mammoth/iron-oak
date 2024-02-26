@@ -1,20 +1,14 @@
 package com.minimammoth.ironoak;
 
 import com.minimammoth.ironoak.init.ModEntityTypes;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.CampfireBlock;
-import net.minecraft.block.FluidFillable;
-import net.minecraft.block.ShapeContext;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.fluid.Fluid;
@@ -22,12 +16,12 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
-import net.minecraft.tag.FluidTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -62,6 +56,12 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
     }
 
     @Override
+    protected MapCodec<? extends BlockWithEntity> getCodec() {
+        // Not used yet https://fabricmc.net/2023/11/30/1203.html
+        return null;
+    }
+
+    @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
         builder.add(FireBowlBlock.LIT);
         // We need the waterlogged property to be recognized as a lit-able campfire. Otherwise, flint and steel will not
@@ -90,11 +90,11 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
         if (world.isClient) {
-            return Boolean.TRUE.equals(state.get(LIT)) ? checkType(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::clientTick) : null;
+            return Boolean.TRUE.equals(state.get(LIT)) ? validateTicker(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::clientTick) : null;
         } else {
             return Boolean.TRUE.equals(state.get(LIT))
-                    ? checkType(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::litServerTick)
-                    : checkType(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::unlitServerTick);
+                    ? validateTicker(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::litServerTick)
+                    : validateTicker(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::unlitServerTick);
         }
     }
 
@@ -109,7 +109,7 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
         // Right click with empty hand to remove stored items
         if (stackInHand.isEmpty() && hand == Hand.MAIN_HAND) {
             // Touching the fire bowl while it's on will hurt you.
-            if (doFireDamage(state, player)) {
+            if (doFireDamage(state, world, player)) {
                 return ActionResult.FAIL;
             }
 
@@ -137,7 +137,7 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
                     return ActionResult.FAIL;
                 }
 
-                entity.setInput(stackToStore, recipe.get().getCookTime());
+                entity.setInput(stackToStore, recipe.get().getCookingTime());
                 world.playSound(player, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 1f, 1f);
                 stackInHand.decrement(1);
 
@@ -169,7 +169,7 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
 
     @Override
     public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
-        doFireDamage(state, entity);
+        doFireDamage(state, world, entity);
         super.onEntityCollision(state, world, pos, entity);
     }
 
@@ -178,9 +178,9 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
      *
      * @return True, if fire damage is applied.
      */
-    private boolean doFireDamage(BlockState state, Entity entity) {
+    private boolean doFireDamage(BlockState state, World world, Entity entity) {
         if (!entity.isFireImmune() && Boolean.TRUE.equals(state.get(LIT)) && entity instanceof LivingEntity && !EnchantmentHelper.hasFrostWalker((LivingEntity) entity)) {
-            entity.damage(DamageSource.IN_FIRE, FIRE_DAME);
+            entity.damage(world.getDamageSources().inFire(), FIRE_DAME);
             return true;
         }
 
@@ -225,7 +225,7 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
     }
 
     @Override
-    public boolean canFillWithFluid(BlockView world, BlockPos pos, BlockState state, Fluid fluid) {
+    public boolean canFillWithFluid(@Nullable PlayerEntity player, BlockView world, BlockPos pos, BlockState state, Fluid fluid) {
         return state.get(LIT) && fluid.isIn(FluidTags.WATER);
     }
 
@@ -238,7 +238,7 @@ public class FireBowlBlock extends BlockWithEntity implements FluidFillable {
             extinguish(null, world, pos);
 
             world.setBlockState(pos, state.with(LIT, false), 3);
-            world.createAndScheduleFluidTick(pos, fluidState.getFluid(), fluidState.getFluid().getTickRate(world));
+            world.scheduleFluidTick(pos, fluidState.getFluid(), fluidState.getFluid().getTickRate(world));
             return true;
         } else {
             return false;

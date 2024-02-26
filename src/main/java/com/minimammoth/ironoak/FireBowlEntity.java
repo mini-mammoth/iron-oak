@@ -15,9 +15,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtInt;
-import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ItemScatterer;
@@ -156,7 +157,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
                 Inventory inventory = new SimpleInventory(input);
                 var result = world.getRecipeManager()
                         .getFirstMatch(ModRecipes.BURNING_RECIPE_TYPE, inventory, world)
-                        .map(campfireCookingRecipe -> campfireCookingRecipe.craft(inventory))
+                        .map(campfireCookingRecipe -> campfireCookingRecipe.value().craft(inventory, null))
                         .orElse(input);
 
                 if (output.isEmpty()) {
@@ -196,7 +197,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
     }
 
     public Optional<BurningRecipe> getRecipeFor(ItemStack item) {
-        return !getInput().isEmpty() ? Optional.empty() : this.world.getRecipeManager().getFirstMatch(ModRecipes.BURNING_RECIPE_TYPE, new SimpleInventory(item), this.world);
+        return !getInput().isEmpty() ? Optional.empty() : this.world.getRecipeManager().getFirstMatch(ModRecipes.BURNING_RECIPE_TYPE, new SimpleInventory(item), this.world).map(RecipeEntry::value);
     }
 
     @Override

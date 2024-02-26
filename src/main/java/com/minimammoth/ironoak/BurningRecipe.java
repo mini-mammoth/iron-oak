@@ -6,13 +6,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.AbstractCookingRecipe;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.recipe.book.CookingRecipeCategory;
 import net.minecraft.util.Identifier;
 
 public class BurningRecipe extends AbstractCookingRecipe {
     public static final String KEY = "burning";
 
-    public BurningRecipe(Identifier id, String group, Ingredient input, ItemStack output, float experience, int cookTime) {
-        super(ModRecipes.BURNING_RECIPE_TYPE, id, group, input, output, experience, cookTime);
+    public BurningRecipe(String group, CookingRecipeCategory category, Ingredient input, ItemStack output, float experience, int cookTime) {
+        super(ModRecipes.BURNING_RECIPE_TYPE, group, category, input, output, experience, cookTime);
     }
 
     @Override

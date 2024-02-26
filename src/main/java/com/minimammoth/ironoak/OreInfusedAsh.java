@@ -1,7 +1,9 @@
 package com.minimammoth.ironoak;
 
 import com.minimammoth.ironoak.init.ModRecipes;
+
 import java.util.Optional;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.ItemEntity;
@@ -51,11 +53,11 @@ public class OreInfusedAsh extends Item {
             player.incrementStat(Stats.USED.getOrCreateStat(this));
             stackInHand.decrement(1);
 
-            var output = recipe.get().craft(input);
+            var output = recipe.get().value().craft(input, null);
 
             var ironShard = new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), output);
             ironShard.setPickupDelay(40);
-            ironShard.setThrower(player.getUuid());
+            ironShard.setThrower(player);
 
             world.spawnEntity(ironShard);
             world.playSound(player, pos, SoundEvents.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 0.5f, 1.0f);

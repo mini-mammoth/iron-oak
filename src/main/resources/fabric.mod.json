@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "iron-oak",
+  "id": "iron_oak",
   "version": "${version}",
   "name": "Iron Oak",
   "description": "A minecraft mod for iron oaks",
@@ -10,7 +10,7 @@
     "repo": "git@github.com:mini-mammoth/iron-oak.git"
   },
   "license": "MIT",
-  "icon": "assets/iron-oak/icon.png",
+  "icon": "assets/iron_oak/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
@@ -18,6 +18,9 @@
     ],
     "main": [
       "com.minimammoth.ironoak.IronOak"
+    ],
+    "fabric-datagen": [
+      "com.minimammoth.ironoak.init.ModDataGenerator"
     ]
   },
   "mixins": [
@@ -25,8 +28,9 @@
   ],
   "accessWidener": "iron_oak.accesswidener",
   "depends": {
-    "fabricloader": ">=0.12.8",
-    "fabric": "*",
-    "minecraft": "1.19.x"
+    "fabricloader": ">=0.15.7",
+    "fabric-api": "*",
+    "minecraft": "1.20.x",
+    "java": ">=17"
   }
 }

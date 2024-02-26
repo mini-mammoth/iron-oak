@@ -6,11 +6,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
-import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.render.model.json.ModelTransformation;
+import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.Quaternion;
+import net.minecraft.util.math.RotationAxis;
 
 @Environment(EnvType.CLIENT)
 public class FireBowlRenderer implements BlockEntityRenderer<FireBowlEntity> {
@@ -31,7 +30,7 @@ public class FireBowlRenderer implements BlockEntityRenderer<FireBowlEntity> {
             matrices.translate(0.5, 0.2, 0.5);
             matrices.scale(2.0f, 2.0f, 2.0f);
 
-            renderer.renderItem(input, ModelTransformation.Mode.GROUND, light, overlay, matrices, vertexConsumers, 100);
+            renderer.renderItem(input, ModelTransformationMode.GROUND, light, overlay, matrices, vertexConsumers, entity.getWorld(), 100);
             matrices.pop();
         }
 
@@ -43,9 +42,9 @@ public class FireBowlRenderer implements BlockEntityRenderer<FireBowlEntity> {
             matrices.scale(1.3f, 1.3f, 1.3f);
 
             // Rotate around the Y Axis
-            matrices.multiply(Quaternion.fromEulerYxz((tickDelta + entity.getWorld().getTime()) * 0.06F % 360F, 0f, 0f));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotation((tickDelta + entity.getWorld().getTime()) * 0.06F % 360F));
 
-            renderer.renderItem(output, ModelTransformation.Mode.GROUND, light, overlay, matrices, vertexConsumers, 100);
+            renderer.renderItem(output, ModelTransformationMode.GROUND, light, overlay, matrices, vertexConsumers, entity.getWorld(), 100);
             matrices.pop();
         }
     }
