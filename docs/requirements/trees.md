@@ -3,7 +3,7 @@ domain: Trees
 domain_code: TRE
 status: active
 last_updated: 2026-08-20
-version: 1
+version: 2
 related:
   - README.md
   - infusion.md
@@ -76,9 +76,17 @@ type and the vanilla trunk/foliage shape.
 Jungle trees keep their vanilla decorators (cocoa beans 0.2, trunk and leaf vines 0.25).
 There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 
+**This was false for 9 of the 18 combinations until #30.** `ModSaplingGenerators` pointed
+the jungle, spruce and dark oak saplings at each other's features, so an infused jungle
+sapling grew a spruce tree of spruce logs (metal preserved, wood wrong), spruce grew dark
+oak, and dark oak grew jungle. The baseline recorded this requirement as `done` because it
+read the committed feature JSON — which was correct all along — and not the
+sapling-to-feature wiring. See the port note in [TRE-04](#tre-04-datagen-reproduces-the-shipped-tree-features).
+
 **Acceptance criteria** (verify: `runClient`, `inspect`)
 - [ ] All 18 combinations grow, and each yields logs of its own metal and wood type
-- [ ] `src/main/generated/data/iron_oak/worldgen/configured_feature/<metal>_<wood>_tree.json`
+      — **not yet checked in game after #30**; the wiring is correct by inspection
+- [x] `src/main/generated/data/iron_oak/worldgen/configured_feature/<metal>_<wood>_tree.json`
       names `iron_oak:<metal>_<wood>_log` and `minecraft:<wood>_leaves`
 - [ ] Tree silhouettes match their vanilla counterparts (dark oak thick trunk, spruce
       conifer, acacia fork)
@@ -87,34 +95,30 @@ There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 
 ### TRE-04: Datagen reproduces the shipped tree features
 
-**Status:** broken · **Issue:** #30
+**Status:** done · **Issue:** #30
 
 WHEN `./gradlew runDatagen` runs THEN the emitted configured features SHALL be identical to
 the committed ones — datagen output is generated, so re-running it must be a no-op.
 
-**This is currently false.** The committed data in `src/main/generated/` is correct
-(`<metal>_jungle_tree.json` → jungle log + jungle leaves), but
-`ModConfiguredFeatures.bootstrap()` pairs three wood types with each other's shapes:
+**This holds, and #30's original diagnosis was wrong.** The baseline read
+`ModConfiguredFeatures` as pairing three wood types with each other's shapes and concluded
+that the next `runDatagen` would rewrite 9 of the 18 tree features. It would not have: the
+registry **ids** were rotated in the opposite direction to the Java constant **names**
+(`COPPER_JUNGLE_TREE = registerKey("copper_spruce_tree")` built by
+`oreSpruce(COPPER_SPRUCE_LOG)`), so every emitted id received the content its own name
+promised and the output was stable. Verified by running the gate: after #30 aligned the
+names, `runDatagen` left `src/main/generated/` byte-identical.
 
-| Registered feature | Built by | Log used |
-|---|---|---|
-| `*_JUNGLE_TREE` | `oreSpruce(...)` | `*_SPRUCE_LOG` |
-| `*_DARK_OAK_TREE` | `oreJungle(...)` | `*_JUNGLE_LOG` |
-| `*_SPRUCE_TREE` | `oreDarkOak(...)` | `*_DARK_OAK_LOG` |
-
-`ModSaplingGenerators` carries the mirror image of the same rotation in its id strings
-(`COPPER_JUNGLE = generator("copper_spruce", …)`). Consequence: the next `runDatagen` will
-silently rewrite 9 of the 18 tree features and jungle/spruce/dark oak saplings will start
-growing each other's trees. The shipped 1.20.4 jar is unaffected, because it ships the
-committed JSON.
-
-**Out of scope for the documentation baseline** — fixing it is a code change in
-`area:worldgen`, tracked as #30.
+The rotation was real, but it was a **live gameplay defect**, not a datagen one — it broke
+[TRE-03](#tre-03-a-grown-tree-is-made-of-infused-logs-of-its-own-metal-and-wood) via
+`ModSaplingGenerators`, which resolved each sapling to a feature id belonging to a
+different wood type. The shipped 1.20.4 jar *was* affected, contrary to what the issue and
+this requirement first stated.
 
 **Acceptance criteria** (verify: `runDatagen`)
-- [ ] `./gradlew runDatagen` leaves `git status` clean
-- [ ] Each `bootstrap()` line pairs `<metal>_<wood>_TREE` with `ore<Wood>(<METAL>_<WOOD>_LOG)`
-- [ ] Each `ModSaplingGenerators` entry's id string matches its own wood type
+- [x] `./gradlew runDatagen` leaves `git status` clean
+- [x] Each `bootstrap()` line pairs `<metal>_<wood>_TREE` with `ore<Wood>(<METAL>_<WOOD>_LOG)`
+- [x] Each `ModSaplingGenerators` entry's id string matches its own wood type
 
 ---
 
@@ -186,5 +190,6 @@ modifications (`ModWorldGenerator` writes `configured_feature/` only).
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial. Records the datagen/source divergence for jungle, spruce and dark oak as TRE-04 (`broken`, #30), verified against the committed generated JSON. |
+| 2026-08-20 | 2 | #30 resolved. Corrects TRE-04: datagen was never going to rotate anything — the ids were rotated opposite to the constant names, so the output was stable. The rotation broke TRE-03 in game instead, for 9 of 18 combinations. TRE-04 → `done`, criteria ticked at `runDatagen`. |
 
 *Last updated: 2026-08-20*

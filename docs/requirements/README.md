@@ -3,7 +3,7 @@ domain: Requirements Index
 domain_code: REQ
 status: active
 last_updated: 2026-08-20
-version: 1
+version: 2
 related:
   - ../concept/README.md
   - ../concept/balance.md
@@ -88,7 +88,7 @@ they name. Treat an unticked criterion on a `done` requirement as unverified, no
 
 ## Status matrix
 
-36 requirements: **28 done · 4 partial · 2 broken · 1 planned · 1 wontfix (provisional)**
+36 requirements: **29 done · 4 partial · 1 broken · 1 planned · 1 wontfix (provisional)**
 
 | ID | Requirement | Status | Issue |
 |---|---|---|---|
@@ -100,7 +100,7 @@ they name. Treat an unticked criterion on a `done` requirement as unverified, no
 | [TRE-01](trees.md#tre-01-an-infused-sapling-behaves-like-its-vanilla-counterpart) | An infused sapling behaves like its vanilla counterpart | done | — |
 | [TRE-02](trees.md#tre-02-growth-follows-vanilla-rules) | Growth follows vanilla rules | done | CON-Q5 |
 | [TRE-03](trees.md#tre-03-a-grown-tree-is-made-of-infused-logs-of-its-own-metal-and-wood) | A grown tree is made of infused logs of its own metal and wood | done | — |
-| [TRE-04](trees.md#tre-04-datagen-reproduces-the-shipped-tree-features) | Datagen reproduces the shipped tree features | **broken** | #30 |
+| [TRE-04](trees.md#tre-04-datagen-reproduces-the-shipped-tree-features) | Datagen reproduces the shipped tree features | done | #30 |
 | [TRE-05](trees.md#tre-05-infused-logs-are-vanilla-logs-for-every-other-purpose) | Infused logs are vanilla logs for every other purpose | done | — |
 | [TRE-06](trees.md#tre-06-breaking-infused-blocks-drops-the-block-itself) | Breaking infused blocks drops the block itself | done | — |
 | [TRE-07](trees.md#tre-07-infused-trees-never-generate-naturally) | Infused trees never generate naturally | done | — |
@@ -137,7 +137,6 @@ it. See [REF-03](refining.md#ref-03-copper-has-no-nugget-path).
 | Issue | Requirement | Symptom |
 |---|---|---|
 | #28 | [BRN-03](burning.md#brn-03-burn-one-log-into-one-ash-of-its-metal), [BRN-04](burning.md#brn-04-keep-burning-briefly-after-the-last-log), [BRN-07](burning.md#brn-07-light-the-bowl-like-a-campfire) | Three different cook durations for the same log; afterburn timer restarts on chunk load; a flaming arrow can never light the bowl |
-| #30 | [TRE-04](trees.md#tre-04-datagen-reproduces-the-shipped-tree-features) | The next `runDatagen` would rotate the jungle, spruce and dark oak tree features |
 | #15 | [WSH-05](washing.md#wsh-05-washing-works-alongside-other-mods-water-interactions) | Player report of ash not washing; unreproduced on `main` |
 | #27 | [BRN-10](burning.md#brn-10-show-what-is-inside) | 1.21.11 only: input not rendered, a loaded bowl cannot be lit |
 
@@ -178,5 +177,6 @@ sit in their own file. Neither is a work item until someone answers it.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial baseline: 36 requirements across six domains, read out of `1.2.1+1.20.4`. Wires #15, #27, #28 and the newly filed #30 to the requirements they break. |
+| 2026-08-20 | 2 | #30 resolved: TRE-04 `broken` → `done`. The defect was a live TRE-03 violation (three woods grew each other's trees), not the predicted datagen rotation — first case of the baseline being corrected by running a gate instead of reading source. |
 
 *Last updated: 2026-08-20*
