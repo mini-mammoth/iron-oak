@@ -41,7 +41,7 @@ are not secret.
 ## Cutting a release
 
 1. **Bump `mod_version`** in `gradle.properties`. The format is `<mod>+<mc>`, e.g.
-   `1.3.0+1.20.4` — bump the Minecraft half in the same commit, never separately.
+   `1.3.0+1.21.11` — bump the Minecraft half in the same commit, never separately.
 2. **Check `publish_game_versions`** in `gradle.properties`. This is *not* derived from
    `minecraft_version`: a jar usually loads on more versions than it was built against,
    and the announced range is a judgement call. Comma-separated, no spaces.
@@ -102,23 +102,25 @@ those live in the workflow, because they need the tokens.
 
 ## Things that will bite you
 
-- **The Gradle wrapper is pinned to 8.11.1, and both bounds are load bearing.**
+- **The Gradle wrapper is 9.5.1 on this line. Do not re-pin it to 8.11.1.**
+  That old pin belonged to the 1.20.4 toolchain and both of its bounds are now history:
   - *Not lower:* the publish plugin needs `ConfigurableFileCollection.convention`, which
     does not exist before Gradle 8.11. Every plugin version — 0.8.4 through 2.2.0 —
     fails on an older wrapper with `Could not create domain object 'modrinth'`.
-  - *Not higher:* on Gradle **8.12** Loom 1.5 produces an **empty 261-byte jar and still
-    reports `BUILD SUCCESSFUL`**. Nothing in the log hints at it. 8.11.1 builds the real
-    174 KB jar with 347 entries.
+  - *Not higher:* on Gradle **8.12**, **Loom 1.5** produced an **empty 261-byte jar and
+    still reported `BUILD SUCCESSFUL`**. Nothing in the log hinted at it.
 
-  So when you touch the wrapper, `BUILD SUCCESSFUL` is not the check. The check is:
+  Both bounds were properties of *Loom 1.5*. This line runs **Loom 1.17**, which requires
+  Gradle 9.x — the 8.11.1 pin does not merely stop being necessary, it stops working.
+
+  What survives the toolchain change is the rule the pin existed to enforce: when you
+  touch the wrapper, Loom or Gradle, **`BUILD SUCCESSFUL` is not the check**. The check is
+  the artefact:
 
   ```bash
   ./gradlew clean build
   unzip -l build/libs/iron-oak-*.jar | tail -1   # expect ~347 files, not 2
   ```
-
-  Raising Loom (which #19/#20 will do anyway) is what unblocks a newer Gradle. Do not
-  raise Gradle on its own.
 - **Neither API is idempotent.** Uploading the same version twice creates two files.
   The workflow has a `concurrency` group with `cancel-in-progress: false` for that
   reason; do not "fix" it into cancelling.

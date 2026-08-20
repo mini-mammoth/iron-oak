@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "#R#",
+    "###"
+  ],
+  "key": {
+    "#": "minecraft:bone_meal",
+    "R": "minecraft:raw_copper"
+  },
+  "result": {
+    "count": 4,
+    "id": "iron_oak:copper_bone_meal"
+  }
+}

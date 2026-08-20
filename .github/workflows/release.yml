@@ -110,12 +110,12 @@ jobs:
 
 
       # Same JDK as the CI build. Loom does not run on JDK 22+, so this pin is load
-      # bearing, not cosmetic.
-      - name: setup jdk 17
+      # bearing, not cosmetic. 21 is what Minecraft 1.21.11 targets.
+      - name: setup jdk 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: setup gradle
         uses: gradle/actions/setup-gradle@v4
