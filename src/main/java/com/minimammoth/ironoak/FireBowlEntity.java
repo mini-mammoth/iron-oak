@@ -45,6 +45,11 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
     /** Cook progress. Real state, so it is persisted. */
     private int cookingTime = 0;
 
+    /**
+     * Ticks a lit bowl has spent with nothing to burn. At {@link #UNLIT_TOTAL_TIME} it goes
+     * out. Real state, so it is persisted — it used to reset to zero on every world load,
+     * which handed an idle bowl a fresh 100 ticks every time the chunk came back.
+     */
     private int unlitTime = 0;
     private static final int UNLIT_TOTAL_TIME = 100;
 
@@ -71,6 +76,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
 
         ContainerHelper.saveAllItems(out.child("input"), NonNullList.of(ItemStack.EMPTY, getInput()));
         out.putInt("cooking_time", cookingTime);
+        out.putInt("unlit_time", unlitTime);
         ContainerHelper.saveAllItems(out.child("output"), NonNullList.of(ItemStack.EMPTY, getOutput()));
     }
 
@@ -83,6 +89,10 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
 
         in.child("input").ifPresent(child -> items.set(INPUT_SLOT, readSingle(child)));
         cookingTime = in.getIntOr("cooking_time", 0);
+        // New in #28. A bowl saved before that has no such key, and 0 is the right answer
+        // for one: it means the idle countdown starts fresh, which is what used to happen
+        // to every bowl on every load.
+        unlitTime = in.getIntOr("unlit_time", 0);
         in.child("output").ifPresent(child -> items.set(OUTPUT_SLOT, readSingle(child)));
     }
 
