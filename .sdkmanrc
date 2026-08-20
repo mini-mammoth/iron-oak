@@ -1,0 +1,2 @@
+# Fabric Loom does not run on JDK 22+. Run `sdk env` to activate.
+java=21.0.3-ms
