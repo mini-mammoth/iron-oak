@@ -6,12 +6,10 @@
     "###"
   ],
   "key": {
-    "#": {
-      "item": "iron_oak:copper_shred"
-    }
+    "#": "iron_oak:gold_shred"
   },
   "result": {
-    "item": "minecraft:raw_copper",
-    "count": 1
+    "count": 1,
+    "id": "minecraft:raw_gold"
   }
 }

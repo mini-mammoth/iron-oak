@@ -7,11 +7,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -21,6 +20,10 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.WorldlyContainer;
@@ -56,44 +59,31 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      * Call {@code BlockEntity.markDirty} to enforce a save.
      */
     @Override
-    protected void saveAdditional(CompoundTag nbt) {
-        super.saveAdditional(nbt);
+    protected void saveAdditional(ValueOutput out) {
+        super.saveAdditional(out);
 
-        var inputNbt = new CompoundTag();
-        ContainerHelper.saveAllItems(inputNbt, NonNullList.of(ItemStack.EMPTY, getInput()));
-        nbt.put("input", inputNbt);
-
-        nbt.put("cooking_time", IntTag.valueOf(cookingTime));
-
-        var outputNbt = new CompoundTag();
-        ContainerHelper.saveAllItems(outputNbt, NonNullList.of(ItemStack.EMPTY, getOutput()));
-        nbt.put("output", outputNbt);
+        ContainerHelper.saveAllItems(out.child("input"), NonNullList.of(ItemStack.EMPTY, getInput()));
+        out.putInt("cooking_time", cookingTime);
+        ContainerHelper.saveAllItems(out.child("output"), NonNullList.of(ItemStack.EMPTY, getOutput()));
     }
 
     /**
      * Restores state for entity from world save.
      */
     @Override
-    public void load(CompoundTag nbt) {
-        super.load(nbt);
+    protected void loadAdditional(ValueInput in) {
+        super.loadAdditional(in);
 
-        if (nbt.contains("input", Tag.TAG_COMPOUND)) {
-            var inputList = NonNullList.withSize(1, ItemStack.EMPTY);
-            ContainerHelper.loadAllItems(nbt.getCompound("input"), inputList);
-            items.set(INPUT_SLOT, inputList.get(0));
-        }
-
-        if (nbt.contains("cooking_time", Tag.TAG_INT)) {
-            cookingTime = nbt.getInt("cooking_time");
-        }
-
-        if (nbt.contains("output", Tag.TAG_COMPOUND)) {
-            var outputList = NonNullList.withSize(1, ItemStack.EMPTY);
-            ContainerHelper.loadAllItems(nbt.getCompound("output"), outputList);
-            items.set(OUTPUT_SLOT, outputList.get(0));
-        }
+        in.child("input").ifPresent(child -> items.set(INPUT_SLOT, readSingle(child)));
+        cookingTime = in.getIntOr("cooking_time", 0);
+        in.child("output").ifPresent(child -> items.set(OUTPUT_SLOT, readSingle(child)));
     }
 
+    private static ItemStack readSingle(ValueInput in) {
+        var list = NonNullList.withSize(1, ItemStack.EMPTY);
+        ContainerHelper.loadAllItems(in, list);
+        return list.get(0);
+    }
 
     /**
      * Used to sync server changes to client on demand.
@@ -110,8 +100,8 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      * Used to sync state to client when chunk is loaded. Necessary for custom renderer to have the same info.
      */
     @Override
-    public CompoundTag getUpdateTag() {
-        return saveWithoutMetadata();
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
     }
 
     public ItemStack getInput() {
@@ -154,10 +144,11 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
             if (fireBowl.cookingTime >= fireBowl.cookingTotalTime) {
                 fireBowl.setInput(ItemStack.EMPTY, DEFAULT_COOKING_TOTAL_TIME);
 
-                Container inventory = new SimpleContainer(input);
-                var result = world.getRecipeManager()
-                        .getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, inventory, world)
-                        .map(campfireCookingRecipe -> campfireCookingRecipe.value().assemble(inventory, null))
+                var recipeInput = new SingleRecipeInput(input);
+                // Recipe lookup lives on ServerLevel; this ticker only runs server-side.
+                var result = ((ServerLevel) world).recipeAccess()
+                        .getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, recipeInput, world)
+                        .map(burningRecipe -> burningRecipe.value().assemble(recipeInput, world.registryAccess()))
                         .orElse(input);
 
                 if (output.isEmpty()) {
@@ -196,8 +187,12 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
         }
     }
 
-    public Optional<BurningRecipe> getRecipeFor(ItemStack item) {
-        return !getInput().isEmpty() ? Optional.empty() : this.level.getRecipeManager().getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, new SimpleContainer(item), this.level).map(RecipeHolder::value);
+    public Optional<BurningRecipe> getRecipeFor(ServerLevel level, ItemStack item) {
+        return !getInput().isEmpty()
+                ? Optional.empty()
+                : level.recipeAccess()
+                        .getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, new SingleRecipeInput(item), level)
+                        .map(RecipeHolder::value);
     }
 
     @Override
@@ -221,7 +216,10 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
 
     @Override
     public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction dir) {
-        return slot == INPUT_SLOT && getInput().isEmpty() && getRecipeFor(stack).isPresent();
+        // Recipes only resolve on the server; a hopper insert is a server-side action anyway.
+        return slot == INPUT_SLOT && getInput().isEmpty()
+                && this.level instanceof ServerLevel serverLevel
+                && getRecipeFor(serverLevel, stack).isPresent();
     }
 
     @Override

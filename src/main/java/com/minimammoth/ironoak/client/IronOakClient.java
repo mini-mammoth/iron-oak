@@ -4,41 +4,44 @@ import com.minimammoth.ironoak.FireBowlRenderer;
 import com.minimammoth.ironoak.init.ModBlocks;
 import com.minimammoth.ironoak.init.ModEntityTypes;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
-import net.minecraft.client.renderer.RenderType;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 
-@net.fabricmc.api.Environment(net.fabricmc.api.EnvType.CLIENT)
+@Environment(EnvType.CLIENT)
 public class IronOakClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        // This is required to see the sapling transparent like all other saplings. If not set the background will
-        // appear black.
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COPPER_OAK_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.GOLD_OAK_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.IRON_OAK_SAPLING, RenderType.cutout());
+        // Saplings and the fire bowl need the cutout layer, otherwise their transparent
+        // pixels render black.
+        BlockRenderLayerMap.putBlocks(ChunkSectionLayer.CUTOUT,
+                ModBlocks.COPPER_OAK_SAPLING,
+                ModBlocks.GOLD_OAK_SAPLING,
+                ModBlocks.IRON_OAK_SAPLING,
 
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COPPER_ACACIA_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.GOLD_ACACIA_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.IRON_ACACIA_SAPLING, RenderType.cutout());
+                ModBlocks.COPPER_ACACIA_SAPLING,
+                ModBlocks.GOLD_ACACIA_SAPLING,
+                ModBlocks.IRON_ACACIA_SAPLING,
 
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COPPER_JUNGLE_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.GOLD_JUNGLE_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.IRON_JUNGLE_SAPLING, RenderType.cutout());
+                ModBlocks.COPPER_JUNGLE_SAPLING,
+                ModBlocks.GOLD_JUNGLE_SAPLING,
+                ModBlocks.IRON_JUNGLE_SAPLING,
 
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COPPER_BIRCH_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.GOLD_BIRCH_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.IRON_BIRCH_SAPLING, RenderType.cutout());
+                ModBlocks.COPPER_BIRCH_SAPLING,
+                ModBlocks.GOLD_BIRCH_SAPLING,
+                ModBlocks.IRON_BIRCH_SAPLING,
 
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COPPER_SPRUCE_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.GOLD_SPRUCE_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.IRON_SPRUCE_SAPLING, RenderType.cutout());
+                ModBlocks.COPPER_SPRUCE_SAPLING,
+                ModBlocks.GOLD_SPRUCE_SAPLING,
+                ModBlocks.IRON_SPRUCE_SAPLING,
 
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.COPPER_DARK_OAK_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.GOLD_DARK_OAK_SAPLING, RenderType.cutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.IRON_DARK_OAK_SAPLING, RenderType.cutout());
+                ModBlocks.COPPER_DARK_OAK_SAPLING,
+                ModBlocks.GOLD_DARK_OAK_SAPLING,
+                ModBlocks.IRON_DARK_OAK_SAPLING,
 
-        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.FIRE_BOWL, RenderType.cutout());
+                ModBlocks.FIRE_BOWL);
 
         BlockEntityRendererRegistry.register(ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlRenderer::new);
     }

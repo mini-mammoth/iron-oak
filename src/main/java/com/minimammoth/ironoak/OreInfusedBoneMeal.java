@@ -27,7 +27,7 @@ public class OreInfusedBoneMeal extends BoneMealItem {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         if (useOnOakSapling(context)) {
-            return InteractionResult.sidedSuccess(context.getLevel().isClientSide);
+            return InteractionResult.SUCCESS;
         }
 
         return super.useOn(context);

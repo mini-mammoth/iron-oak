@@ -3,6 +3,11 @@ package com.minimammoth.ironoak;
 import com.minimammoth.ironoak.init.ModEntityTypes;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Containers;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -95,7 +100,7 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
     @Override
     @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
-        if (world.isClientSide) {
+        if (world.isClientSide()) {
             return Boolean.TRUE.equals(state.getValue(LIT)) ? createTickerHelper(type, ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlEntity::clientTick) : null;
         } else {
             return Boolean.TRUE.equals(state.getValue(LIT))
@@ -104,79 +109,93 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
         }
     }
 
+    /**
+     * Right click with an empty hand to take the stored items back out.
+     */
     @Override
-    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        ItemStack stackInHand = player.getItemInHand(hand);
-
+    protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
         if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
             return InteractionResult.PASS;
         }
 
-        // Right click with empty hand to remove stored items
-        if (stackInHand.isEmpty() && hand == InteractionHand.MAIN_HAND) {
-            // Touching the fire bowl while it's on will hurt you.
-            if (doFireDamage(state, world, player)) {
+        // Touching the fire bowl while it's on will hurt you.
+        if (doFireDamage(state, world, player)) {
+            return InteractionResult.FAIL;
+        }
+
+        if (entity.getInput().isEmpty() && entity.getOutput().isEmpty()) {
+            return InteractionResult.FAIL;
+        }
+
+        entity.spawnContainingItems();
+
+        world.playSound(player, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.PLAYERS, 1f, 1f);
+
+        return InteractionResult.SUCCESS;
+    }
+
+    /**
+     * You can place any log into the fire bowl. But only one at a time.
+     */
+    @Override
+    protected InteractionResult useItemOn(ItemStack stackInHand, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
+            return InteractionResult.PASS;
+        }
+
+        // Recipes only resolve on the server. Returning TRY_WITH_EMPTY_HAND on the client
+        // lets vanilla route an empty hand to useWithoutItem as before.
+        if (!(world instanceof ServerLevel serverLevel)) {
+            return stackInHand.isEmpty() ? InteractionResult.TRY_WITH_EMPTY_HAND : InteractionResult.SUCCESS;
+        }
+
+        var recipe = entity.getRecipeFor(serverLevel, stackInHand);
+        if (recipe.isPresent()) {
+            var stackToStore = stackInHand.copy();
+            stackToStore.setCount(1);
+
+            // Use isEmpty instead of canInsert to ensure that we only have exactly one wood block to process
+            if (!entity.getInput().isEmpty()) {
                 return InteractionResult.FAIL;
             }
 
-            if (entity.getInput().isEmpty() && entity.getOutput().isEmpty()) {
-                return InteractionResult.FAIL;
-            }
+            entity.setInput(stackToStore, recipe.get().cookingTime());
+            world.playSound(player, pos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1f, 1f);
+            stackInHand.shrink(1);
 
-            entity.spawnContainingItems();
+            entity.setChanged();
 
-            world.playSound(player, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.PLAYERS, 1f, 1f);
-
-            return InteractionResult.sidedSuccess(world.isClientSide);
+            return InteractionResult.SUCCESS;
         }
 
+        return InteractionResult.TRY_WITH_EMPTY_HAND;
+    }
 
-        // You can place any log into the fire bowl. But only one at a time.
-        if (!stackInHand.isEmpty()) {
-            var recipe = entity.getRecipeFor(stackInHand);
-            if (recipe.isPresent()) {
-                var stackToStore = stackInHand.copy();
-                stackToStore.setCount(1);
-
-                // Use isEmpty instead of canInsert to ensure that we only have exactly one wood block to process
-                if (!entity.getInput().isEmpty()) {
-                    return InteractionResult.FAIL;
-                }
-
-                entity.setInput(stackToStore, recipe.get().getCookingTime());
-                world.playSound(player, pos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1f, 1f);
-                stackInHand.shrink(1);
-
-                entity.setChanged();
-
-                return InteractionResult.sidedSuccess(world.isClientSide);
-            }
+    /**
+     * Drop the stored items before the block goes away. {@code onRemove} was replaced by
+     * {@code affectNeighborsAfterRemoval}, which runs after the block entity is gone — so
+     * the contents have to be spawned here, while it still exists.
+     */
+    @Override
+    public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
+        if (!Boolean.TRUE.equals(state.getValue(LIT))
+                && world.getBlockEntity(pos) instanceof FireBowlEntity fireBowl) {
+            // A burning fire bowl loses its contents. :/
+            fireBowl.spawnContainingItems();
         }
 
-        return InteractionResult.PASS;
+        return super.playerWillDestroy(world, pos, state, player);
     }
 
     @Override
-    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
-        if (!state.is(newState.getBlock())) {
-            if (Boolean.TRUE.equals(state.getValue(LIT))) {
-                // If a burning fire bowl is destroyed, all items get lost. :/
-                return;
-            }
-
-            BlockEntity blockEntity = world.getBlockEntity(pos);
-            if (blockEntity instanceof FireBowlEntity fireBowl) {
-                fireBowl.spawnContainingItems();
-            }
-
-            super.onRemove(state, world, pos, newState, moved);
-        }
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean movedByPiston) {
+        Containers.updateNeighboursAfterDestroy(state, world, pos);
     }
 
     @Override
-    public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
+    protected void entityInside(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean bl) {
         doFireDamage(state, world, entity);
-        super.entityInside(state, world, pos, entity);
+        super.entityInside(state, world, pos, entity, effectApplier, bl);
     }
 
     /**
@@ -185,12 +204,25 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
      * @return True, if fire damage is applied.
      */
     private boolean doFireDamage(BlockState state, Level world, Entity entity) {
-        if (!entity.fireImmune() && Boolean.TRUE.equals(state.getValue(LIT)) && entity instanceof LivingEntity && !EnchantmentHelper.hasFrostWalker((LivingEntity) entity)) {
+        if (!entity.fireImmune() && Boolean.TRUE.equals(state.getValue(LIT))
+                && entity instanceof LivingEntity living && !hasFrostWalker(world, living)) {
             entity.hurt(world.damageSources().inFire(), FIRE_DAME);
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * {@code EnchantmentHelper.hasFrostWalker} was removed, so the enchantment has to be
+     * resolved from the registry to keep frost walker boots protecting the wearer.
+     */
+    private static boolean hasFrostWalker(Level world, LivingEntity entity) {
+        return world.registryAccess()
+                .lookup(Registries.ENCHANTMENT)
+                .flatMap(registry -> registry.get(Enchantments.FROST_WALKER))
+                .map(enchantment -> EnchantmentHelper.getEnchantmentLevel(enchantment, entity) > 0)
+                .orElse(false);
     }
 
     @Nullable
@@ -231,7 +263,7 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
     }
 
     @Override
-    public boolean canPlaceLiquid(@Nullable Player player, BlockGetter world, BlockPos pos, BlockState state, Fluid fluid) {
+    public boolean canPlaceLiquid(@Nullable LivingEntity placer, BlockGetter world, BlockPos pos, BlockState state, Fluid fluid) {
         return state.getValue(LIT) && fluid.is(FluidTags.WATER);
     }
 
@@ -255,9 +287,9 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
      * Shooting with a burning arrow should lit the fire.
      */
     @Override
-    public void onProjectileHit(Level world, BlockState state, BlockHitResult hit, Projectile projectile) {
+    protected void onProjectileHit(Level world, BlockState state, BlockHitResult hit, Projectile projectile) {
         BlockPos blockPos = hit.getBlockPos();
-        if (!world.isClientSide && projectile.isOnFire() && projectile.mayInteract(world, blockPos) && Boolean.TRUE.equals(state.getValue(LIT))) {
+        if (world instanceof ServerLevel serverLevel && projectile.isOnFire() && projectile.mayInteract(serverLevel, blockPos) && Boolean.TRUE.equals(state.getValue(LIT))) {
             world.setBlock(blockPos, state.setValue(BlockStateProperties.LIT, true), 11);
         }
     }

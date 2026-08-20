@@ -8,8 +8,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -30,29 +31,34 @@ public class OreInfusedAsh extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
+    public InteractionResult use(Level world, Player player, InteractionHand hand) {
         var stackInHand = player.getItemInHand(hand);
         var blockHitResult = getPlayerPOVHitResult(world, player, ClipContext.Fluid.SOURCE_ONLY);
 
         if (blockHitResult.getType() == HitResult.Type.MISS || blockHitResult.getType() != HitResult.Type.BLOCK) {
-            return InteractionResultHolder.pass(stackInHand);
+            return InteractionResult.PASS;
         }
 
         if (hand != InteractionHand.MAIN_HAND) {
-            return InteractionResultHolder.pass(stackInHand);
+            return InteractionResult.PASS;
         }
 
         var pos = blockHitResult.getBlockPos();
         var blockState = world.getBlockState(pos);
 
-        var input = new SimpleContainer(stackInHand);
-        var recipe = world.getRecipeManager().getRecipeFor(ModRecipes.WASHING_RECIPE_TYPE, input, world);
+        // Recipe resolution is server-only, so bail out early on the client.
+        if (!(world instanceof ServerLevel serverLevel)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        var input = new SingleRecipeInput(stackInHand);
+        var recipe = serverLevel.recipeAccess().getRecipeFor(ModRecipes.WASHING_RECIPE_TYPE, input, serverLevel);
 
         if (blockState.getBlock() == Blocks.WATER && recipe.isPresent()) {
             player.awardStat(Stats.ITEM_USED.get(this));
             stackInHand.shrink(1);
 
-            var output = recipe.get().value().assemble(input, null);
+            var output = recipe.get().value().assemble(input, serverLevel.registryAccess());
 
             var ironShard = new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), output);
             ironShard.setPickUpDelay(40);
@@ -61,9 +67,9 @@ public class OreInfusedAsh extends Item {
             world.addFreshEntity(ironShard);
             world.playSound(player, pos, SoundEvents.GENERIC_SPLASH, SoundSource.BLOCKS, 0.5f, 1.0f);
 
-            return InteractionResultHolder.sidedSuccess(stackInHand, world.isClientSide());
+            return InteractionResult.SUCCESS;
         }
 
-        return InteractionResultHolder.fail(stackInHand);
+        return InteractionResult.FAIL;
     }
 }

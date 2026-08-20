@@ -1,10 +1,10 @@
 {
   "type": "minecraft:smelting",
   "group": "iron_nugget",
-  "ingredient": {
-    "item": "iron_oak:iron_shred"
+  "ingredient": "iron_oak:gold_shred",
+  "result": {
+    "id": "minecraft:gold_nugget"
   },
-  "result": "minecraft:iron_nugget",
   "experience": 0.1,
   "cookingtime": 50
 }

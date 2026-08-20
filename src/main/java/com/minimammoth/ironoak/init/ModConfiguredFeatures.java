@@ -3,10 +3,10 @@ package com.minimammoth.ironoak.init;
 import java.util.List;
 import java.util.OptionalInt;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.data.worldgen.BootstapContext;
+import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Block;
@@ -89,7 +89,7 @@ public class ModConfiguredFeatures {
     }
 
 
-    public static void bootstrap(BootstapContext<ConfiguredFeature<?, ?>> context) {
+    public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
         FeatureUtils.register(context, COPPER_OAK_TREE, Feature.TREE, oreOak(ModBlocks.COPPER_OAK_LOG).build());
         FeatureUtils.register(context, GOLD_OAK_TREE, Feature.TREE, oreOak(ModBlocks.GOLD_OAK_LOG).build());
         FeatureUtils.register(context, IRON_OAK_TREE, Feature.TREE, oreOak(ModBlocks.IRON_OAK_LOG).build());
@@ -116,6 +116,6 @@ public class ModConfiguredFeatures {
     }
 
     public static ResourceKey<ConfiguredFeature<?, ?>> registerKey(String name) {
-        return ResourceKey.create(Registries.CONFIGURED_FEATURE, new ResourceLocation(MOD_ID, name));
+        return ResourceKey.create(Registries.CONFIGURED_FEATURE, Identifier.fromNamespaceAndPath(MOD_ID, name));
     }
 }
