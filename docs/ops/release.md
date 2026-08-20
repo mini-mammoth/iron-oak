@@ -26,12 +26,18 @@ Two repository secrets, under *Settings → Secrets and variables → Actions*:
 
 | Secret | Where to get it | Scope needed |
 |---|---|---|
-| `MODRINTH_API_KEY` | https://modrinth.com/settings/pats | *Create versions* **and** *Write versions* |
+| `MODRINTH_API_KEY` | https://modrinth.com/settings/pats | *Create versions*, *Write versions* **and** *Read user* |
 | `CURSEFORGE_API_KEY` | https://legacy.curseforge.com/account/api-tokens | full token, CurseForge has no scopes |
 
 Neither token is in the repository, and neither is needed to run a dry run. **A missing
 token does not fail the build** — it downgrades that one platform to a dry run. That is
 deliberate: a wrong token must not be able to publish to one platform and skip the other.
+
+*Read user* is on the Modrinth list only so preflight can verify the token before a
+release: `GET /v2/user` is the one cheap authenticated call that does not publish
+anything, and it needs that scope. Publishing itself does not. A PAT without it is
+rejected by preflight with HTTP 401 even though it would upload fine — so if you would
+rather not grant it, remove the Modrinth token check instead of leaving it failing.
 
 The project ids are already in `gradle.properties` (`modrinth_id`, `curseforge_id`) and
 are not secret.

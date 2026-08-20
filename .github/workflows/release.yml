@@ -62,14 +62,25 @@ jobs:
           fail=0
 
           if [ -n "${MODRINTH_API_KEY:-}" ]; then
-            user=$(curl -sS -m 30 -o /tmp/mr.json -w '%{http_code}' \
+            code=$(curl -sS -m 30 -o /tmp/mr.json -w '%{http_code}' \
               -H "Authorization: $MODRINTH_API_KEY" \
               -H 'User-Agent: mini-mammoth/iron-oak' \
               https://api.modrinth.com/v2/user)
-            if [ "$user" = 200 ]; then
+            if [ "$code" = 200 ]; then
               echo "Modrinth token OK (user: $(jq -r .username /tmp/mr.json))"
             else
-              echo "::error::Modrinth token rejected (HTTP $user)"; fail=1
+              # Print what Modrinth actually said. A revoked token and a token that is
+              # merely missing the read scope both come back as 401, and the description
+              # is the only thing that tells them apart.
+              detail=$(jq -r '.description // .error // "no detail in response"' /tmp/mr.json 2>/dev/null \
+                || echo 'response was not JSON')
+              echo "::error::Modrinth token rejected (HTTP $code): $detail"
+              echo "  This check reads GET /v2/user, which needs the 'Read user' scope."
+              echo "  A PAT scoped only for 'Create versions' + 'Write versions' is"
+              echo "  rejected here even though it could publish fine. Either add"
+              echo "  'Read user' to the PAT, or regenerate it with all three scopes."
+              echo "  See docs/ops/release.md."
+              fail=1
             fi
 
             curl -sS -m 30 -H 'User-Agent: mini-mammoth/iron-oak' \
