@@ -9,7 +9,7 @@
     "website": "https://github.com/mini-mammoth/iron-oak",
     "repo": "git@github.com:mini-mammoth/iron-oak.git"
   },
-  "license": "MIT",
+  "license": "LicenseRef-IronOak-1.0",
   "icon": "assets/iron_oak/icon.png",
   "environment": "*",
   "entrypoints": {

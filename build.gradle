@@ -4,6 +4,7 @@ plugins {
     // 'net.fabricmc.fabric-loom' plugin is used instead.
     id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
     id 'maven-publish'
+    id 'me.modmuss50.mod-publish-plugin' version '2.2.0'
 }
 
 version = project.mod_version
@@ -85,6 +86,56 @@ sourceSets {
             srcDirs += [
                     'src/main/generated'
             ]
+        }
+    }
+}
+
+// Uploads the remapped jar to Modrinth and CurseForge. Run with `./gradlew publishMods`;
+// the release workflow does that for you on a published GitHub Release.
+//
+// Tokens come from the environment and are never stored here:
+//   MODRINTH_API_KEY, CURSEFORGE_API_KEY
+// A missing token does not fail the build — it downgrades that platform to a dry run,
+// which writes the payload to build/publishMods/ instead of uploading. That way a
+// half-configured run cannot half-publish a release, and the release workflow needs no
+// dry-run switch of its own: it simply withholds the tokens.
+publishMods {
+    file = remapJar.archiveFile
+    displayName = "Iron Oak ${project.mod_version}"
+    version = project.mod_version
+    // `type` is a ReleaseType enum, not a String — the property has to be converted.
+    type = me.modmuss50.mpp.ReleaseType.valueOf(project.publish_type)
+    modLoaders.add("fabric")
+
+    // Set by the release workflow from the GitHub Release body.
+    changelog = providers.environmentVariable("CHANGELOG")
+            .orElse("See https://github.com/mini-mammoth/iron-oak/releases")
+
+    def gameVersions = project.publish_game_versions.split(",").collect { it.trim() }
+
+    modrinth {
+        projectId = project.modrinth_id
+        accessToken = providers.environmentVariable("MODRINTH_API_KEY")
+        minecraftVersions.addAll(gameVersions)
+        requires("fabric-api")
+        // Per platform, not global: a missing Modrinth token must not silently stop the
+        // CurseForge upload, and vice versa.
+        dryRun = providers.environmentVariable("MODRINTH_API_KEY").getOrNull() == null
+    }
+
+    // Guarded, not commented out: until someone fills in curseforge_id, Modrinth must
+    // still publish on its own rather than the task failing on an empty project id.
+    if (project.curseforge_id) {
+        curseforge {
+            projectId = project.curseforge_id
+            projectSlug = "iron-oak"
+            accessToken = providers.environmentVariable("CURSEFORGE_API_KEY")
+            minecraftVersions.addAll(gameVersions)
+            // CurseForge rejects a release that declares neither environment.
+            client = true
+            server = true
+            requires("fabric-api")
+            dryRun = providers.environmentVariable("CURSEFORGE_API_KEY").getOrNull() == null
         }
     }
 }

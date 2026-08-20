@@ -34,8 +34,14 @@ Fabric's own guidance is explicit: **migrate the mappings before bumping the Min
 version.** See "The ordering, corrected" below for how that actually played out — the
 mapping migration went first, on 1.20.4, not on 1.21.11 as originally planned here.
 
-That gives a forced ordering, and it happens to be free reach: 1.21.11 is a version worth
-shipping (see below), and we pass through it anyway.
+That fixes the order, and it is stricter than it first looks: `migrateMappings` rewrites
+**source**, so it needs a tree that resolves. Run it after a four-release version bump and
+it has nothing to work with. So the mapping migration went **first, on 1.20.4** — where
+the tree still compiled and a green build proved the mapping change alone worked. Only
+then did the Minecraft version move.
+
+It also happens to be free reach: 1.21.11 is a version worth shipping (see below), and we
+pass through it anyway.
 
 ### Why 26.2 and not stopping at 1.21.11
 
@@ -164,6 +170,44 @@ Acceptance for 1.21.11, in `runClient`:
 
 ---
 
+## Stage 3 — 26.2, and the traps it inherits
+
+Stages 1 and 2 are done — see **Status** above. Their step-by-step plans have been retired
+from this document rather than left to rot: what is worth keeping from them is recorded in
+"The ordering, corrected" and "What `migrateMappings` cannot do".
+
+Two warnings from those stages are **not** historical, because 26.1+ renames things again
+and every one of them will bite a second time:
+
+- **A missed resource-directory rename does not fail the build.** 1.21 renamed
+  `loot_tables` → `loot_table`, `tags/blocks` → `tags/block`, `tags/items` → `tags/item`,
+  `recipes` → `recipe`. Everything compiles, the jar builds, CI is green — and in-game the
+  recipes, loot tables or tags are simply absent. There is no test suite to catch it, which
+  is why the acceptance below is in-game and not a green build.
+- **The access widener is not source code.** `migrateMappings` will not translate it. Ours
+  is inert (its only entry is a comment), but a real one must be done by hand via
+  https://mappings.dev
+
+When pinning a Loom version, verify it against
+`https://maven.fabricmc.net/fabric-loom/fabric-loom.gradle.plugin/maven-metadata.xml`
+before writing it into `gradle.properties` — these move.
+
+### The work itself
+
+- Bump `minecraft_version` to `26.2`, `fabric_version` to `0.158.0+26.2`.
+- Fabric API's own classes were renamed to official names in 26.1. Every
+  `net.fabricmc.fabric.api.*` import is a candidate.
+- Vanilla changes between 1.21.11 and 26.2 on top of that.
+- Fabric's docs now target 26.2 and show Mojmap throughout, so from here the docs and the
+  code finally speak the same language: https://docs.fabricmc.net/
+
+Acceptance: the same in-game checklist as 1.21.11 above, plus a check that the mod loads
+on a **dedicated server** (`./gradlew runServer`) — `environment` is `*` in
+`fabric.mod.json`, so a client-only regression is a real risk and the fire bowl renderer is
+the obvious place for one.
+
+---
+
 ## What happens to the old versions
 
 `main` moves to the newest supported version. The 1.20.4 line becomes a branch if it is
@@ -184,8 +228,9 @@ free release, and it is out of scope here.
 
 | Gate | When | Who |
 |---|---|---|
-| Stage 1 plan approved | before the first `area:build` ticket | human |
-| Stage 1 in-game loop verified | before merging stage 1 | human, on the worker's `runClient` evidence |
+| Plan approved | before the first `area:build` ticket | human — **done** |
+| Mapping migration build green | before starting the version bump | orchestrator — a mapping-only change must not alter behaviour — **done** |
+| 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on the worker's `runClient` evidence |
 | 1.21.11 release tagged | after stage 2 | human |
 | Stage 3 started | after 1.21.11 is released | human |
 | Old-version branch policy | before `main` moves | human |

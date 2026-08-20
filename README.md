@@ -1,5 +1,8 @@
 # Iron Oak
 
+[![License: Iron Oak 1.0](https://img.shields.io/badge/license-Iron_Oak_1.0-blue)](LICENSE)
+[![Modpacks: allowed](https://img.shields.io/badge/modpacks-allowed-brightgreen)](LICENSE#L19)
+
 This mod aims to add several ore infused oak trees. This allows you to plant and farm ingot instead of mining them in
 the dark.
 
@@ -64,3 +67,25 @@ the bowl again.
 ### Ore Washing
 
 *Coming soon*
+
+## License
+
+Iron Oak is **not** open source. It is distributed under the
+[Iron Oak License 1.0](LICENSE) — all rights reserved, with the following
+permissions granted to everyone up front:
+
+- **Modpacks are welcome.** You may include Iron Oak in any modpack, public or
+  private, free or paid, and bundle the mod file in your client or server pack.
+  The only condition is that your modpack credits *Iron Oak* and links back to
+  this repository. No need to ask first.
+- **Add-ons are welcome.** Mods, patches, and resource packs that depend on
+  Iron Oak are yours, under whatever license you like.
+- **Reading and contributing is welcome.** Fork the repository, study the code,
+  open a pull request.
+
+What is not allowed without asking: redistributing the mod as a standalone
+download or mirror outside of a modpack, and republishing it as a separate
+project under another name.
+
+Releases up to and including `1.2.1+1.20.4` were published under the MIT
+License and stay MIT.

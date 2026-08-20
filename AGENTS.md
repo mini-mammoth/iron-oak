@@ -12,7 +12,9 @@ gates, issue labels, supervisor loop — lives in
 ## The product
 
 **Iron Oak** — a Minecraft **Fabric** mod that adds ore-infused trees, so you can farm
-ingots instead of mining them. Repo: `mini-mammoth/iron-oak`, MIT, public.
+ingots instead of mining them. Repo: `mini-mammoth/iron-oak`, public source, licensed
+under the Iron Oak License 1.0 (all rights reserved, modpack use granted — see
+[`LICENSE`](LICENSE)). It is **not** open source; do not describe it as MIT.
 
 The gameplay loop the mod implements, in order — know it before you touch a recipe:
 
@@ -111,6 +113,15 @@ in the PR instead of implying you did.
 - `./gradlew build` is incremental and Loom caches Minecraft; the first run after a
   version bump re-downloads and decompiles and can take several minutes. That is normal,
   not a hang.
+- **The Gradle wrapper is 9.5.1 on purpose — do not re-pin it to 8.11.1.** That old pin
+  is documented history from the 1.20.4 line: Loom **1.5** built an **empty jar and still
+  reported `BUILD SUCCESSFUL`** on Gradle 8.12+, so the wrapper was held at 8.11.1. This
+  line runs **Loom 1.17**, which requires Gradle 9.x and does not have that bug; pinning
+  back to 8.11.1 breaks the build outright.
+  The rule the pin protected still holds: when you touch the wrapper, Loom or Gradle,
+  **verify the artefact, not the exit code** —
+  `unzip -l build/libs/iron-oak-*.jar | tail -1` must show ~347 files, not 2.
+  Details in [`docs/ops/release.md`](docs/ops/release.md).
 
 ---
 
@@ -221,6 +232,7 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | Label taxonomy | `docs/ops/issue-labels.md` |
 | Supervisor loop runbook | `docs/ops/orca-progress-loop.md` |
 | Migration plan and its stages | `docs/ops/version-migration.md` |
+| How to cut a release / publish to Modrinth or CurseForge | `docs/ops/release.md` |
 | Fabric API for the current version | https://docs.fabricmc.net/ |
 | What a Minecraft symbol is called | https://mappings.dev, or the `minecraft-fabric-lookup` skill |
 | Whether a Minecraft class/method still exists in this version | the `minecraft-fabric-lookup` skill — never answer this from memory |
@@ -239,6 +251,7 @@ All Gradle commands assume `JAVA_HOME` points at JDK 21 (see above).
 | Regenerate data | `./gradlew runDatagen` |
 | Clean | `./gradlew clean` |
 | Refresh after a version bump | `./gradlew --refresh-dependencies build` |
+| Dry-run a release upload | `./gradlew publishMods` (no tokens set = dry run) |
 | Check available versions | https://modmuss50.me/fabric.html |
 
 ---

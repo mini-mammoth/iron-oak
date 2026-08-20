@@ -1,16 +1,66 @@
-The MIT License (MIT)
+Iron Oak License 1.0
+LicenseRef-IronOak-1.0
 
-Copyright (c) 2021 
+Copyright (c) 2021-2026 Paul Reichelt-Ritter
+All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This is not an open source license. The permissions below are granted to
+everyone; anything not listed requires prior written permission from the
+copyright holder.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+"Modpack" means a curated collection of Minecraft mods distributed for use
+together, including its configuration files and its server pack.
+
+
+YOU MAY
+
+  1. Download the mod and use it, privately or on a server of any size.
+
+  2. Include the mod in a modpack, public or private, free or paid, provided
+     the modpack credits "Iron Oak" and links to
+     https://github.com/mini-mammoth/iron-oak
+
+  3. Distribute the mod file, unmodified, as part of such a modpack -
+     including bundled inside a client or server pack.
+
+  4. Read, study, and fork this source code, and open pull requests against
+     the original repository.
+
+  5. Write, publish, and sell add-ons, patches, or resource packs that depend
+     on this mod, without those works becoming subject to this license.
+
+  6. Distribute translations of the mod's language files by contributing them
+     back to the original repository.
+
+
+YOU MAY NOT
+
+  1. Distribute the mod, modified or unmodified, as a standalone download or
+     as a mirror, outside of a modpack as permitted above.
+
+  2. Publish a fork of this mod as a separate project or under a different
+     name.
+
+  3. Remove or alter this license, the copyright notice, or the mod's
+     attribution, or present the mod as your own work.
+
+
+CONTRIBUTIONS
+
+Unless you state otherwise in writing, any contribution you submit for
+inclusion in this project is licensed to the copyright holder under these
+same terms, and you grant the copyright holder the right to relicense it as
+part of the project.
+
+
+PRIOR VERSIONS
+
+Releases of Iron Oak up to and including version 1.2.1+1.20.4 were published
+under the MIT License. That grant is not revoked and continues to apply to
+those releases.
+
+
+NO WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
