@@ -35,8 +35,9 @@ see [test-driven-development.md](test-driven-development.md).
 It proves the mod **compiles and remaps**. That is all. `AGENTS.md` already says so; this
 is the evidence.
 
-Four bugs were found in a single day of verification. Every one of them was invisible to a
-green build on both Linux and Windows:
+Four bugs were found in a single day of verification. All four are fixed and merged now;
+every one of them was invisible to a green build on both Linux and Windows, and a human
+launching the game is what found each one:
 
 | Bug | What was broken | CI | What would have caught it |
 |---|---|---|---|
@@ -72,7 +73,7 @@ The rule of thumb, in this repo's own terms:
 ### Layer 1 — Loader unit tests
 
 There is **no pure-Java layer in a Fabric mod**, and pretending otherwise is the first
-trap. `ItemStack.EMPTY`, `Blocks.OAK_SAPLING` and `Registries.ITEM` all need a game that
+trap. `ItemStack.EMPTY`, `Blocks.OAK_SAPLING` and `BuiltInRegistries.ITEM` all need a game that
 has been bootstrapped. Layer 1 is not "no Minecraft" — it is **"no world"**.
 `fabric-loader-junit` exists exactly for that: it boots the loader inside an ordinary
 JUnit run, so Minecraft classes and registries are reachable without starting the game.
@@ -82,14 +83,15 @@ What belongs here, by name:
 
 | Target | Why it is layer 1 |
 |---|---|
-| `FireBowlEntity.getAvailableSlots(Direction)` | A pure `switch` over `Direction`: `DOWN` → output only, `UP` → input only, the four sides → both. No world touched. This is the whole contract with hopper automation, which `README.md` documents as a supported way to play. |
-| `FireBowlEntity.canExtract` | Pure — `slot == OUTPUT_SLOT`. Note that its neighbour `canInsert` is **not**: it calls `getRecipeFor`, which dereferences `this.world`. Same interface, different layer. |
-| `ImplementedInventory` defaults | `isEmpty()` over a `DefaultedList`; `removeStack(slot, count)` marking dirty only when the result is non-empty; `setStack` clamping to `getMaxCountPerStack()` **after** it has already stored the stack, which means it mutates the caller's instance. Construct it with `ImplementedInventory.ofSize(2)` — no block entity, no world. |
+| `FireBowlEntity.getSlotsForFace(Direction)` | A pure `switch` over `Direction`: `DOWN` → output only, `UP` → input only, the four sides → both. No level touched. This is the whole contract with hopper automation, which `README.md` documents as a supported way to play. |
+| `FireBowlEntity.canTakeItemThroughFace` | Pure — `slot == OUTPUT_SLOT`. Note that its neighbour `canPlaceItemThroughFace` is **not**: it needs a `ServerLevel` to resolve a recipe, and tests for one with an `instanceof`. Same interface, different layer. |
+| `FireBowlEntity.cookingTotalTime(Optional<RecipeHolder<BurningRecipe>>)` | A private static function from a matched recipe to a duration, falling back to `ModRecipes.DEFAULT_COOKING_TIME` when there is none. It became a function in #28, having been a cached field before — and as a function it is the easiest thing in the mod to test. |
+| `ImplementedInventory` defaults | `isEmpty()` over a `NonNullList`; `removeItem(slot, count)` calling `setChanged()` only when the result is non-empty; `setItem` clamping to `getMaxStackSize()` **after** it has already stored the stack, which means it mutates the caller's instance. Construct it with `ImplementedInventory.ofSize(2)` — no block entity, no level. Worth pairing with the observation that `FireBowlEntity` overrides four of these defaults purely to add the client sync. |
 | `OreInfusedBoneMeal`'s infusion map | The constructor takes a `Map<Block, Block>`; `ModItems` hand-builds three of them with `Map.of(...)`. Assert each map has exactly six entries, keyed by the six vanilla saplings, valued by the **same metal's** sapling for the **same wood**. This is the #30 failure class on the item side of the matrix, and it is six lines of test. |
-| `BurningRecipe` / `WashingRecipe` cook time | Both classes are five-line subclasses of `AbstractCookingRecipe`; all the behaviour is in the serializer and the JSON. `ModRecipes` registers `new CookingRecipeSerializer<>(BurningRecipe::new, 200)` — a 200-tick default — and `FireBowlBlock.onUse` reads the duration straight back out with `recipe.get().getCookingTime()`. Run the serializer's codec over the committed `data/iron_oak/recipes/*.json` and assert the input item and the cook time the JSON declares. No world, no fire. |
-| `FireBowlEntity` NBT round-trip | `writeNbt` into a fresh `NbtCompound`, `readNbt` into a second entity, compare. This is exactly [#28](https://github.com/mini-mammoth/iron-oak/issues/28) defect 2: `cookingTotalTime` and `unlitTime` are never written, so a log mid-burn silently switches to the hardcoded default on reload. A block entity is constructible without a world (`new FireBowlEntity(pos, state)`), so the round-trip needs no server. |
+| `BurningRecipe` / `WashingRecipe` cook time | Both are thin subclasses of `AbstractCookingRecipe`; all the behaviour is in the serializer and the JSON. `ModRecipes` registers `new AbstractCookingRecipe.Serializer<>(BurningRecipe::new, DEFAULT_COOKING_TIME)`, all three burning recipes omit `cookingtime` in their JSON and therefore take that default, and `FireBowlEntity` reads the duration back out with `holder.value().cookingTime()`. Run the serializer's codec over the committed `data/iron_oak/recipe/*.json` and assert the input item and the cook time. No level, no fire. |
+| `FireBowlEntity` save/load round-trip | `saveAdditional` into a fresh `ValueOutput`, `loadAdditional` on a second entity, compare. This is the regression guard for [#28](https://github.com/mini-mammoth/iron-oak/issues/28) defect 2, where `unlitTime` was never written and the idle countdown restarted on every world load; it is persisted as `unlit_time` now. A block entity is constructible without a level (`new FireBowlEntity(pos, state)`), so the round-trip needs no server — but note that a `ValueInput`/`ValueOutput` pair is not a bare `CompoundTag` any more, so #40 has to settle how one is built in a test. |
 | The 6×3 matrix | The worked example below. |
-| Registry ↔ assets consistency | For every id in `Registries.ITEM`/`Registries.BLOCK` with namespace `iron_oak`, assert the asset files that id requires exist. Nothing but the registry list and the filesystem. This is the test that would have caught #26, where 15 magenta cubes in a creative search were precisely the mod's 15 `iron_*` entries. |
+| Registry ↔ assets consistency | For every id in `BuiltInRegistries.ITEM`/`BLOCK` with namespace `iron_oak`, assert the asset files that id requires exist — the `items/` definition, the model it points at, the blockstate. Nothing but the registry list and the filesystem. This is the test that would have caught #26, where 15 magenta cubes in a creative search were precisely the mod's 15 `iron_*` entries. Since the fix, `ModModelGenerator` emits the `items/` layer by walking the registry, so this test also guards the thing that walk assumes: that every mod item has a matching `iron_oak:item/<id>` model. |
 
 ### Layer 2 — Server gametests
 
@@ -105,12 +107,12 @@ not cover:
 |---|---|
 | `FireBowlEntity.litServerTick` | The cook completes on a tick counter, moves the result into the output slot, stacks or scatters it, then hands over to the idle timer. There is no way to observe that without ticking a world. |
 | `FireBowlEntity.unlitServerTick` | The cook-time decay (`clamp(cookingTime - 2, …)`) and the 100-tick idle extinguish. |
-| Hopper insertion | #28 defect 3: a player insert goes through `setInput(stack, recipe.getCookingTime())`, a hopper goes through `setStack` and never sets the duration at all. The bug only exists at the seam between two real inserters, so the test needs both. |
-| Burning arrow lights the bowl | #28 defect 1: the guard in `onProjectileHit` requires `LIT` to already be `true` before setting `LIT` to `true`, so the body is unreachable. Needs a projectile in a world. |
+| Hopper insertion | #28 defect 3: the player path used to be handed the duration while the hopper path went through `setItem` and was never given one, so the same log burned for different lengths of time depending on who inserted it. Both paths now funnel through `setItem` and the duration is derived, but the bug only ever existed at the seam between two real inserters — so the regression test needs both. |
+| Burning arrow lights the bowl | #28 defect 1: the guard in `onProjectileHit` used to require `LIT` to already be `true` before setting `LIT` to `true`, so the body was unreachable in every state where it would have done anything. It now matches `CampfireBlock.onProjectileHit` — unlit and not waterlogged. Needs a projectile in a level. |
 | Infused sapling growth | The in-world proof for #30 — plant `iron_spruce_sapling`, force growth, assert the logs placed are `iron_oak:iron_spruce_log`. The layer-1 matrix test asserts the wiring; this asserts the outcome. |
 | `OreInfusedAsh.use` | Raycast to water, match a `WashingRecipe`, spawn the shred as an `ItemEntity` with a pickup delay. Three world interactions in one method. |
-| `FireBowlBlock.onStateReplaced` | Breaking an unlit bowl drops its contents; breaking a lit one destroys them. That second one is *intended* — write it down as a test so nobody "fixes" it by accident. |
-| `canInsert` | Needs a recipe manager, which needs a world. |
+| `FireBowlBlock.playerWillDestroy` | Breaking an unlit bowl drops its contents; breaking a lit one destroys them. That second one is *intended* — write it down as a test so nobody "fixes" it by accident. The drop has to happen here rather than in `affectNeighborsAfterRemoval`, which runs after the block entity is already gone; a test is the only thing that would notice if those two were swapped back. |
+| `canPlaceItemThroughFace` | Needs a recipe lookup, which needs a `ServerLevel`. |
 
 ### Layer 3 — Client gametests
 
@@ -119,12 +121,18 @@ expensive layer and the smallest: use it only for things that are true on the cl
 false on the server.
 
 **A client gametest does not check pixels.** What it checks is that the client *has* what
-the renderer reads. That distinction is the whole of #27 defect 1: `FireBowlRenderer.render`
-draws `entity.getInput()`, and the server's `setInput` wrote the slot directly instead of
-going through the one method that pushes an update to clients — so the client's copy of
-the block entity kept an empty input slot and the renderer correctly drew nothing. The
-assertion is *"after the server-side insert, the client's block entity has the item"*, and
-only a real client can make it.
+the renderer reads. That distinction is the whole of #27 defect 1: the server's `setInput`
+wrote the slot directly instead of going through the one method that pushes an update to
+clients, so the client's copy of the block entity kept an empty input slot and the renderer
+correctly drew nothing. The assertion is *"after the server-side insert, the client's block
+entity has the item"*, and only a real client can make it.
+
+Since 1.21.9 that assertion has a name to aim at. Rendering is split in two:
+`FireBowlRenderer.extractRenderState` copies what it needs off the block entity into a
+`FireBowlRenderState`, and `submit` draws purely from that snapshot. So the testable claim
+is `state.hasInput` — an explicit boolean on a plain object — rather than anything about
+geometry. Everything after `extractRenderState` is matrix maths and stays untested on
+purpose.
 
 The other resident of this layer is the #26 class of failure: whether an item's model
 **resolved**, as opposed to whether its file exists. File existence is layer 1 and much
@@ -147,19 +155,21 @@ every gametest that lands is one line the human no longer has to walk.
 ## The worked example: the #30 matrix test
 
 This is what a test in this repo actually looks like, and it is not hypothetical. The
-worker who fixed #30 **wrote it as a throwaway script**, ran it, and deleted it.
+worker who fixed #30 **wrote it as a throwaway script**, ran it, and deleted it. The fix
+landed in #37, so what follows is history — but the invariant it checked is permanent, and
+nothing checks it today.
 
 The chain it walks, for each of the 18 sapling arms:
 
 ```
 ModBlocks.<METAL>_<WOOD>_SAPLING            registered as "<metal>_<wood>_sapling"
-  → ModSaplingGenerators.<METAL>_<WOOD>     built from a feature RegistryKey
+  → ModSaplingGenerators.<METAL>_<WOOD>     built from a feature ResourceKey
     → ModConfiguredFeatures.<METAL>_<WOOD>_TREE   whose key string is registerKey("…")
       → src/main/generated/…/<that key>.json      the feature that actually ships
 ```
 
-The assertion at every hop: **the wood and the metal agree**. Against `main` the script
-reported **54 inconsistencies**. Against the fix, **18 of 18 clean**.
+The assertion at every hop: **the wood and the metal agree**. Against the broken tree the
+script reported **54 inconsistencies**. Against the fix, **18 of 18 clean**.
 
 What made the bug survive for years is the thing the test has to be designed around:
 **the code was self-consistent, and only the names lied.**
@@ -175,8 +185,8 @@ IRON_SPRUCE = generator("iron_dark_oak", ModConfiguredFeatures.IRON_SPRUCE_TREE)
 IRON_SPRUCE_SAPLING = sapling("iron_spruce_sapling", ModSaplingGenerators.IRON_SPRUCE, …);
 ```
 
-The generated JSON is correct. `runDatagen` produces no diff. Every arm compiles. The
-three-cycle — spruce grows dark oak, dark oak grows jungle, jungle grows spruce — exists
+The generated JSON was correct. `runDatagen` produced no diff. Every arm compiled. The
+three-cycle — spruce grows dark oak, dark oak grows jungle, jungle grows spruce — existed
 only in the identifiers, and `ModBlocks` consumes them by name.
 
 Three consequences for how the test must be written, and they generalise to every
@@ -192,7 +202,9 @@ consistency test in this repo:
 3. **The test must fail against the broken tree.** Those 54 findings *are* the red step.
    Because the generated JSON was already right, a test written against the JSON alone
    would have passed against the bug. A test you have never seen fail for the real reason
-   is not evidence.
+   is not evidence — and now that #37 has landed, a test written today can only be checked
+   against the fixed tree, which is exactly the weaker position this document is trying to
+   avoid being in next time.
 
 And the process lesson, which is why this document exists at all:
 
@@ -202,9 +214,10 @@ And the process lesson, which is why this document exists at all:
 
 ## Tooling — the verified facts
 
-Checked against the actual artefacts on 2026-08-20, at Minecraft 1.21.11 / loader 0.19.3 /
-Fabric API 0.141.6. Do not re-derive these; do re-check them at the next version bump, and
-treat that re-check as part of the migration gate in
+Checked against the actual artefacts on 2026-08-20. Those versions — Minecraft 1.21.11,
+loader 0.19.3, Fabric API 0.141.6 — are what `gradle.properties` declares on this line, so
+the facts below apply to the tree as it stands. Do not re-derive them; do re-check them at
+the next version bump, and treat that re-check as part of the migration gate in
 [`docs/ops/version-migration.md`](../ops/version-migration.md).
 
 | Artefact | Version | State |
@@ -226,8 +239,12 @@ and CI:
 Two constraints inherited from `AGENTS.md` that apply to the harness as much as to the mod:
 
 - **JDK 21 for every Gradle invocation.** A test task is not exempt.
-- **The Gradle wrapper is pinned to 8.11.1 and both bounds matter.** Do not move it to add
-  a test task.
+- **Do not move the Gradle wrapper to add a test task.** It is on 9.5.1 because Loom 1.17
+  requires Gradle 9.x; the old 8.11.1 pin belonged to the 1.20.4 line. If a harness seems
+  to need a different Gradle, that is a finding for #40, not a side effect.
+- **`runDatagen` inherits `client`**, because Fabric routes model providers through a
+  client-only mixin. A test task that needs the datagen classpath inherits the same
+  constraint.
 
 ---
 
@@ -259,10 +276,10 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
 |---|---|---|
 | Building a matrix test's expectations by iterating `ModConfiguredFeatures.*` or `ModBlocks.*` | The field names were the bug (#30). The test restates it and passes. | Cross-product the metal and wood **strings**, then look each arm up. |
 | Asserting that `src/main/generated/*.json` is correct | It is output, not authority. `AGENTS.md`: regenerate, never hand-edit. | Assert (a) the source Java agrees with the id it registers, and (b) `runDatagen` produces no diff. |
-| Mocking `World` or `ServerWorld` to unit-test ticking | Half of `FireBowlEntity`'s behaviour is the interaction with a real world. A mock asserts your idea of the world. | A layer-2 gametest. |
-| Reading `FireBowlEntity.cookingTotalTime` by reflection | It is private for a reason, and the field is not the behaviour. | Assert the observable: how long the burn takes, and that it survives a reload. |
+| Mocking `Level` or `ServerLevel` to unit-test ticking | Half of `FireBowlEntity`'s behaviour is the interaction with a real level, and `litServerTick` casts to `ServerLevel` on the first line. A mock asserts your idea of the level. | A layer-2 gametest. |
+| Reaching into `FireBowlEntity`'s private state by reflection | The field is not the behaviour, and #28 deleted the most tempting one — `cookingTotalTime` is a function now, not stored state. | Assert the observable: how long the burn takes, and that progress survives a reload. |
 | Copying a test from the Fabric wiki or a tutorial | Same failure mode `AGENTS.md` already warns about for API calls, and #26/#27 both hit it. The gametest API's shape changed across this version range. | Resolve it against the jar — the `minecraft-fabric-lookup` skill. |
-| Hand-listing the 46 asset paths in an assets test | The 6×3 matrix grows. A hand-written list silently stops covering the newest arm — which is the exact shape of a half-filled matrix. | Derive the list from `Registries.ITEM` / `Registries.BLOCK`, filtered to the `iron_oak` namespace. |
+| Hand-listing the asset paths in an assets test | The 6×3 matrix grows. A hand-written list silently stops covering the newest arm — which is the exact shape of a half-filled matrix. | Derive the list from `BuiltInRegistries.ITEM` / `BLOCK`, filtered to the `iron_oak` namespace. `ModItems.onInitialize` and `ModModelGenerator.generateItemModels` both already do exactly this; copy that, not a list. |
 | A test that only exercises `iron_*` | #30 was wrong for **all three metals** and three of six woods. One metal proves one arm. | Loop the full 6×3. The matrix is all-or-nothing (`AGENTS.md`), and so is its test. |
 | Asserting on a display string from `lang/en_us.json` | It is localisable, and `de_de` exists. | Assert the translation **key** resolves; leave the text to the translator. |
 | A gametest that sleeps, or asserts after a fixed tick count | Flaky by construction, and a flaky gametest gets disabled and then deleted. | Drive ticks explicitly and assert on state, not on elapsed time. |
@@ -293,5 +310,6 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Three layers defined for a Fabric mod and mapped onto named classes in this repo; the four bugs of 2026-08-20 (#26, #27, #28, #30) used as the evidence; the #30 matrix check written up as the worked example. Records that the harness is not wired up (#40) and the verified artefact facts as of loader 0.19.3. |
+| 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). Every named class and method re-checked against the merged tree: Mojang mappings throughout, `getSlotsForFace`/`canTakeItemThroughFace`/`saveAdditional`, `cookingTotalTime` now a derived function and a better layer-1 target, the renderer's `extractRenderState`/`submit` split giving layer 3 an explicit `hasInput` to assert. All four bugs restated as fixed. Gradle wrapper fact corrected to 9.5.1 / Loom 1.17. |
 
 *Last updated: 2026-08-20*
