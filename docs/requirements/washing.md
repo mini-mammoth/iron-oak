@@ -3,11 +3,12 @@ domain: Washing
 domain_code: WSH
 status: active
 last_updated: 2026-08-20
-version: 1
+version: 2
 related:
   - README.md
   - burning.md
   - refining.md
+  - ../design/automated-washing.design.md
   - ../concept/balance.md
 ---
 
@@ -91,7 +92,10 @@ The mod SHALL provide a way to wash ash without a player right-click, so that th
 log to shred can be automated end to end.
 
 **Nothing is built.** The README has advertised "Ore Washing — *Coming soon*" since 1.1.x.
-There is no block, no cauldron interaction and no dispenser behaviour, and no design exists.
+There is no block, no cauldron interaction and no dispenser behaviour. A design draft now
+exists — [`../design/automated-washing.design.md`](../design/automated-washing.design.md),
+proposing a washing basin in the fire bowl's image — but it is **not approved**, so this
+requirement stays `planned` and its acceptance criteria stay provisional.
 Whatever it becomes must not require a machine GUI (concept principle 5) and must not make
 the manual path obsolete.
 
@@ -134,6 +138,7 @@ unexplained, and rather than `broken` because nobody has reproduced it.
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-20 | 2 | WSH-04 points at its design draft (#36). Still `planned` — the design is not approved. |
 | 2026-08-20 | 1 | Initial. WSH-04 records the README's long-standing "coming soon" as `planned`; WSH-05 keeps #15 visible as unreproduced rather than silently `done`. |
 
 *Last updated: 2026-08-20*

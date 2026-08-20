@@ -47,10 +47,18 @@ workers — a worker reads [`AGENTS.md`](../AGENTS.md), which is deliberately sh
 | [version-migration.md](ops/version-migration.md) | The staged 1.20.4 → 1.21.11 → 26.2 migration and its gates |
 | [release.md](ops/release.md) | Cutting a release and publishing to Modrinth and CurseForge |
 
-Design documents (`docs/design/`) do not exist yet and are only created for work that changes
-player-visible mechanics or adds a subsystem — see the conditional design phase in
-[orchestration.md](ops/orchestration.md). A design document sits *below* a requirement: the
-requirement says what must happen, the design says how it will be built.
+## Design (`docs/design/`)
+
+**Answers the question: _how will this be built, and what did we decide along the way?_**
+
+Technical blueprints for work that changes player-visible mechanics or adds a subsystem, each
+recording the options that were rejected and why. Required by the conditional design phase in
+[orchestration.md](ops/orchestration.md), which ends in a human gate. For *new* work the design
+comes first and the requirements are minted from the approved design; for behaviour that already
+exists, the requirement stands alone and no design is owed.
+
+Start at [design/README.md](design/README.md); copy [design/TEMPLATE.md](design/TEMPLATE.md).
+All current documents are drafts with open questions — nothing in them is approved.
 
 ## Images (`docs/*.png`, `docs/*.gif`)
 
@@ -62,6 +70,7 @@ texture, the matching image is now wrong; either update it or say so in the PR.
 
 > Writing code? Read [`AGENTS.md`](../AGENTS.md).
 > Deciding **what** the behaviour should be? `docs/requirements/`.
+> Deciding **how** to build something new? `docs/design/` — and get the gate first.
 > Wondering **why** it is that way, or what a number is? `docs/concept/`.
 > Dispatching work to agents? `docs/ops/orchestration.md`.
 > Bumping a Minecraft version? Read `docs/ops/version-migration.md` first — it is staged
