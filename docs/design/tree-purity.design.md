@@ -3,7 +3,7 @@ domain: Tree Purity
 domain_code: DES
 status: draft
 last_updated: 2026-08-20
-version: 2
+version: 3
 related:
   - README.md
   - leaf-resources.design.md
@@ -91,17 +91,20 @@ grade, so old worlds keep working with no fixer.
 a model or colour tint per grade to be properly readable.
 **Matrix cost:** none. Blocks stay at 18 + 18.
 
-**Coarse only where stacking applies.** Blocks do not stack, so the *planted* sapling can carry
-a fine-grained value in its block entity for free; only the harvested item is quantised.
-Breeding can then compute in small steps ("this tree is at 62, three generations of care bring
-it to 71") and the grade is derived at harvest. The player reads a grade, the system keeps the
-resolution — which is also what makes the per-generation drift perceptible without grades
-flickering.
+**The grade is the only stored value — decided.** An earlier version of this draft proposed a
+fine-grained value (0–100) in the planted sapling's block entity, quantised only on the harvested
+item. That is dropped, because the grade is now **visually distinct per grade** (see *Making the
+grade visible* below) and the two requirements collide:
 
-| Where | Resolution | Why |
-|---|---|---|
-| Planted sapling (block entity NBT) | fine, e.g. 0–100 | Never stacks, so it costs nothing |
-| Harvested log / sapling item | coarse, N grades | `isSameItemSameComponents` applies here |
+- A fine value needs NBT, which means a **block entity on every planted sapling**. A plantation
+  of 200 saplings is then 200 block entities — a farm-scale cost for a number the player never
+  sees.
+- A visible grade needs a **blockstate property**, and a blockstate can only carry a handful of
+  values.
+
+So: grade in the blockstate on the block, grade in a component on the item, no block entity and
+no hidden resolution. Breeding advances whole grades, and the per-generation drift moves whole
+grades — coarser than the earlier proposal, and legible without a tooltip.
 
 **Recommendation: Option C.** It is Option A with the stacking problem removed, and the
 grade count becomes a balance knob rather than a code change.
@@ -118,6 +121,47 @@ Two API facts checked against the 1.21.11 jar, because the option stands or fall
   `init/Mod*.java`. No Fabric-specific API, no mixin — the mixin config is still empty. Whether the grade also shows on
 the *placed* sapling as a blockstate (so a plantation is readable at a glance) is a separate,
 cheaper decision — the sapling is one block either way.
+
+## Making the grade visible
+
+Decided: a grade the player cannot see does not exist for them
+([principle 1](../concept/README.md#design-principles)). Both halves are supported in 1.21.11,
+verified against the mapped jar:
+
+**On the item** — one item, several models, picked by the component. `minecraft:select` accepts
+`property: "minecraft:component"`, implemented by
+`net.minecraft.client.renderer.item.properties.select.ComponentContents<T>`, which takes a
+`DataComponentType<T>` and matches `cases` through that component's own `valueCodec()`. Vanilla
+uses `minecraft:select` in 71 of its 1,506 item definitions (on `block_state`,
+`custom_model_data`, `trim_material` and others), and this mod has shipped
+`assets/iron_oak/items/*.json` since #26 — currently as the trivial single-model case:
+
+```json
+{ "model": { "type": "minecraft:select", "property": "minecraft:component",
+             "component": "iron_oak:purity",
+             "cases": [ { "when": 3, "model": { "type": "minecraft:model",
+                                                "model": "iron_oak:item/iron_oak_log_pure" } } ],
+             "fallback": { "type": "minecraft:model",
+                           "model": "iron_oak:item/iron_oak_log" } } }
+```
+
+**On the placed block** — item model definitions do not apply to blocks in the world, so the
+grade has to be a blockstate property (`purity=0..3`). For a log that multiplies with `axis`:
+3 blockstate entries today become 12. Block and item registrations stay at 18 + 18.
+
+**The cost is art, not code:**
+
+| | Today | 4 visible grades |
+|---|---|---|
+| Block / item registrations | 18 + 18 | unchanged |
+| Blockstate entries per log | 3 (`axis`) | 12 |
+| Block models | 18 | 72 |
+| Textures | 18 | 72 hand-drawn — **or** 18 bases + one overlay/tint per grade |
+
+72 hand-drawn log textures is the real bill. The cheap route is one base texture per metal × wood
+plus a speck overlay or a tint per grade, which keeps it at 18 + 4. Either way the models and
+blockstates belong in datagen, not in 72 hand-written files — `MAT-01` demands completeness and
+`scripts/generate.go` exists for exactly this kind of repetition.
 
 ## Options — how purity goes up
 
@@ -187,12 +231,16 @@ unmeasured baseline cannot be balanced.
 2. **What is the baseline?** Does a freshly infused vanilla sapling start at the bottom grade
    (so every farm begins weak) or in the middle (so breeding can go both ways)?
 3. **Is purity per tree or per log?** One grade for the whole tree is simpler; per-log
-   variance would be more organic and much harder to read.
+   variance would be more organic, much harder to read, and would fight the blockstate
+   representation.
 4. **Does the grade survive the chain?** Log → ash → shred carrying the grade means three
    more components and three more stacking surfaces; collapsing it at the ash step (grade
    decides *how many* ash, then the ash is plain) is simpler and probably enough.
-5. **Does it show on the placed block?** A blockstate or tint on the sapling, or a different
-   log texture per grade, or nothing but a tooltip.
+5. ~~**Does it show on the placed block?**~~ **Resolved: yes, visibly, on both the item and the
+   placed block** — see *Making the grade visible*. What remains is the **art strategy**:
+   distinct textures per grade (72 log textures) or a shared base with an overlay/tint per grade
+   (18 + 4). And whether the placed *log* shows its grade too, or only the sapling — the log's
+   grade matters for the fire bowl, the sapling's for the farm.
 6. **How does this interact with the leaves line?** See
    [`leaf-resources.design.md`](leaf-resources.design.md) — the "super tree" idea would have
    to decide whether one tree has one purity or one per line.
@@ -210,6 +258,7 @@ A new domain, `PUR`, in `docs/requirements/purity.md` — all `planned` on appro
 - `PUR-05` Purity changes yield (lever per the decision above)
 - `PUR-06` Items of the same grade stack; items without the component read as baseline
 - `PUR-07` The player can tell a log's grade without leaving the game
+- `PUR-08` Every grade has a model and a blockstate entry for every arm of the matrix
 
 ## Verification
 
@@ -223,6 +272,7 @@ open with its logs readable as baseline. Both are exactly the class of failure t
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-20 | 3 | Grade decided to be visible on the item and on the placed block; verified `minecraft:select` + `minecraft:component` (`ComponentContents`) for items and a blockstate property for blocks. Consequently the fine-value-in-a-block-entity split is dropped — a visible grade needs a blockstate and a fine value would need a block entity per sapling. Adds the asset cost table and `PUR-08`. |
 | 2026-08-20 | 2 | Records the verified 1.21.11 facts the recommendation rests on: `isSameItemSameComponents` for stacking, `Ingredient` matching on items not components, `Registries.DATA_COMPONENT_TYPE` for registration. Adds the fine-on-the-block, coarse-on-the-item split. |
 | 2026-08-20 | 1 | Initial draft (#36). Carrier options weighed; continuous components rejected on stacking, per-grade blocks rejected on matrix cost. Degradation decided as per-generation drift. Seven open questions. |
 
