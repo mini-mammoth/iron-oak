@@ -315,11 +315,20 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
 
     /**
      * Shooting with a burning arrow should lit the fire.
+     * <p>
+     * The condition is {@code CampfireBlock.onProjectileHit}'s, verbatim: the bowl must be
+     * <em>un</em>lit and not waterlogged. It used to require {@code LIT} to already be true
+     * before setting {@code LIT} to true, so the body was unreachable in every state where
+     * it would have done anything.
      */
     @Override
     protected void onProjectileHit(Level world, BlockState state, BlockHitResult hit, Projectile projectile) {
         BlockPos blockPos = hit.getBlockPos();
-        if (world instanceof ServerLevel serverLevel && projectile.isOnFire() && projectile.mayInteract(serverLevel, blockPos) && Boolean.TRUE.equals(state.getValue(LIT))) {
+        if (world instanceof ServerLevel serverLevel
+                && projectile.isOnFire()
+                && projectile.mayInteract(serverLevel, blockPos)
+                && !state.getValue(LIT)
+                && !state.getValue(WATERLOGGED)) {
             world.setBlock(blockPos, state.setValue(BlockStateProperties.LIT, true), 11);
         }
     }
