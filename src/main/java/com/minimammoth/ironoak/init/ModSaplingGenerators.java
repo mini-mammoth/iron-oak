@@ -18,17 +18,17 @@ public class ModSaplingGenerators {
     public static final TreeGrower GOLD_ACACIA = generator("gold_acacia", ModConfiguredFeatures.GOLD_ACACIA_TREE);
     public static final TreeGrower IRON_ACACIA = generator("iron_acacia", ModConfiguredFeatures.IRON_ACACIA_TREE);
 
-    public static final TreeGrower COPPER_JUNGLE = generator("copper_spruce", ModConfiguredFeatures.COPPER_JUNGLE_TREE);
-    public static final TreeGrower GOLD_JUNGLE = generator("gold_spruce", ModConfiguredFeatures.GOLD_JUNGLE_TREE);
-    public static final TreeGrower IRON_JUNGLE = generator("iron_spruce", ModConfiguredFeatures.IRON_JUNGLE_TREE);
+    public static final TreeGrower COPPER_SPRUCE = generator("copper_spruce", ModConfiguredFeatures.COPPER_SPRUCE_TREE);
+    public static final TreeGrower GOLD_SPRUCE = generator("gold_spruce", ModConfiguredFeatures.GOLD_SPRUCE_TREE);
+    public static final TreeGrower IRON_SPRUCE = generator("iron_spruce", ModConfiguredFeatures.IRON_SPRUCE_TREE);
 
-    public static final TreeGrower COPPER_DARK_OAK = generator("copper_jungle", ModConfiguredFeatures.COPPER_DARK_OAK_TREE);
-    public static final TreeGrower GOLD_DARK_OAK = generator("gold_jungle", ModConfiguredFeatures.GOLD_DARK_OAK_TREE);
-    public static final TreeGrower IRON_DARK_OAK = generator("iron_jungle", ModConfiguredFeatures.IRON_DARK_OAK_TREE);
+    public static final TreeGrower COPPER_JUNGLE = generator("copper_jungle", ModConfiguredFeatures.COPPER_JUNGLE_TREE);
+    public static final TreeGrower GOLD_JUNGLE = generator("gold_jungle", ModConfiguredFeatures.GOLD_JUNGLE_TREE);
+    public static final TreeGrower IRON_JUNGLE = generator("iron_jungle", ModConfiguredFeatures.IRON_JUNGLE_TREE);
 
-    public static final TreeGrower COPPER_SPRUCE = generator("copper_dark_oak", ModConfiguredFeatures.COPPER_SPRUCE_TREE);
-    public static final TreeGrower GOLD_SPRUCE = generator("gold_dark_oak", ModConfiguredFeatures.GOLD_SPRUCE_TREE);
-    public static final TreeGrower IRON_SPRUCE = generator("iron_dark_oak", ModConfiguredFeatures.IRON_SPRUCE_TREE);
+    public static final TreeGrower COPPER_DARK_OAK = generator("copper_dark_oak", ModConfiguredFeatures.COPPER_DARK_OAK_TREE);
+    public static final TreeGrower GOLD_DARK_OAK = generator("gold_dark_oak", ModConfiguredFeatures.GOLD_DARK_OAK_TREE);
+    public static final TreeGrower IRON_DARK_OAK = generator("iron_dark_oak", ModConfiguredFeatures.IRON_DARK_OAK_TREE);
 
     private static TreeGrower generator(String id, ResourceKey<ConfiguredFeature<?, ?>> featureRegistryKey) {
         return new TreeGrower(id, Optional.empty(), Optional.of(featureRegistryKey), Optional.empty());
