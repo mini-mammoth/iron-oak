@@ -1,51 +1,52 @@
 package com.minimammoth.ironoak;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
-import net.minecraft.client.render.model.json.ModelTransformation;
-import net.minecraft.client.render.model.json.ModelTransformationMode;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 
 @Environment(EnvType.CLIENT)
 public class FireBowlRenderer implements BlockEntityRenderer<FireBowlEntity> {
-    private BlockEntityRendererFactory.Context context;
+    private BlockEntityRendererProvider.Context context;
 
-    public FireBowlRenderer(BlockEntityRendererFactory.Context context) {
+    public FireBowlRenderer(BlockEntityRendererProvider.Context context) {
         this.context = context;
     }
 
     @Override
-    public void render(FireBowlEntity entity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
-        var renderer = MinecraftClient.getInstance().getItemRenderer();
+    public void render(FireBowlEntity entity, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
+        var renderer = Minecraft.getInstance().getItemRenderer();
 
         var input = entity.getInput();
         if (!input.isEmpty()) {
-            matrices.push();
+            matrices.pushPose();
 
             matrices.translate(0.5, 0.2, 0.5);
             matrices.scale(2.0f, 2.0f, 2.0f);
 
-            renderer.renderItem(input, ModelTransformationMode.GROUND, light, overlay, matrices, vertexConsumers, entity.getWorld(), 100);
-            matrices.pop();
+            renderer.renderStatic(input, ItemDisplayContext.GROUND, light, overlay, matrices, vertexConsumers, entity.getLevel(), 100);
+            matrices.popPose();
         }
 
         var output = entity.getOutput();
-        if (!output.isEmpty() && !entity.getCachedState().get(FireBowlBlock.LIT)) {
-            matrices.push();
+        if (!output.isEmpty() && !entity.getBlockState().getValue(FireBowlBlock.LIT)) {
+            matrices.pushPose();
 
             matrices.translate(0.5, 0.4, 0.5);
             matrices.scale(1.3f, 1.3f, 1.3f);
 
             // Rotate around the Y Axis
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotation((tickDelta + entity.getWorld().getTime()) * 0.06F % 360F));
+            matrices.mulPose(Axis.YP.rotation((tickDelta + entity.getLevel().getGameTime()) * 0.06F % 360F));
 
-            renderer.renderItem(output, ModelTransformationMode.GROUND, light, overlay, matrices, vertexConsumers, entity.getWorld(), 100);
-            matrices.pop();
+            renderer.renderStatic(output, ItemDisplayContext.GROUND, light, overlay, matrices, vertexConsumers, entity.getLevel(), 100);
+            matrices.popPose();
         }
     }
 }
