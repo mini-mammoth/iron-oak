@@ -107,6 +107,11 @@ in the PR instead of implying you did.
 - `./gradlew build` is incremental and Loom caches Minecraft; the first run after a
   version bump re-downloads and decompiles and can take several minutes. That is normal,
   not a hang.
+- **The Gradle wrapper is pinned to 8.11.1 and both bounds matter.** Below 8.11 the
+  publish plugin cannot configure; on 8.12 Loom 1.5 builds an **empty jar and still
+  reports `BUILD SUCCESSFUL`**. If you touch the wrapper, verify the artefact, not the
+  exit code: `unzip -l build/libs/iron-oak-*.jar | tail -1` must show ~347 files, not 2.
+  Details in [`docs/ops/release.md`](docs/ops/release.md).
 
 ---
 
@@ -217,6 +222,7 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | Label taxonomy | `docs/ops/issue-labels.md` |
 | Supervisor loop runbook | `docs/ops/orca-progress-loop.md` |
 | Migration plan and its stages | `docs/ops/version-migration.md` |
+| How to cut a release / publish to Modrinth or CurseForge | `docs/ops/release.md` |
 | Fabric API for the current version | https://docs.fabricmc.net/ |
 | What a Minecraft symbol is called | https://mappings.dev, or the `minecraft-fabric-lookup` skill |
 | Whether a Minecraft class/method still exists in this version | the `minecraft-fabric-lookup` skill — never answer this from memory |
@@ -235,6 +241,7 @@ All Gradle commands assume `JAVA_HOME` points at JDK 21 (see above).
 | Regenerate data | `./gradlew runDatagen` |
 | Clean | `./gradlew clean` |
 | Refresh after a version bump | `./gradlew --refresh-dependencies build` |
+| Dry-run a release upload | `./gradlew publishMods` (no tokens set = dry run) |
 | Check available versions | https://modmuss50.me/fabric.html |
 
 ---
