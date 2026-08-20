@@ -197,9 +197,10 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
   bulky and tells you nothing a provider class won't. Grep it at most.
 - **`ModBlocks.java` and `ModItems.java` are long but shallow** — the same three lines
   repeated across the matrix. Read one arm, not all eighteen.
-- **Do not read the decompiled Minecraft sources to answer an API question.** Use
-  [Fabric docs](https://docs.fabricmc.net/) or [mappings.dev](https://mappings.dev). A
-  decompiled class will fill your window and often answers a different version's question.
+- **Do not read the decompiled Minecraft sources to answer an API question.** Use the
+  `minecraft-fabric-lookup` skill — it resolves the question against the jar in seconds.
+  Extract one class if you must read vanilla source; opening the sources jar to browse
+  will fill your window and often answers a different version's question.
 - **Search before reading.** Grep for the exact symbol, then open at that line.
 
 ---
@@ -215,7 +216,8 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | Supervisor loop runbook | `docs/ops/orca-progress-loop.md` |
 | Migration plan and its stages | `docs/ops/version-migration.md` |
 | Fabric API for the current version | https://docs.fabricmc.net/ |
-| What a Minecraft symbol is called | https://mappings.dev |
+| What a Minecraft symbol is called | https://mappings.dev, or the `minecraft-fabric-lookup` skill |
+| Whether a Minecraft class/method still exists in this version | the `minecraft-fabric-lookup` skill — never answer this from memory |
 
 ---
 
