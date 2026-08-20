@@ -178,8 +178,9 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
             return InteractionResult.CONSUME;
         }
 
-        var recipe = entity.getRecipeFor(serverLevel, stackInHand);
-        if (recipe.isEmpty()) {
+        // Only asked whether a recipe exists — the duration is the entity's business, and it
+        // derives it from the recipe rather than being handed it here.
+        if (entity.getRecipeFor(serverLevel, stackInHand).isEmpty()) {
             // Nothing this block can do with the held item. Also covers a log offered to a
             // bowl whose input is already occupied, because getRecipeFor guards on that —
             // which is what made the old `!entity.getInput().isEmpty()` check below
@@ -191,7 +192,7 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
         var stackToStore = stackInHand.copy();
         stackToStore.setCount(1);
 
-        entity.setInput(stackToStore, recipe.get().cookingTime());
+        entity.setInput(stackToStore);
         world.playSound(player, pos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1f, 1f);
         stackInHand.shrink(1);
 
