@@ -136,6 +136,24 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
 
     /**
      * You can place any log into the fire bowl. But only one at a time.
+     * <p>
+     * The three return values are not interchangeable, and this block needs all three
+     * because it is both a container you empty by hand and a block you can set alight.
+     * {@code ServerPlayerGameMode.useItemOn} — and its identical client twin
+     * {@code MultiPlayerGameMode.performUseItemOn} — dispatches like this:
+     * <ol>
+     *   <li>a {@code Success} ({@code SUCCESS} / {@code SUCCESS_SERVER} / {@code CONSUME})
+     *       ends the interaction here;</li>
+     *   <li>{@code TRY_WITH_EMPTY_HAND} runs {@link #useWithoutItem} next, and only if
+     *       <em>that</em> does not consume does the held item get a turn;</li>
+     *   <li>{@code PASS} skips {@link #useWithoutItem} entirely and goes straight to
+     *       {@code itemStack.useOn(...)}.</li>
+     * </ol>
+     * So {@code PASS}, not {@code TRY_WITH_EMPTY_HAND}, is what hands an item this block
+     * has no use for back to that item — it is the direct successor of 1.20.4's
+     * {@code ActionResult.PASS}. {@code TRY_WITH_EMPTY_HAND} sent flint and steel into
+     * {@link #useWithoutItem}, which consumed the interaction whenever the bowl had
+     * something to remove, so a loaded bowl could not be lit.
      */
     @Override
     protected InteractionResult useItemOn(ItemStack stackInHand, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
@@ -143,32 +161,44 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
             return InteractionResult.PASS;
         }
 
-        // Recipes only resolve on the server. Returning TRY_WITH_EMPTY_HAND on the client
-        // lets vanilla route an empty hand to useWithoutItem as before.
+        // An empty hand is not an item interaction. TRY_WITH_EMPTY_HAND is what routes it
+        // on to useWithoutItem, which takes the contents back out. Safe on both sides: the
+        // contents are synced, so the client predicts the same answer the server will give.
+        if (stackInHand.isEmpty()) {
+            return InteractionResult.TRY_WITH_EMPTY_HAND;
+        }
+
+        // Burning recipes only resolve on a ServerLevel, so the client genuinely cannot
+        // tell an insertable log from a flint and steel. CONSUME suppresses the client's
+        // own prediction of the held item without claiming a swing — the swing then comes
+        // from whatever the server decides. This is the shape CampfireBlock uses when it
+        // knows it would handle the item but is not on the server. The interaction packet
+        // is sent regardless of what is returned here, so the server still gets its say.
         if (!(world instanceof ServerLevel serverLevel)) {
-            return stackInHand.isEmpty() ? InteractionResult.TRY_WITH_EMPTY_HAND : InteractionResult.SUCCESS;
+            return InteractionResult.CONSUME;
         }
 
         var recipe = entity.getRecipeFor(serverLevel, stackInHand);
-        if (recipe.isPresent()) {
-            var stackToStore = stackInHand.copy();
-            stackToStore.setCount(1);
-
-            // Use isEmpty instead of canInsert to ensure that we only have exactly one wood block to process
-            if (!entity.getInput().isEmpty()) {
-                return InteractionResult.FAIL;
-            }
-
-            entity.setInput(stackToStore, recipe.get().cookingTime());
-            world.playSound(player, pos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1f, 1f);
-            stackInHand.shrink(1);
-
-            entity.setChanged();
-
-            return InteractionResult.SUCCESS;
+        if (recipe.isEmpty()) {
+            // Nothing this block can do with the held item. Also covers a log offered to a
+            // bowl whose input is already occupied, because getRecipeFor guards on that —
+            // which is what made the old `!entity.getInput().isEmpty()` check below
+            // unreachable. 1.20.4 returned PASS in exactly this situation too.
+            return InteractionResult.PASS;
         }
 
-        return InteractionResult.TRY_WITH_EMPTY_HAND;
+        // One log at a time; getRecipeFor already refused if the input slot is taken.
+        var stackToStore = stackInHand.copy();
+        stackToStore.setCount(1);
+
+        entity.setInput(stackToStore, recipe.get().cookingTime());
+        world.playSound(player, pos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1f, 1f);
+        stackInHand.shrink(1);
+
+        // SUCCESS_SERVER, not SUCCESS: the client returned CONSUME above and therefore did
+        // not swing, so the swing has to be driven from here. Only a Success whose
+        // swingSource is SERVER makes ServerGamePacketListenerImpl swing the arm.
+        return InteractionResult.SUCCESS_SERVER;
     }
 
     /**
