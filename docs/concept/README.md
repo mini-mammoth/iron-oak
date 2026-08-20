@@ -3,10 +3,11 @@ domain: Concept
 domain_code: CON
 status: active
 last_updated: 2026-08-20
-version: 1
+version: 2
 related:
   - balance.md
   - roadmap.md
+  - ../design/README.md
   - ../requirements/README.md
   - ../../README.md
 ---
@@ -156,16 +157,21 @@ Recorded, not resolved. Each is referenced from the requirement it affects.
   insertion intended, or the bug behind #28? → [BRN-03](../requirements/burning.md)
 - **CON-Q4** Should washing be automatable at all, and if so as a block, a cauldron
   interaction, or a dispenser behaviour? The README promises "*coming soon*".
-  → [WSH-04](../requirements/washing.md)
+  → [WSH-04](../requirements/washing.md),
+  [design draft](../design/automated-washing.design.md)
 - **CON-Q5** Should infused saplings grow more slowly than vanilla ones as the cost of
-  farmed ore? Today they use vanilla growth exactly. → [TRE-02](../requirements/trees.md)
+  farmed ore? Today they use vanilla growth exactly. → [TRE-02](../requirements/trees.md),
+  [tree purity draft](../design/tree-purity.design.md)
 - **CON-Q6** Is there a target yield per tree, or is "roughly break-even by feel" the
-  intended balance statement? → [`balance.md`](balance.md)
+  intended balance statement? → [`balance.md`](balance.md). **This one now blocks work:**
+  the [tree purity draft](../design/tree-purity.design.md) cannot be balanced against an
+  unmeasured baseline.
 
 ## Version History
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-20 | 2 | Open questions CON-Q4/Q5/Q6 point at the design drafts that now discuss them (#36); CON-Q6 marked as blocking. |
 | 2026-08-20 | 1 | Initial concept, written from the shipped 1.20.4 code. Records the loop, the six design principles, the metal/wood scope, and six open questions. No behaviour was changed. |
 
 *Last updated: 2026-08-20*
