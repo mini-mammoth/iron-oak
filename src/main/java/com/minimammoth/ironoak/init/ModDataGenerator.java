@@ -13,6 +13,10 @@ public class ModDataGenerator implements DataGeneratorEntrypoint {
         LOGGER.info("Init data generators");
         FabricDataGenerator.Pack pack = fabricDataGenerator.createPack();
         pack.addProvider(ModWorldGenerator::new);
+        // Emits assets/iron_oak/items/*.json only. Requires the datagen run to inherit
+        // `client`: Fabric routes FabricModelProvider through a client-only mixin, so on
+        // a server-side datagen run this provider is never called. See build.gradle.
+        pack.addProvider(ModModelGenerator::new);
     }
 
     @Override

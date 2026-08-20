@@ -45,8 +45,17 @@ loom {
 
     runs {
         // This adds a new gradle task that runs the datagen API: "gradlew runDatagen"
+        //
+        // `inherit client`, not `server`. Fabric has two datagen entry points, and the
+        // model providers only exist on one of them: ModelProviderMixin — the mixin that
+        // routes FabricModelProvider's generateBlockStateModels/generateItemModels — is
+        // declared under "client" in fabric-data-generation-api-v1.client.mixins.json.
+        // On a server-side run that mixin is not applied, so a FabricModelProvider is
+        // silently bypassed and vanilla's own generators run in its place. Nothing fails;
+        // the output is simply wrong. Client-side, Fabric's MinecraftMixin runs datagen
+        // and exits before the game window opens.
         datagen {
-            inherit server
+            inherit client
             name "Data Generation"
             vmArg "-Dfabric-api.datagen"
             vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
