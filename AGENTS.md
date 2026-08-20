@@ -12,7 +12,9 @@ gates, issue labels, supervisor loop — lives in
 ## The product
 
 **Iron Oak** — a Minecraft **Fabric** mod that adds ore-infused trees, so you can farm
-ingots instead of mining them. Repo: `mini-mammoth/iron-oak`, MIT, public.
+ingots instead of mining them. Repo: `mini-mammoth/iron-oak`, public source, licensed
+under the Iron Oak License 1.0 (all rights reserved, modpack use granted — see
+[`LICENSE`](LICENSE)). It is **not** open source; do not describe it as MIT.
 
 The gameplay loop the mod implements, in order — know it before you touch a recipe:
 
