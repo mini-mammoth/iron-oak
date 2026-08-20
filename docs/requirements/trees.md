@@ -87,7 +87,7 @@ There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 
 ### TRE-04: Datagen reproduces the shipped tree features
 
-**Status:** broken · **Issue:** — (needs one; see note)
+**Status:** broken · **Issue:** #30
 
 WHEN `./gradlew runDatagen` runs THEN the emitted configured features SHALL be identical to
 the committed ones — datagen output is generated, so re-running it must be a no-op.
@@ -109,7 +109,7 @@ growing each other's trees. The shipped 1.20.4 jar is unaffected, because it shi
 committed JSON.
 
 **Out of scope for the documentation baseline** — fixing it is a code change in
-`area:worldgen` and needs its own issue.
+`area:worldgen`, tracked as #30.
 
 **Acceptance criteria** (verify: `runDatagen`)
 - [ ] `./gradlew runDatagen` leaves `git status` clean
@@ -185,6 +185,6 @@ modifications (`ModWorldGenerator` writes `configured_feature/` only).
 
 | Date | Version | Changes |
 |------|---------|---------|
-| 2026-08-20 | 1 | Initial. Records the datagen/source divergence for jungle, spruce and dark oak as TRE-04 (`broken`), verified against the committed generated JSON. |
+| 2026-08-20 | 1 | Initial. Records the datagen/source divergence for jungle, spruce and dark oak as TRE-04 (`broken`, #30), verified against the committed generated JSON. |
 
 *Last updated: 2026-08-20*
