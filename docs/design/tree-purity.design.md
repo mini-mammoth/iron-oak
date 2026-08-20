@@ -3,7 +3,7 @@ domain: Tree Purity
 domain_code: DES
 status: draft
 last_updated: 2026-08-20
-version: 1
+version: 2
 related:
   - README.md
   - leaf-resources.design.md
@@ -45,9 +45,12 @@ toward baseline** if left alone — so an iron tree is a crop under care, not an
 - **Existing worlds must not break.** Every infused log and sapling already in a world has no
   purity; whatever the design is, those have to resolve to something sane without a data
   fixer.
-- **Items must still stack.** A farm that produces five partial stacks of the same log
-  because each carries a slightly different number is a worse game than one without purity at
-  all. This constraint kills the most obvious implementation — see Option A.
+- **Items must still stack.** Stacking compares components **exactly**: in 1.21.11 the test is
+  `ItemStack.isSameItemSameComponents(a, b)` (alongside `matches`, which adds the count, and
+  `isSameItem`, which ignores components) — verified against the mapped jar. There is no
+  tolerance, so two logs at purity 37 and 38 are as unstackable as a stone and an apple. A farm
+  that produces forty single-item slots of the same log is a worse game than one without purity
+  at all. This constraint kills the most obvious implementation — see Option A.
 - **No test suite.** Anything that only shows up statistically over many generations is
   effectively unverifiable here. The mechanic has to be observable in a single `runClient`
   session.
@@ -58,8 +61,8 @@ toward baseline** if left alone — so an iron tree is a crop under care, not an
 
 A `iron_oak:purity` data component on the item, mirrored in the sapling's block entity.
 
-**For:** no new blocks, matrix untouched, idiomatic for the target version, and the value
-flows naturally along the chain (sapling → log → ash → shred).
+**For:** no new blocks, matrix untouched, and the value flows naturally along the chain
+(sapling → log → ash → shred).
 **Against:** **items with different components do not stack.** A continuous value means a
 harvest of 40 logs at purities 37, 38, 41, … is 40 unstackable items. This alone disqualifies
 the continuous form.
@@ -81,14 +84,38 @@ The same component as Option A, but the value is one of a small fixed set of gra
 Purity is a grade, not a percentage.
 
 **For:** keeps Option A's zero matrix cost *and* stacks properly — all grade-2 iron oak logs
-are one stack. Legible via item name or tooltip ("Iron Infused Oak Log — Refined"). Existing
-items with no component read as the baseline grade, so old worlds keep working with no fixer.
+are one stack, so a harvest is at most one stack per grade. Legible via item name or tooltip
+("Iron Infused Oak Log — Refined"). Existing items with no component read as the baseline
+grade, so old worlds keep working with no fixer.
 **Against:** still invisible in the world until the player looks; needs a tooltip and probably
 a model or colour tint per grade to be properly readable.
 **Matrix cost:** none. Blocks stay at 18 + 18.
 
+**Coarse only where stacking applies.** Blocks do not stack, so the *planted* sapling can carry
+a fine-grained value in its block entity for free; only the harvested item is quantised.
+Breeding can then compute in small steps ("this tree is at 62, three generations of care bring
+it to 71") and the grade is derived at harvest. The player reads a grade, the system keeps the
+resolution — which is also what makes the per-generation drift perceptible without grades
+flickering.
+
+| Where | Resolution | Why |
+|---|---|---|
+| Planted sapling (block entity NBT) | fine, e.g. 0–100 | Never stacks, so it costs nothing |
+| Harvested log / sapling item | coarse, N grades | `isSameItemSameComponents` applies here |
+
 **Recommendation: Option C.** It is Option A with the stacking problem removed, and the
-grade count becomes a balance knob rather than a code change. Whether the grade also shows on
+grade count becomes a balance knob rather than a code change.
+
+Two API facts checked against the 1.21.11 jar, because the option stands or falls on them:
+
+- **Existing recipes are unaffected.** `Ingredient` is a `HolderSet<Item>` predicate
+  (`acceptsItem(Holder<Item>)`, `items()`) — it matches on item and tag, not on components. The
+  burning recipe on `iron_oak:<metal>_infused_logs` keeps accepting every grade, and the grade
+  only has to be read where it decides yield.
+- **Registration fits the existing style.**
+  `DataComponentType.builder().persistent(codec).networkSynchronized(streamCodec).build()`,
+  registered into `Registries.DATA_COMPONENT_TYPE` with plain `Registry.register` as in
+  `init/Mod*.java`. No Fabric-specific API, no mixin — the mixin config is still empty. Whether the grade also shows on
 the *placed* sapling as a blockstate (so a plantation is readable at a glance) is a separate,
 cheaper decision — the sapling is one block either way.
 
@@ -196,6 +223,7 @@ open with its logs readable as baseline. Both are exactly the class of failure t
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-20 | 2 | Records the verified 1.21.11 facts the recommendation rests on: `isSameItemSameComponents` for stacking, `Ingredient` matching on items not components, `Registries.DATA_COMPONENT_TYPE` for registration. Adds the fine-on-the-block, coarse-on-the-item split. |
 | 2026-08-20 | 1 | Initial draft (#36). Carrier options weighed; continuous components rejected on stacking, per-grade blocks rejected on matrix cost. Degradation decided as per-generation drift. Seven open questions. |
 
 *Last updated: 2026-08-20*
