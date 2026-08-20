@@ -45,8 +45,9 @@ repetitive — when you add a metal or a wood type you touch every arm of it.
 | Build | Gradle + **Fabric Loom** | `build.gradle`, `gradle.properties` |
 | Language | Java | `src/main/java/com/minimammoth/ironoak/` |
 | Registration | plain `Registry.register` in `init/Mod*.java` — no DeferredRegister (that is Forge/NeoForge) | `init/` |
-| Data generation | Fabric datagen API, custom `runDatagen` Gradle task | `init/ModDataGenerator.java` → `src/main/generated/` |
-| Hand-written resources | recipes, loot tables, tags, models, textures, lang | `src/main/resources/{data,assets}/` |
+| Data generation | Fabric datagen API, custom `runDatagen` Gradle task — the task **inherits `client`**, because Fabric routes model providers through a client-only mixin | `init/ModDataGenerator.java` → `src/main/generated/` |
+| Hand-written resources | recipes, loot tables, tags, models, blockstates, textures, lang | `src/main/resources/{data,assets}/` |
+| Generated resources | worldgen, and the `assets/iron_oak/items/` client item definitions | `src/main/generated/` |
 | Access widener | present but **inert** — its only line is a comment, so it widens nothing | `src/main/resources/iron_oak.accesswidener` |
 | Mixins | **config exists but is empty** — no mixin classes, no `mixin` package | `src/main/resources/iron-oak.mixins.json` |
 | Resource generator | a Go helper that emits repetitive resource JSON | `scripts/generate.go` |

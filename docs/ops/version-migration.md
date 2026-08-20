@@ -163,7 +163,11 @@ Acceptance for 1.21.11, in `runClient`:
 - [ ] Burn a log in a fire bowl → ash; output renders and spins when unlit
 - [ ] Wash ash in water → shreds
 - [ ] 9 shreds → raw ore; smelt a shred → nugget
-- [ ] All 36 blocks and 9 items present and correctly named in the mod's creative tab
+- [ ] All 36 blocks and 9 items present and correctly named in the mod's creative tab.
+      **The tab is on the second creative page** — click the `>` at the top right of the
+      creative screen, or press `PAGE_DOWN`. Fabric puts every non-vanilla tab on page 2
+      and up; page 1 holds only the 14 vanilla tabs. A tab that is "missing" is on page 2
+      until proven otherwise (see #26).
 - [ ] Place items in a bowl, save and reload, items still there
 - [ ] Hopper automation still feeds the bowl
 - [ ] `./gradlew runServer` starts (environment is `*`, so a client-only regression is real)
@@ -184,6 +188,13 @@ and every one of them will bite a second time:
   `recipes` → `recipe`. Everything compiles, the jar builds, CI is green — and in-game the
   recipes, loot tables or tags are simply absent. There is no test suite to catch it, which
   is why the acceptance below is in-game and not a green build.
+- **A missing *asset* layer is quieter still.** 1.21.4 put `assets/<ns>/items/<id>.json`
+  between an item and its model, and this mod shipped none of them until #26 — every stack
+  rendered as the missing-texture cube. Nothing was logged, and nothing could have been:
+  `ClientItemInfoLoader` and `ItemModelResolver` have no diagnostic for an absent
+  definition, they fall back to `MissingItemModel` in silence. So on the assets side a
+  clean `latest.log` is not evidence of anything. Check that the files exist and that what
+  they point at exists.
 - **The access widener is not source code.** `migrateMappings` will not translate it. Ours
   is inert (its only entry is a comment), but a real one must be done by hand via
   https://mappings.dev
