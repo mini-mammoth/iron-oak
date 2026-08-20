@@ -11,8 +11,8 @@ related:
 
 # Version Migration — 1.20.4 → 26.2
 
-The mod currently targets **Minecraft 1.20.4** (`mod_version=1.2.1+1.20.4`). The goal is
-**26.2**, with a **1.21.11 release tagged on the way**.
+`main` now targets **Minecraft 1.21.11** (`mod_version=1.3.0+1.21.11`), migrated up from
+1.20.4. The goal is **26.2**, with a **1.21.11 release tagged on the way**.
 
 This document is the plan and the gate list. It is process policy, not a task briefing —
 workers get scoped tickets, not this file.
@@ -26,22 +26,16 @@ Two ecosystem facts decide the shape of the work:
 1. **Minecraft 26.1 and later are unobfuscated.** Yarn and Intermediary stopped being
    updated after **1.21.11** — the last yarn artifact on `maven.fabricmc.net` is
    `1.21.11+build.6` (published 2026-05-27), and there is no `26.x` yarn at all. This mod
-   uses yarn today.
+   used yarn until this migration.
 2. **Fabric API renamed its own surface to official names in 26.1.** Not backwards
    compatible.
 
 Fabric's own guidance is explicit: **migrate the mappings before bumping the Minecraft
-version.**
+version.** See "The ordering, corrected" below for how that actually played out — the
+mapping migration went first, on 1.20.4, not on 1.21.11 as originally planned here.
 
-That fixes the order, and it is stricter than it first looks: `migrateMappings` rewrites
-**source**, so it needs a tree that resolves. Run it after a four-release version bump and
-it has nothing to work with. So the mapping migration goes **first, on 1.20.4** — where
-the tree still compiles and a green build proves the mapping change alone worked. Only
-then does the Minecraft version move.
-
-The stage numbering below reflects that: mappings, then version, then 26.2. It also happens
-to be free reach — 1.21.11 is a version worth shipping (see below), and we pass through it
-anyway.
+That gives a forced ordering, and it happens to be free reach: 1.21.11 is a version worth
+shipping (see below), and we pass through it anyway.
 
 ### Why 26.2 and not stopping at 1.21.11
 
@@ -62,148 +56,111 @@ the next planning round rather than trusting these.
 
 ---
 
+## Status
+
+| Stage | State |
+|---|---|
+| Yarn → Mojang official mappings, still on 1.20.4 | **done**, build green |
+| 1.20.4 → 1.21.11 | **done**, build green, `runDatagen` green |
+| 1.21.11 in-game verification | **not done** — blocking gate, see below |
+| 1.21.11 release tag | not done |
+| 1.21.11 → 26.2 | toolchain proven, ~52 source errors remain (branch `migration/26.2`) |
+
+---
+
+## The ordering, corrected
+
+The original plan here said: bump to 1.21.11 on Yarn first, then migrate mappings. That
+was wrong, and the reason is worth keeping.
+
+`migrateMappings` rewrites **source**, so it needs a tree that resolves. Doing the version
+bump first means running the mapping migration on a codebase that does not compile.
+Migrating the mappings **first**, while still on 1.20.4, means only one variable changes
+and a green build proves it worked. That is the order actually used:
+
+1. **Mappings, on 1.20.4.** `./gradlew migrateMappings --mappings "net.minecraft:mappings:1.20.4"`
+   on Loom 1.5 — the task has existed far longer than the 1.13 floor the porting guide
+   mentions, and it worked. Output went to `remappedSrc/`, non-destructively.
+2. **Version bump, on Mojang mappings.** Toolchain lifted wholesale from Fabric's own
+   1.21.11 example mod branch rather than assembled by hand.
+3. **26.2**, on the same mappings.
+
+### What `migrateMappings` cannot do
+
+Three classes of leftover, all of which need a human pass:
+
+- **Wildcard imports.** `import net.minecraft.item.*;` is left untouched — the task cannot
+  resolve a wildcard. It had already added every explicit import needed, so the wildcards
+  were simply dead lines, but they fail the build with a confusing "package does not
+  exist".
+- **Types it cannot resolve** get emitted as the obfuscated name: one import came out as
+  `import I;`. The correct type was already imported alongside it.
+- **Anything that is not Java.** The access widener names classes as strings. Ours turned
+  out to be inert (its only entry is a comment), but a real one must be translated by
+  hand via https://mappings.dev
+
+---
+
 ## Target versions
 
-| Stage | Minecraft | Mappings | Loader | Fabric API | Java |
-|-------|-----------|----------|--------|-----------|------|
-| now | 1.20.4 | yarn 1.20.4+build.3 | 0.15.7 | 0.96.4+1.20.4 | 17 |
-| 1 | **1.21.11** | yarn 1.21.11+build.6 | 0.19.3 | 0.141.6+1.21.11 | 21 |
-| 2 | 1.21.11 | **Mojang official** | 0.19.3 | 0.141.6+1.21.11 | 21 |
-| 3 | **26.2** | Mojang official | 0.19.3 | 0.158.0+26.2 | 21 |
+| Stage | Minecraft | Mappings | Loader | Fabric API | Java | Loom plugin |
+|-------|-----------|----------|--------|-----------|------|-------------|
+| was | 1.20.4 | yarn 1.20.4+build.3 | 0.15.7 | 0.96.4+1.20.4 | 17 | `fabric-loom` 1.5 |
+| **now** | **1.21.11** | **Mojang official** | 0.19.3 | 0.141.6+1.21.11 | **21** | `net.fabricmc.fabric-loom-remap` 1.17-SNAPSHOT |
+| next | 26.2 | Mojang official | 0.19.3 | 0.158.0+26.2 | **25** | `net.fabricmc.fabric-loom` 1.17-SNAPSHOT |
 
-Loom must be **1.13 or newer** for `migrateMappings`; the newest stable line is
-`1.17.19` (`1.18.0` is alpha only). Verify against
-`https://maven.fabricmc.net/fabric-loom/fabric-loom.gradle.plugin/maven-metadata.xml`
-before pinning — these move.
+Gradle 9.5.1 for both. Note the plugin id: the `-remap` variant is for obfuscated
+Minecraft (≤ 1.21.11); 26.1+ ships unobfuscated and uses the plain `fabric-loom`, with
+mod dependencies on `implementation` instead of `modImplementation` and no `mappings`
+line at all.
 
-**Java goes 17 → 21.** Update all three places: `build.gradle` (`targetJavaVersion`,
-`options.release`, `sourceCompatibility`/`targetCompatibility`), `fabric.mod.json`
-(`"java": ">=21"`), and `iron-oak.mixins.json` (`compatibilityLevel: "JAVA_21"`).
-
----
-
-## Stage 1 — yarn → Mojang official mappings, still on 1.20.4
-
-Mechanical, and mostly done by Loom. Goes first, while the tree still compiles on 1.20.4 — that way only the mapping set changes and a green build is proof.
-
-```bash
-# 1. Back up. The task rewrites your sources in place.
-git switch -c migration/mojmap
-
-# 2. Run the migration BEFORE editing build.gradle or gradle.properties.
-#    Older Loom writes to --output instead of overwriting in place; check
-#    `gradlew help --task migrateMappings` for which flags your Loom has.
-export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
-./gradlew migrateMappings --mappings "net.minecraft:mappings:1.20.4" \
-  --output remappedSrc
-
-# 3. Now switch the mappings dependency in build.gradle:
-#      -  mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-#      +  mappings loom.officialMojangMappings()
-#    and drop yarn_mappings from gradle.properties.
-
-# 4. Rebuild and clean up what the task could not translate.
-./gradlew --refresh-dependencies build
-```
-
-Caveats, from Fabric's own porting docs:
-
-- Loom **1.13+** is what the porting guide says; the task itself is much older and has
-  worked on Loom 1.5. Check what your Loom offers before assuming you must bump it first.
-- Do **not** touch `gradle.properties` or `build.gradle` until after the task has run.
-- The task does not translate Kotlin — irrelevant here, this mod is pure Java.
-- It leaves behind what it cannot resolve: string-literal class references, and the
-  access widener, which is **not** source code and must be translated by hand.
-  `iron_oak.accesswidener` names `net/minecraft/recipe/CookingRecipeSerializer` in yarn
-  form; under Mojmap that path changes. Use https://mappings.dev to translate it.
-- Comments and identifiers naming yarn types (`Identifier`, `AbstractBlock`) still read as
-  yarn afterwards. Renaming them is cosmetic; do it in a separate commit so the mechanical
-  diff stays reviewable.
-
-Acceptance: build green, **and** the same in-game loop as stage 1. A mapping migration
-that compiles can still have swapped two same-signature methods.
-
-Nothing is released at the end of this stage: it is a refactor with no behaviour change,
-and the version is still 1.20.4. The 1.21.11 release tag comes after stage 2.
+**Java jumps twice**: 17 → 21 for 1.21.11, then 21 → 25 for 26.2. Three places each time:
+`build.gradle` (`options.release`, `sourceCompatibility`/`targetCompatibility`),
+`fabric.mod.json` (`"java"`), and `iron-oak.mixins.json` (`compatibilityLevel`).
 
 ---
 
-## Stage 2 — 1.20.4 → 1.21.11, on Mojang mappings
+## The blocking gate: nothing has been verified in-game
 
-The largest stage by far. Four Minecraft releases' worth of breaking change, and the mod
-touches most of the areas that changed.
+`./gradlew build` and `./gradlew runDatagen` are green. That is the whole of the evidence.
+This repo has **no test suite**, so a green build says the mod compiles and remaps — it
+says nothing about whether the mod works.
 
-**Known breaking areas, in the order they will bite.** Treat this as a map of where to
-look, not as a verified changelog — confirm each against the compiler and the Fabric docs
-for the target version.
+Several changes in the 1.21.11 migration are behavioural and can only be checked by
+playing:
 
-| Area | What changes | Files |
-|---|---|---|
-| Identifiers | `new Identifier(a, b)` → `Identifier.of(a, b)`. ~200 call sites. | `init/ModItems`, `init/ModBlocks`, `init/ModRecipes` |
-| Settings objects | `FabricItemSettings` / `FabricBlockSettings` are gone — use vanilla `Item.Settings` / `AbstractBlock.Settings` (`.copyOf(...)`, `.requiresTool()` etc. move accordingly). | `init/ModItems`, `init/ModBlocks` |
-| Registry keys in settings | From 1.21.2 an item's and block's settings must carry their own registry key. The idiomatic shape becomes a `register(name, factory, settings)` helper rather than static construction followed by `Registry.register`. **This restructures both registration classes**, it is not a find-and-replace. | `init/ModItems`, `init/ModBlocks` |
-| Data components | 1.20.5 replaced NBT-based `ItemStack` data with components. Relevant only where the mod reads/writes stack data. | `FireBowlEntity`, `helper/ImplementedInventory` |
-| Recipes | `AbstractCookingRecipe`'s constructor and the serializer shape both changed; `createIcon` is gone; serializers moved to codec pairs. `BurningRecipe`/`WashingRecipe` subclass `AbstractCookingRecipe` and register via `CookingRecipeSerializer`, so both are affected. **Expect this to be the hardest file in the migration.** | `BurningRecipe`, `WashingRecipe`, `init/ModRecipes` |
-| Access widener | Widens `CookingRecipeSerializer$RecipeFactory`. If that class or nested type no longer exists, the widener fails the build — and it may simply no longer be needed. | `iron_oak.accesswidener` |
-| Resource directories | `loot_tables` → `loot_table`, `tags/blocks` → `tags/block`, `tags/items` → `tags/item`, `recipes` → `recipe`. Directory renames, silently ignored if missed — the mod loads and the recipes do not exist. | `resources/data/**` |
-| Pack format | `pack.mcmeta`/`fabric.mod.json` pack version bumps. | `resources/` |
-| Datagen | Provider constructor signatures and the `RegistryWrapper` plumbing changed more than once in this range. | `init/ModDataGenerator`, `init/ModConfiguredFeatures` |
+- **`ofLegacyCopy` vs `ofFullCopy`** on block settings. `ofFullCopy` also copies the source
+  block's loot table, which would make an infused log drop a plain vanilla log.
+  `ofLegacyCopy` was chosen deliberately. **Verify the logs drop themselves.**
+- **`playerWillDestroy` replacing `onRemove`** for dropping stored items. The new
+  `affectNeighborsAfterRemoval` runs after the block entity is gone, so the drop moved to
+  a pre-removal hook. This covers a player breaking the bowl; it may **not** cover
+  destruction by explosion or piston, which the old hook did. **Verify breaking a
+  non-burning bowl returns its contents.**
+- **`useWithoutItem` / `useItemOn` split.** The old single `use` handled both empty hand
+  and held item. **Verify both: empty hand takes items out, a log goes in.**
+- **Frost walker.** `EnchantmentHelper.hasFrostWalker` was removed; the enchantment is now
+  resolved from the registry. **Verify frost walker boots still prevent the burn.**
+- **The block entity's save format** moved to `ValueInput`/`ValueOutput`. **Verify a bowl
+  with items in it survives a world reload.**
+- **Recipe JSON** was rewritten for all 15 recipes. **Verify each of the three metals
+  end-to-end.**
+- **`FURNACE_MISC`** was picked for `recipeBookCategory()`, which is new and required.
+  Check it does not put the mod's recipes somewhere silly in the recipe book.
+- **The renderer** was rewritten for the two-phase render-state pipeline. **Verify the
+  input item shows in the bowl and the output spins once the fire is out.**
 
-### The trap in this stage
+Acceptance for 1.21.11, in `runClient`:
 
-**A missed resource-directory rename does not fail the build.** Everything compiles, the
-jar builds, CI is green — and in-game the recipes, loot tables or tags are simply absent.
-There is no test suite to catch it. So stage 1's acceptance is **not** a green build:
-
-- [ ] `./gradlew build` green (Linux + Windows via CI)
-- [ ] `./gradlew runDatagen` produces no unexpected diff
-- [ ] `./gradlew runClient`, and in-game: craft infused bone meal, infuse a sapling, grow
-      a tree, burn a log in a fire bowl, wash the ash, craft a raw ore. **The whole loop
-      from `README.md`, for at least one metal.** Anything less does not verify the
-      migration.
-- [ ] All 18 log/sapling pairs present in the creative tab (the 6×3 matrix)
-
-### Suggested ticket split
-
-`area:build` first and alone (it is a barrier — see
-[`orca-progress-loop.md`](orca-progress-loop.md)), then the code areas. Do **not** try to
-land stage 1 as one PR: it will not be reviewable, and a compaction mid-way loses
-everything.
-
-1. `area:build` — version bump in `gradle.properties`, Loom + Gradle wrapper, Java 21 in
-   all three places, CI modernised. **Will not compile at the end of this ticket** — that
-   is expected and must be stated in the ticket, or a worker will try to fix the whole mod
-   inside it.
-2. `area:items` + `area:blocks` — settings objects, identifiers, the registry-key
-   restructure.
-3. `area:recipes` — the cooking-recipe rewrite and the access widener.
-4. `area:assets` — resource directory renames and pack formats.
-5. `area:datagen` — provider signatures, then regenerate and commit.
-6. `area:client` — renderer API drift.
-
-Tickets 2–6 each depend on 1. Because the tree does not compile until the last of them
-lands, they are **not** independently mergeable — this is the one case in this repo where
-a shared integration branch beats PR-per-ticket. Cut them as commits on one
-`migration/1.21.11` branch, in order, and open a single PR for stage 1.
-
-That is a deliberate exception to "1 PR = 1 issue", and the reason is worth stating: with
-no compiling intermediate state there is nothing for CI to verify per-ticket, so the usual
-benefit of separate PRs is absent while the rebase cost is not.
-
----
-
-## Stage 3 — 1.21.11 → 26.2
-
-- Bump `minecraft_version` to `26.2`, `fabric_version` to `0.158.0+26.2`.
-- Fabric API's own classes were renamed to official names in 26.1. Every
-  `net.fabricmc.fabric.api.*` import is a candidate.
-- Vanilla changes between 1.21.11 and 26.2 on top of that.
-- Fabric's docs now target 26.2 and show Mojmap throughout, so from here the docs and the
-  code finally speak the same language: https://docs.fabricmc.net/
-
-Acceptance: as stage 1, plus a check that the mod loads on a **dedicated server**
-(`./gradlew runServer`) — `environment` is `*` in `fabric.mod.json`, so a client-only
-regression is a real risk and the fire bowl renderer is the obvious place for one.
+- [ ] Craft infused bone meal (all three metals)
+- [ ] Infuse a sapling, grow the tree, cut it, confirm the log drops itself
+- [ ] Burn a log in a fire bowl → ash; output renders and spins when unlit
+- [ ] Wash ash in water → shreds
+- [ ] 9 shreds → raw ore; smelt a shred → nugget
+- [ ] All 36 blocks and 9 items present and correctly named in the mod's creative tab
+- [ ] Place items in a bowl, save and reload, items still there
+- [ ] Hopper automation still feeds the bowl
+- [ ] `./gradlew runServer` starts (environment is `*`, so a client-only regression is real)
 
 ---
 
@@ -227,9 +184,8 @@ free release, and it is out of scope here.
 
 | Gate | When | Who |
 |---|---|---|
-| Plan approved | before the first `area:build` ticket | human |
-| Stage 1 build green | before starting stage 2 | orchestrator — a mapping-only change must not alter behaviour |
-| Stage 2 in-game loop verified | before merging stage 2 | human, on the worker's `runClient` evidence |
+| Stage 1 plan approved | before the first `area:build` ticket | human |
+| Stage 1 in-game loop verified | before merging stage 1 | human, on the worker's `runClient` evidence |
 | 1.21.11 release tagged | after stage 2 | human |
 | Stage 3 started | after 1.21.11 is released | human |
 | Old-version branch policy | before `main` moves | human |
