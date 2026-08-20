@@ -1,5 +1,8 @@
 # Iron Oak
 
+[![License: Iron Oak 1.0](https://img.shields.io/badge/license-Iron_Oak_1.0-blue)](LICENSE)
+[![Modpacks: allowed](https://img.shields.io/badge/modpacks-allowed-brightgreen)](LICENSE#L19)
+
 This mod aims to add several ore infused oak trees. This allows you to plant and farm ingot instead of mining them in
 the dark.
 
