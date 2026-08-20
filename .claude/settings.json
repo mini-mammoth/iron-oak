@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew build*)",
+      "Bash(./gradlew clean*)",
+      "Bash(./gradlew runDatagen*)",
+      "Bash(./gradlew tasks*)",
+      "Bash(./gradlew dependencies*)",
+      "Bash(./gradlew --refresh-dependencies*)",
+      "Bash(java -version)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git switch *)",
+      "Bash(git checkout *)",
+      "Bash(git restore *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git grep*)",
+      "Bash(gh issue *)",
+      "Bash(gh pr *)",
+      "Bash(gh label list*)",
+      "Bash(gh repo view*)",
+      "Bash(gh api repos/mini-mammoth/iron-oak/*)",
+      "Bash(orca worktree *)",
+      "Bash(orca terminal *)",
+      "Bash(orca orchestration *)",
+      "Bash(orca status*)",
+      "Bash(orca automations *)",
+      "WebFetch(domain:docs.fabricmc.net)",
+      "WebFetch(domain:fabricmc.net)",
+      "WebFetch(domain:maven.fabricmc.net)",
+      "WebFetch(domain:meta.fabricmc.net)",
+      "WebFetch(domain:mappings.dev)",
+      "WebFetch(domain:api.modrinth.com)",
+      "WebFetch(domain:modrinth.com)",
+      "WebFetch(domain:modmuss50.me)",
+      "WebFetch(domain:minecraft.wiki)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Edit(src/main/generated/**)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(gh label create*)",
+      "Bash(gh label edit*)",
+      "Bash(gh label delete*)"
+    ]
+  }
+}
