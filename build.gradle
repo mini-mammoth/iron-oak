@@ -28,6 +28,19 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Layer 1 of docs/strategy/testing.md: plain JUnit with the loader booted and no
+    // world. The version is pinned to loader_version on purpose — loader-junit boots the
+    // very loader it ships against, and a mismatch fails at class-load time with a stack
+    // trace that blames Knot rather than the version.
+    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+
+    // fabric-loader-junit pulls in the Jupiter engine but not the parameterised runner,
+    // and the 6x3 matrix tests want one named case per arm rather than one case that
+    // stops at the first bad arm. The BOM keeps both halves on the version loader-junit
+    // was built against.
+    testImplementation platform("org.junit:junit-bom:5.10.0")
+    testImplementation "org.junit.jupiter:junit-jupiter"
 }
 
 processResources {
@@ -68,6 +81,22 @@ loom {
 
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
+}
+
+// `./gradlew build` runs this, so a failing test fails the build — which is the whole
+// point of #40. See docs/strategy/testing.md for what belongs here and what does not.
+test {
+    useJUnitPlatform()
+
+    // fabric-loader-junit boots Knot from a JUnit LauncherSessionListener and defaults to
+    // the client side. Nothing under src/test touches rendering, and a server-side boot
+    // keeps client-only mixins out of the picture, so CI needs no display.
+    systemProperty "fabric.side", "server"
+
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+    }
 }
 
 java {
