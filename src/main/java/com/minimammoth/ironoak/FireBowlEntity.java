@@ -112,18 +112,27 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
         items.set(INPUT_SLOT, input);
         this.cookingTime = 0;
         this.cookingTotalTime = cookingTotalTime;
+        markUpdated();
     }
 
     public ItemStack getOutput() {
         return items.get(OUTPUT_SLOT);
     }
 
+    /**
+     * Drops the stored items. Server-side only — {@code useWithoutItem} runs on both sides,
+     * and vanilla guards the equivalent path the same way
+     * ({@code JukeboxBlockEntity.popOutTheItem}). Without the guard the client spawns its
+     * own item entities and wipes its copy of a container it does not own.
+     */
     public void spawnContainingItems() {
+        if (level == null || level.isClientSide()) {
+            return;
+        }
+
         // Drop all stored items
         Containers.dropContents(level, worldPosition, items);
-        items.clear();
-
-        setChanged();
+        clearContent();
     }
 
     public static void clientTick(Level world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
@@ -163,7 +172,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
 
                 // From now on the unlit timer ticks.
                 fireBowl.unlitTime = 0;
-                world.sendBlockUpdated(pos, state, state, 3);
+                fireBowl.markUpdated();
             }
         } else {
             fireBowl.unlitTime++;
@@ -227,15 +236,63 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
         return slot == OUTPUT_SLOT;
     }
 
+    /**
+     * Pushes the container to clients.
+     * <p>
+     * {@code setChanged()} on its own only marks the chunk dirty for saving — it sends
+     * nothing. {@code FireBowlRenderer.extractRenderState} reads the input and output
+     * stacks off the <em>client's</em> block entity, so any slot change that skips this is
+     * invisible in the world until the chunk reloads. Same shape as
+     * {@code CampfireBlockEntity.markUpdated}.
+     * <p>
+     * Every write to {@link #items} outside {@code loadAdditional} has to end up here.
+     */
+    private void markUpdated() {
+        if (level == null) {
+            return;
+        }
+
+        setChanged();
+        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+    }
+
     @Override
     public void setItem(int slot, ItemStack stack) {
         ImplementedInventory.super.setItem(slot, stack);
+        markUpdated();
+    }
 
-        // As the items are used for the custom entity renderer we have trigger a sync to ensure that the items are
-        // also available for the client.
-        if (level != null) {
-            this.setChanged();
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+    /**
+     * The hopper's extraction path. {@code ImplementedInventory} only marks dirty here, so
+     * without this a hopper pulling the output would leave it rendered in the bowl.
+     */
+    @Override
+    public ItemStack removeItem(int slot, int count) {
+        ItemStack removed = ImplementedInventory.super.removeItem(slot, count);
+        if (!removed.isEmpty()) {
+            markUpdated();
         }
+
+        return removed;
+    }
+
+    /**
+     * Vanilla's "no update" in the name is about save-dirtying, not about the client. The
+     * renderer reads this container either way, so the block update still has to go out.
+     */
+    @Override
+    public ItemStack removeItemNoUpdate(int slot) {
+        ItemStack removed = ImplementedInventory.super.removeItemNoUpdate(slot);
+        if (!removed.isEmpty()) {
+            markUpdated();
+        }
+
+        return removed;
+    }
+
+    @Override
+    public void clearContent() {
+        ImplementedInventory.super.clearContent();
+        markUpdated();
     }
 }
