@@ -78,6 +78,12 @@ Rules for keeping this honest:
 3. Issues reference requirement IDs. IDs are permanent — a dropped requirement becomes
    `wontfix`, it is not deleted and its number is never reused.
 
+**Provenance of this baseline.** The statuses below were derived by reading the
+`1.2.1+1.20.4` source, its shipped data and the open issues — **not** from a fresh in-game
+pass. That is why every acceptance criterion is still unticked: `done` here means "implemented
+and believed to work", and the boxes get ticked by whoever actually checks them at the gate
+they name. Treat an unticked criterion on a `done` requirement as unverified, not as proven.
+
 ---
 
 ## Status matrix
