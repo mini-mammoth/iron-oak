@@ -62,9 +62,19 @@ manual run can override it without a commit — see below.
 
 ## Dry run — do this before the first real release
 
-*Actions → Release → Run workflow*, leave **dry run** checked. This builds, validates
-both platform configurations and writes the payloads it *would* have uploaded to
-`build/publishMods/`, which the run attaches as an artifact. Nothing is published.
+*Actions → Release → Run workflow*, leave **dry run** checked. Nothing is published. The
+run does three useful things:
+
+1. **Preflight** — checks both tokens against the live APIs and verifies that every entry
+   in `publish_game_versions` actually exists on both platforms. This is the only place
+   the tokens get exercised without publishing; a dry run withholds them from Gradle, so
+   without this step an expired token would first surface during a real release.
+2. Builds the jar.
+3. Writes the payloads it *would* have uploaded to `build/publishMods/`, attached to the
+   run as an artifact.
+
+Preflight also runs on a real release, before the upload — so a bad game version string
+fails the run instead of landing on the project page.
 
 Locally the same thing, since no tokens are set in your shell:
 
@@ -74,8 +84,8 @@ export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 ```
 
 The console prints the display name, version, changelog and resolved dependencies per
-platform. Read them — a wrong `publish_game_versions` is invisible in the build and very
-visible on the project page.
+platform. Read them. Note that a local run does **not** include the preflight checks —
+those live in the workflow, because they need the tokens.
 
 ---
 

@@ -40,6 +40,75 @@ jobs:
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
+      # Fails the run before a single byte is uploaded — and before the build is even
+      # spent. Two things go wrong here in practice, and neither shows up in the build:
+      # an expired token, and a game version string that does not exist on a platform
+      # (invisible locally, very visible on the project page).
+      #
+      # The tokens are read by this step even on a dry run. That is intentional and safe:
+      # every call here is a read-only GET, and the tokens still never reach Gradle, which
+      # is what decides whether anything is published.
+      - name: preflight — tokens and game versions
+        env:
+          MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          versions=$(grep '^publish_game_versions=' gradle.properties | cut -d= -f2)
+          echo "Announcing game versions: $versions"
+          [ -n "$versions" ] || { echo "::error::publish_game_versions is empty"; exit 1; }
+
+          fail=0
+
+          if [ -n "${MODRINTH_API_KEY:-}" ]; then
+            user=$(curl -sS -m 30 -o /tmp/mr.json -w '%{http_code}' \
+              -H "Authorization: $MODRINTH_API_KEY" \
+              -H 'User-Agent: mini-mammoth/iron-oak' \
+              https://api.modrinth.com/v2/user)
+            if [ "$user" = 200 ]; then
+              echo "Modrinth token OK (user: $(jq -r .username /tmp/mr.json))"
+            else
+              echo "::error::Modrinth token rejected (HTTP $user)"; fail=1
+            fi
+
+            curl -sS -m 30 -H 'User-Agent: mini-mammoth/iron-oak' \
+              https://api.modrinth.com/v2/tag/game_version | jq -r '.[].version' > /tmp/mr-versions
+            for v in ${versions//,/ }; do
+              if grep -qxF "$v" /tmp/mr-versions; then
+                echo "  Modrinth knows game version $v"
+              else
+                echo "::error::Modrinth does not know game version '$v'"; fail=1
+              fi
+            done
+          else
+            echo "No Modrinth token in this run — skipping its checks."
+          fi
+
+          if [ -n "${CURSEFORGE_API_KEY:-}" ]; then
+            code=$(curl -sS -m 30 -o /tmp/cf.json -w '%{http_code}' \
+              -H "X-Api-Token: $CURSEFORGE_API_KEY" \
+              https://minecraft.curseforge.com/api/game/versions)
+            if [ "$code" = 200 ]; then
+              echo "CurseForge token OK ($(jq 'length' /tmp/cf.json) game versions visible)"
+              jq -r '.[].name' /tmp/cf.json > /tmp/cf-versions
+              for v in ${versions//,/ }; do
+                if grep -qxF "$v" /tmp/cf-versions; then
+                  echo "  CurseForge knows game version $v"
+                else
+                  echo "::error::CurseForge does not know game version '$v'"; fail=1
+                fi
+              done
+            else
+              echo "::error::CurseForge token rejected (HTTP $code)"; fail=1
+            fi
+          else
+            echo "No CurseForge token in this run — skipping its checks."
+          fi
+
+          exit $fail
+
+
       # Same JDK as the CI build. Loom does not run on JDK 22+, so this pin is load
       # bearing, not cosmetic.
       - name: setup jdk 17
