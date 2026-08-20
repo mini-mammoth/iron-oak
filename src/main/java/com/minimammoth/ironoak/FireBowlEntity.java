@@ -30,6 +30,7 @@ import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -41,13 +42,24 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
     private static final int INPUT_SLOT = 0;
     private static final int OUTPUT_SLOT = 1;
 
+    /** Cook progress. Real state, so it is persisted. */
     private int cookingTime = 0;
-    private int cookingTotalTime = 200;
-    private static final int DEFAULT_COOKING_TOTAL_TIME = 150;
 
+    /**
+     * Ticks a lit bowl has spent with nothing to burn. At {@link #UNLIT_TOTAL_TIME} it goes
+     * out. Real state, so it is persisted — it used to reset to zero on every world load,
+     * which handed an idle bowl a fresh 100 ticks every time the chunk came back.
+     */
     private int unlitTime = 0;
     private static final int UNLIT_TOTAL_TIME = 100;
 
+    /**
+     * Caches the last matched burning recipe so the per-tick lookup below is a field read
+     * rather than a scan. Exactly what {@code AbstractFurnaceBlockEntity} keeps for the
+     * same reason. Derived, so it is neither saved nor synced.
+     */
+    private final RecipeManager.CachedCheck<SingleRecipeInput, BurningRecipe> quickCheck =
+            RecipeManager.createCheck(ModRecipes.BURNING_RECIPE_TYPE);
 
     public FireBowlEntity(BlockPos pos, BlockState state) {
         super(ModEntityTypes.FIRE_BOWL_ENTITY, pos, state);
@@ -64,6 +76,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
 
         ContainerHelper.saveAllItems(out.child("input"), NonNullList.of(ItemStack.EMPTY, getInput()));
         out.putInt("cooking_time", cookingTime);
+        out.putInt("unlit_time", unlitTime);
         ContainerHelper.saveAllItems(out.child("output"), NonNullList.of(ItemStack.EMPTY, getOutput()));
     }
 
@@ -76,6 +89,10 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
 
         in.child("input").ifPresent(child -> items.set(INPUT_SLOT, readSingle(child)));
         cookingTime = in.getIntOr("cooking_time", 0);
+        // New in #28. A bowl saved before that has no such key, and 0 is the right answer
+        // for one: it means the idle countdown starts fresh, which is what used to happen
+        // to every bowl on every load.
+        unlitTime = in.getIntOr("unlit_time", 0);
         in.child("output").ifPresent(child -> items.set(OUTPUT_SLOT, readSingle(child)));
     }
 
@@ -108,11 +125,37 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
         return items.get(INPUT_SLOT);
     }
 
-    public void setInput(ItemStack input, int cookingTotalTime) {
-        items.set(INPUT_SLOT, input);
-        this.cookingTime = 0;
-        this.cookingTotalTime = cookingTotalTime;
-        markUpdated();
+    /**
+     * Puts a stack in the input slot. No duration argument: the recipe already knows how
+     * long its own input burns, so nothing needs to be told or remembered — see
+     * {@link #cookingTotalTime}.
+     */
+    public void setInput(ItemStack input) {
+        setItem(INPUT_SLOT, input);
+    }
+
+    /**
+     * The burning recipe matching a stack, or empty if there is none.
+     */
+    private Optional<RecipeHolder<BurningRecipe>> recipeFor(ItemStack stack, ServerLevel level) {
+        return stack.isEmpty()
+                ? Optional.empty()
+                : quickCheck.getRecipeFor(new SingleRecipeInput(stack), level);
+    }
+
+    /**
+     * How long the stack currently in the input slot takes to burn.
+     * <p>
+     * Derived on demand and deliberately not stored. It used to be a field written in
+     * exactly one place — the player insertion path — which made it wrong for a
+     * hopper-inserted log and made it unrecoverable across a save, because it was never
+     * persisted either. Both defects were the same defect: a value that belongs to the
+     * recipe was being cached on the entity. {@code AbstractFurnaceBlockEntity} derives its
+     * cook time the same way, for a block with the same shape — one input slot, fed by
+     * hoppers as well as by hand.
+     */
+    private static int cookingTotalTime(Optional<RecipeHolder<BurningRecipe>> recipe) {
+        return recipe.map(holder -> holder.value().cookingTime()).orElse(ModRecipes.DEFAULT_COOKING_TIME);
     }
 
     public ItemStack getOutput() {
@@ -147,16 +190,19 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
     public static void litServerTick(Level world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
         ItemStack input = fireBowl.getInput();
         ItemStack output = fireBowl.getOutput();
+        // Only registered server-side, see FireBowlBlock.getTicker.
+        ServerLevel serverLevel = (ServerLevel) world;
 
         if (!input.isEmpty()) {
+            // One lookup per tick, for both the duration and the result.
+            var recipe = fireBowl.recipeFor(input, serverLevel);
+
             fireBowl.cookingTime++;
-            if (fireBowl.cookingTime >= fireBowl.cookingTotalTime) {
-                fireBowl.setInput(ItemStack.EMPTY, DEFAULT_COOKING_TOTAL_TIME);
+            if (fireBowl.cookingTime >= cookingTotalTime(recipe)) {
+                fireBowl.setInput(ItemStack.EMPTY);
 
                 var recipeInput = new SingleRecipeInput(input);
-                // Recipe lookup lives on ServerLevel; this ticker only runs server-side.
-                var result = ((ServerLevel) world).recipeAccess()
-                        .getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, recipeInput, world)
+                var result = recipe
                         .map(burningRecipe -> burningRecipe.value().assemble(recipeInput, world.registryAccess()))
                         .orElse(input);
 
@@ -191,17 +237,22 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      */
     public static void unlitServerTick(Level world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
         if (fireBowl.cookingTime > 0) {
-            fireBowl.cookingTime = Mth.clamp(fireBowl.cookingTime - 2, 0, fireBowl.cookingTotalTime);
+            // Only registered server-side, see FireBowlBlock.getTicker.
+            var recipe = fireBowl.recipeFor(fireBowl.getInput(), (ServerLevel) world);
+            fireBowl.cookingTime = Mth.clamp(fireBowl.cookingTime - 2, 0, cookingTotalTime(recipe));
             fireBowl.setChanged();
         }
     }
 
+    /**
+     * Whether {@code item} can be put in, i.e. it has a burning recipe <em>and</em> the
+     * input slot is free. Not the same question as {@link #recipeFor}, which asks only what
+     * the stack already in the slot cooks into.
+     */
     public Optional<BurningRecipe> getRecipeFor(ServerLevel level, ItemStack item) {
         return !getInput().isEmpty()
                 ? Optional.empty()
-                : level.recipeAccess()
-                        .getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, new SingleRecipeInput(item), level)
-                        .map(RecipeHolder::value);
+                : recipeFor(item, level).map(RecipeHolder::value);
     }
 
     @Override
@@ -259,6 +310,15 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
     @Override
     public void setItem(int slot, ItemStack stack) {
         ImplementedInventory.super.setItem(slot, stack);
+
+        // A new log starts from zero progress whoever put it there. Without this a
+        // hopper-inserted log inherited whatever progress the previous one had left behind,
+        // because only the player path reset it. Vanilla resets the same way in
+        // CampfireBlockEntity.placeFood.
+        if (slot == INPUT_SLOT) {
+            cookingTime = 0;
+        }
+
         markUpdated();
     }
 
