@@ -153,8 +153,11 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      * recipe was being cached on the entity. {@code AbstractFurnaceBlockEntity} derives its
      * cook time the same way, for a block with the same shape — one input slot, fed by
      * hoppers as well as by hand.
+     * <p>
+     * Package-private rather than private so {@code FireBowlEntityTest} can pin the fallback
+     * without a world; it is not called from anywhere else in {@code src/main}.
      */
-    private static int cookingTotalTime(Optional<RecipeHolder<BurningRecipe>> recipe) {
+    static int cookingTotalTime(Optional<RecipeHolder<BurningRecipe>> recipe) {
         return recipe.map(holder -> holder.value().cookingTime()).orElse(ModRecipes.DEFAULT_COOKING_TIME);
     }
 
