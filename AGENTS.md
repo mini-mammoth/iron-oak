@@ -30,6 +30,14 @@ Six wood types are covered (oak, acacia, birch, jungle, spruce, dark oak) × thr
 (iron, copper, gold). That 6×3 matrix is why `ModBlocks`/`ModItems` are long and
 repetitive — when you add a metal or a wood type you touch every arm of it.
 
+**Before you change behaviour, read the requirement for it.**
+[`docs/requirements/README.md`](docs/requirements/README.md) states what each mechanic must
+do, whether it currently does it, and which acceptance criteria prove it — the closest thing
+this repo has to a test suite. Update the requirement and its status row in the same PR as
+the code; a behaviour change with no requirement change means one of the two is wrong. Why
+the mod works this way, and every tunable number with its source location, live in
+[`docs/concept/`](docs/concept/README.md).
+
 - Mod id is `iron_oak` (underscore). The Gradle artifact is `iron-oak` (hyphen). Both are
   load-bearing; do not "unify" them.
 - User-facing strings live in `src/main/resources/assets/iron_oak/lang/`. Code,
@@ -217,6 +225,8 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | Need to know… | Read |
 |---|---|
 | What the mod does, in player terms | `README.md` |
+| What a mechanic must do, and whether it does | `docs/requirements/README.md` — the status matrix |
+| Why the mod works this way, and what a number is | `docs/concept/README.md`, `docs/concept/balance.md` |
 | Current target versions | `gradle.properties` |
 | Dispatch / gate / label process | `docs/ops/orchestration.md` |
 | Label taxonomy | `docs/ops/issue-labels.md` |
@@ -263,5 +273,6 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version. Ops model adapted from the openkegelbillard setup: worker instructions here, orchestration policy in `docs/ops/`. Records the JDK-21 constraint, the datagen direction, the 6×3 matrix rule, and that there is no test suite. |
+| 2026-08-20 | 1.1 | Points at the new `docs/concept/` and `docs/requirements/`: requirements state what each mechanic must do and whether it does, and move in the same PR as the code. |
 
 *Last updated: 2026-08-20*
