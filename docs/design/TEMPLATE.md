@@ -6,14 +6,13 @@ last_updated: YYYY-MM-DD
 version: 1
 related:
   - README.md
-  - ../requirements/<domain>.md
   - ../concept/README.md
 ---
 
 # Design: [Feature name]
 
 > Status: **draft** — not approved, nothing may be implemented from it.
-> Requirements: [`XXX-nn`](../requirements/<domain>.md) · Concept:
+> Requirements: `XXX-nn` in `../requirements/<domain>.md` · Concept:
 > [`../concept/README.md`](../concept/README.md)
 
 ## Problem
