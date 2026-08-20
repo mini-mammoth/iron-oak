@@ -47,17 +47,17 @@ public class ModConfiguredFeatures {
     public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_ACACIA_TREE = registerKey("gold_acacia_tree");
     public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_ACACIA_TREE = registerKey("iron_acacia_tree");
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_JUNGLE_TREE = registerKey("copper_spruce_tree");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_JUNGLE_TREE = registerKey("gold_spruce_tree");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_JUNGLE_TREE = registerKey("iron_spruce_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_SPRUCE_TREE = registerKey("copper_spruce_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_SPRUCE_TREE = registerKey("gold_spruce_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_SPRUCE_TREE = registerKey("iron_spruce_tree");
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_DARK_OAK_TREE = registerKey("copper_jungle_tree");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_DARK_OAK_TREE = registerKey("gold_jungle_tree");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_DARK_OAK_TREE = registerKey("iron_jungle_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_JUNGLE_TREE = registerKey("copper_jungle_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_JUNGLE_TREE = registerKey("gold_jungle_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_JUNGLE_TREE = registerKey("iron_jungle_tree");
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_SPRUCE_TREE = registerKey("copper_dark_oak_tree");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_SPRUCE_TREE = registerKey("gold_dark_oak_tree");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_SPRUCE_TREE = registerKey("iron_dark_oak_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_DARK_OAK_TREE = registerKey("copper_dark_oak_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_DARK_OAK_TREE = registerKey("gold_dark_oak_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_DARK_OAK_TREE = registerKey("iron_dark_oak_tree");
 
     private static TreeConfiguration.TreeConfigurationBuilder oreOak(Block oreLog) {
         return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(4, 2, 0), BlockStateProvider.simple(Blocks.OAK_LEAVES), new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3), new TwoLayersFeatureSize(1, 0, 1)).ignoreVines();
@@ -102,17 +102,17 @@ public class ModConfiguredFeatures {
         FeatureUtils.register(context, GOLD_ACACIA_TREE, Feature.TREE, oreAcacia(ModBlocks.GOLD_ACACIA_LOG).build());
         FeatureUtils.register(context, IRON_ACACIA_TREE, Feature.TREE, oreAcacia(ModBlocks.IRON_ACACIA_LOG).build());
 
-        FeatureUtils.register(context, COPPER_JUNGLE_TREE, Feature.TREE, oreSpruce(ModBlocks.COPPER_SPRUCE_LOG).build());
-        FeatureUtils.register(context, GOLD_JUNGLE_TREE, Feature.TREE, oreSpruce(ModBlocks.GOLD_SPRUCE_LOG).build());
-        FeatureUtils.register(context, IRON_JUNGLE_TREE, Feature.TREE, oreSpruce(ModBlocks.IRON_SPRUCE_LOG).build());
+        FeatureUtils.register(context, COPPER_SPRUCE_TREE, Feature.TREE, oreSpruce(ModBlocks.COPPER_SPRUCE_LOG).build());
+        FeatureUtils.register(context, GOLD_SPRUCE_TREE, Feature.TREE, oreSpruce(ModBlocks.GOLD_SPRUCE_LOG).build());
+        FeatureUtils.register(context, IRON_SPRUCE_TREE, Feature.TREE, oreSpruce(ModBlocks.IRON_SPRUCE_LOG).build());
 
-        FeatureUtils.register(context, COPPER_DARK_OAK_TREE, Feature.TREE, oreJungle(ModBlocks.COPPER_JUNGLE_LOG).build());
-        FeatureUtils.register(context, GOLD_DARK_OAK_TREE, Feature.TREE, oreJungle(ModBlocks.GOLD_JUNGLE_LOG).build());
-        FeatureUtils.register(context, IRON_DARK_OAK_TREE, Feature.TREE, oreJungle(ModBlocks.IRON_JUNGLE_LOG).build());
+        FeatureUtils.register(context, COPPER_JUNGLE_TREE, Feature.TREE, oreJungle(ModBlocks.COPPER_JUNGLE_LOG).build());
+        FeatureUtils.register(context, GOLD_JUNGLE_TREE, Feature.TREE, oreJungle(ModBlocks.GOLD_JUNGLE_LOG).build());
+        FeatureUtils.register(context, IRON_JUNGLE_TREE, Feature.TREE, oreJungle(ModBlocks.IRON_JUNGLE_LOG).build());
 
-        FeatureUtils.register(context, COPPER_SPRUCE_TREE, Feature.TREE, oreDarkOak(ModBlocks.COPPER_DARK_OAK_LOG).build());
-        FeatureUtils.register(context, GOLD_SPRUCE_TREE, Feature.TREE, oreDarkOak(ModBlocks.GOLD_DARK_OAK_LOG).build());
-        FeatureUtils.register(context, IRON_SPRUCE_TREE, Feature.TREE, oreDarkOak(ModBlocks.IRON_DARK_OAK_LOG).build());
+        FeatureUtils.register(context, COPPER_DARK_OAK_TREE, Feature.TREE, oreDarkOak(ModBlocks.COPPER_DARK_OAK_LOG).build());
+        FeatureUtils.register(context, GOLD_DARK_OAK_TREE, Feature.TREE, oreDarkOak(ModBlocks.GOLD_DARK_OAK_LOG).build());
+        FeatureUtils.register(context, IRON_DARK_OAK_TREE, Feature.TREE, oreDarkOak(ModBlocks.IRON_DARK_OAK_LOG).build());
     }
 
     public static ResourceKey<ConfiguredFeature<?, ?>> registerKey(String name) {
