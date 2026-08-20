@@ -45,16 +45,23 @@ repetitive — when you add a metal or a wood type you touch every arm of it.
 | Build | Gradle + **Fabric Loom** | `build.gradle`, `gradle.properties` |
 | Language | Java | `src/main/java/com/minimammoth/ironoak/` |
 | Registration | plain `Registry.register` in `init/Mod*.java` — no DeferredRegister (that is Forge/NeoForge) | `init/` |
-| Data generation | Fabric datagen API, custom `runDatagen` Gradle task | `init/ModDataGenerator.java` → `src/main/generated/` |
-| Hand-written resources | recipes, loot tables, tags, models, textures, lang | `src/main/resources/{data,assets}/` |
-| Access widener | one entry, for the cooking-recipe serializer factory | `src/main/resources/iron_oak.accesswidener` |
+| Data generation | Fabric datagen API, custom `runDatagen` Gradle task — the task **inherits `client`**, because Fabric routes model providers through a client-only mixin | `init/ModDataGenerator.java` → `src/main/generated/` |
+| Hand-written resources | recipes, loot tables, tags, models, blockstates, textures, lang | `src/main/resources/{data,assets}/` |
+| Generated resources | worldgen, and the `assets/iron_oak/items/` client item definitions | `src/main/generated/` |
+| Access widener | present but **inert** — its only line is a comment, so it widens nothing | `src/main/resources/iron_oak.accesswidener` |
 | Mixins | **config exists but is empty** — no mixin classes, no `mixin` package | `src/main/resources/iron-oak.mixins.json` |
 | Resource generator | a Go helper that emits repetitive resource JSON | `scripts/generate.go` |
 | CI | GitHub Actions, `./gradlew build` on Linux + Windows | `.github/workflows/main.yml` |
 
 Version facts live in **`gradle.properties`** and nowhere else — `minecraft_version`,
-`yarn_mappings`, `loader_version`, `fabric_version`, `mod_version`. Read them before you
+`loader_version`, `loom_version`, `fabric_version`, `mod_version`. Read them before you
 write a single API call; this mod is mid-migration and the answer changes.
+
+**Mappings are Mojang official, not Yarn.** Yarn was discontinued after 1.21.11, so this
+mod migrated off it. Class names here are the Mojang ones — `Identifier`,
+`BlockBehaviour.Properties`, `BuiltInRegistries`. Any Yarn-era snippet you find online
+(`AbstractBlock.Settings`, `Registries.BLOCK`, `new Identifier(...)`) needs translating
+first: https://mappings.dev
 
 ---
 
@@ -103,14 +110,18 @@ checked in `runClient` before you claim it works. If you did not launch the game
 in the PR instead of implying you did.
 
 - Done means `gh pr checks <pr>` is green. A green local build is not proof — CI also
-  builds on Windows.
+  builds on Windows, and the workflow pins JDK 21 for the same reason you have to.
 - `./gradlew build` is incremental and Loom caches Minecraft; the first run after a
   version bump re-downloads and decompiles and can take several minutes. That is normal,
   not a hang.
-- **The Gradle wrapper is pinned to 8.11.1 and both bounds matter.** Below 8.11 the
-  publish plugin cannot configure; on 8.12 Loom 1.5 builds an **empty jar and still
-  reports `BUILD SUCCESSFUL`**. If you touch the wrapper, verify the artefact, not the
-  exit code: `unzip -l build/libs/iron-oak-*.jar | tail -1` must show ~347 files, not 2.
+- **The Gradle wrapper is 9.5.1 on purpose — do not re-pin it to 8.11.1.** That old pin
+  is documented history from the 1.20.4 line: Loom **1.5** built an **empty jar and still
+  reported `BUILD SUCCESSFUL`** on Gradle 8.12+, so the wrapper was held at 8.11.1. This
+  line runs **Loom 1.17**, which requires Gradle 9.x and does not have that bug; pinning
+  back to 8.11.1 breaks the build outright.
+  The rule the pin protected still holds: when you touch the wrapper, Loom or Gradle,
+  **verify the artefact, not the exit code** —
+  `unzip -l build/libs/iron-oak-*.jar | tail -1` must show ~347 files, not 2.
   Details in [`docs/ops/release.md`](docs/ops/release.md).
 
 ---

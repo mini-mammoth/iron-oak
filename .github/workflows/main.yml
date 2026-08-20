@@ -29,7 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 17 ]
+        # Fabric Loom does not run on JDK 22+. 21 is what 1.21.11 targets.
+        java: [ 21 ]
         # Build on both: Loom and the resource paths behave differently on Windows.
         os: [ ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.os }}

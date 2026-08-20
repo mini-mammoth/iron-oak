@@ -3,37 +3,40 @@ package com.minimammoth.ironoak;
 import com.minimammoth.ironoak.helper.ImplementedInventory;
 import com.minimammoth.ironoak.init.ModEntityTypes;
 import com.minimammoth.ironoak.init.ModRecipes;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CampfireBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SidedInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtInt;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
-import net.minecraft.recipe.RecipeEntry;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ItemScatterer;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Containers;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
-public class FireBowlEntity extends BlockEntity implements ImplementedInventory, SidedInventory {
-    private final DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
+public class FireBowlEntity extends BlockEntity implements ImplementedInventory, WorldlyContainer {
+    private final NonNullList<ItemStack> items = NonNullList.withSize(2, ItemStack.EMPTY);
 
     private static final int INPUT_SLOT = 0;
     private static final int OUTPUT_SLOT = 1;
@@ -56,44 +59,31 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      * Call {@code BlockEntity.markDirty} to enforce a save.
      */
     @Override
-    protected void writeNbt(NbtCompound nbt) {
-        super.writeNbt(nbt);
+    protected void saveAdditional(ValueOutput out) {
+        super.saveAdditional(out);
 
-        var inputNbt = new NbtCompound();
-        Inventories.writeNbt(inputNbt, DefaultedList.copyOf(ItemStack.EMPTY, getInput()));
-        nbt.put("input", inputNbt);
-
-        nbt.put("cooking_time", NbtInt.of(cookingTime));
-
-        var outputNbt = new NbtCompound();
-        Inventories.writeNbt(outputNbt, DefaultedList.copyOf(ItemStack.EMPTY, getOutput()));
-        nbt.put("output", outputNbt);
+        ContainerHelper.saveAllItems(out.child("input"), NonNullList.of(ItemStack.EMPTY, getInput()));
+        out.putInt("cooking_time", cookingTime);
+        ContainerHelper.saveAllItems(out.child("output"), NonNullList.of(ItemStack.EMPTY, getOutput()));
     }
 
     /**
      * Restores state for entity from world save.
      */
     @Override
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
+    protected void loadAdditional(ValueInput in) {
+        super.loadAdditional(in);
 
-        if (nbt.contains("input", NbtElement.COMPOUND_TYPE)) {
-            var inputList = DefaultedList.ofSize(1, ItemStack.EMPTY);
-            Inventories.readNbt(nbt.getCompound("input"), inputList);
-            items.set(INPUT_SLOT, inputList.get(0));
-        }
-
-        if (nbt.contains("cooking_time", NbtElement.INT_TYPE)) {
-            cookingTime = nbt.getInt("cooking_time");
-        }
-
-        if (nbt.contains("output", NbtElement.COMPOUND_TYPE)) {
-            var outputList = DefaultedList.ofSize(1, ItemStack.EMPTY);
-            Inventories.readNbt(nbt.getCompound("output"), outputList);
-            items.set(OUTPUT_SLOT, outputList.get(0));
-        }
+        in.child("input").ifPresent(child -> items.set(INPUT_SLOT, readSingle(child)));
+        cookingTime = in.getIntOr("cooking_time", 0);
+        in.child("output").ifPresent(child -> items.set(OUTPUT_SLOT, readSingle(child)));
     }
 
+    private static ItemStack readSingle(ValueInput in) {
+        var list = NonNullList.withSize(1, ItemStack.EMPTY);
+        ContainerHelper.loadAllItems(in, list);
+        return list.get(0);
+    }
 
     /**
      * Used to sync server changes to client on demand.
@@ -102,16 +92,16 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      */
     @Nullable
     @Override
-    public Packet<ClientPlayPacketListener> toUpdatePacket() {
-        return BlockEntityUpdateS2CPacket.create(this);
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     /**
      * Used to sync state to client when chunk is loaded. Necessary for custom renderer to have the same info.
      */
     @Override
-    public NbtCompound toInitialChunkDataNbt() {
-        return createNbt();
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
     }
 
     public ItemStack getInput() {
@@ -122,30 +112,39 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
         items.set(INPUT_SLOT, input);
         this.cookingTime = 0;
         this.cookingTotalTime = cookingTotalTime;
+        markUpdated();
     }
 
     public ItemStack getOutput() {
         return items.get(OUTPUT_SLOT);
     }
 
+    /**
+     * Drops the stored items. Server-side only — {@code useWithoutItem} runs on both sides,
+     * and vanilla guards the equivalent path the same way
+     * ({@code JukeboxBlockEntity.popOutTheItem}). Without the guard the client spawns its
+     * own item entities and wipes its copy of a container it does not own.
+     */
     public void spawnContainingItems() {
-        // Drop all stored items
-        ItemScatterer.spawn(world, pos, items);
-        items.clear();
+        if (level == null || level.isClientSide()) {
+            return;
+        }
 
-        markDirty();
+        // Drop all stored items
+        Containers.dropContents(level, worldPosition, items);
+        clearContent();
     }
 
-    public static void clientTick(World world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
-        Random random = world.random;
+    public static void clientTick(Level world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
+        RandomSource random = world.random;
         if (random.nextFloat() < 0.11F) {
             for (var i = 0; i < random.nextInt(2) + 2; ++i) {
-                CampfireBlock.spawnSmokeParticle(world, pos, false, false);
+                CampfireBlock.makeParticles(world, pos, false, false);
             }
         }
     }
 
-    public static void litServerTick(World world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
+    public static void litServerTick(Level world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
         ItemStack input = fireBowl.getInput();
         ItemStack output = fireBowl.getOutput();
 
@@ -154,34 +153,35 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
             if (fireBowl.cookingTime >= fireBowl.cookingTotalTime) {
                 fireBowl.setInput(ItemStack.EMPTY, DEFAULT_COOKING_TOTAL_TIME);
 
-                Inventory inventory = new SimpleInventory(input);
-                var result = world.getRecipeManager()
-                        .getFirstMatch(ModRecipes.BURNING_RECIPE_TYPE, inventory, world)
-                        .map(campfireCookingRecipe -> campfireCookingRecipe.value().craft(inventory, null))
+                var recipeInput = new SingleRecipeInput(input);
+                // Recipe lookup lives on ServerLevel; this ticker only runs server-side.
+                var result = ((ServerLevel) world).recipeAccess()
+                        .getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, recipeInput, world)
+                        .map(burningRecipe -> burningRecipe.value().assemble(recipeInput, world.registryAccess()))
                         .orElse(input);
 
                 if (output.isEmpty()) {
                     fireBowl.items.set(OUTPUT_SLOT, result.copy());
-                } else if (ItemStack.areItemsEqual(output, result) && output.getCount() < output.getMaxCount()) {
-                    output.increment(1);
+                } else if (ItemStack.isSameItem(output, result) && output.getCount() < output.getMaxStackSize()) {
+                    output.grow(1);
                 } else {
-                    ItemScatterer.spawn(world, pos, new SimpleInventory(result));
+                    Containers.dropContents(world, pos, new SimpleContainer(result));
                 }
 
-                world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_BURN, SoundCategory.BLOCKS, 1f, 0.5f);
+                world.playSound(null, pos, SoundEvents.GENERIC_BURN, SoundSource.BLOCKS, 1f, 0.5f);
 
                 // From now on the unlit timer ticks.
                 fireBowl.unlitTime = 0;
-                world.updateListeners(pos, state, state, 3);
+                fireBowl.markUpdated();
             }
         } else {
             fireBowl.unlitTime++;
             if (fireBowl.unlitTime >= UNLIT_TOTAL_TIME) {
-                world.setBlockState(pos, state.with(FireBowlBlock.LIT, false), 3);
+                world.setBlock(pos, state.setValue(FireBowlBlock.LIT, false), 3);
             }
         }
 
-        fireBowl.markDirty();
+        fireBowl.setChanged();
     }
 
     /**
@@ -189,29 +189,33 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      * <p>
      * Borrowed from {@code CampfireBlockEntity}
      */
-    public static void unlitServerTick(World world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
+    public static void unlitServerTick(Level world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
         if (fireBowl.cookingTime > 0) {
-            fireBowl.cookingTime = MathHelper.clamp(fireBowl.cookingTime - 2, 0, fireBowl.cookingTotalTime);
-            fireBowl.markDirty();
+            fireBowl.cookingTime = Mth.clamp(fireBowl.cookingTime - 2, 0, fireBowl.cookingTotalTime);
+            fireBowl.setChanged();
         }
     }
 
-    public Optional<BurningRecipe> getRecipeFor(ItemStack item) {
-        return !getInput().isEmpty() ? Optional.empty() : this.world.getRecipeManager().getFirstMatch(ModRecipes.BURNING_RECIPE_TYPE, new SimpleInventory(item), this.world).map(RecipeEntry::value);
+    public Optional<BurningRecipe> getRecipeFor(ServerLevel level, ItemStack item) {
+        return !getInput().isEmpty()
+                ? Optional.empty()
+                : level.recipeAccess()
+                        .getRecipeFor(ModRecipes.BURNING_RECIPE_TYPE, new SingleRecipeInput(item), level)
+                        .map(RecipeHolder::value);
     }
 
     @Override
-    public boolean canPlayerUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return false;
     }
 
     @Override
-    public DefaultedList<ItemStack> getItems() {
+    public NonNullList<ItemStack> getItems() {
         return items;
     }
 
     @Override
-    public int[] getAvailableSlots(Direction side) {
+    public int[] getSlotsForFace(Direction side) {
         return switch (side) {
             case DOWN -> new int[]{OUTPUT_SLOT};
             case UP -> new int[]{INPUT_SLOT};
@@ -220,24 +224,75 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
     }
 
     @Override
-    public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
-        return slot == INPUT_SLOT && getInput().isEmpty() && getRecipeFor(stack).isPresent();
+    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction dir) {
+        // Recipes only resolve on the server; a hopper insert is a server-side action anyway.
+        return slot == INPUT_SLOT && getInput().isEmpty()
+                && this.level instanceof ServerLevel serverLevel
+                && getRecipeFor(serverLevel, stack).isPresent();
     }
 
     @Override
-    public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+    public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction dir) {
         return slot == OUTPUT_SLOT;
     }
 
-    @Override
-    public void setStack(int slot, ItemStack stack) {
-        ImplementedInventory.super.setStack(slot, stack);
-
-        // As the items are used for the custom entity renderer we have trigger a sync to ensure that the items are
-        // also available for the client.
-        if (world != null) {
-            this.markDirty();
-            world.updateListeners(pos, getCachedState(), getCachedState(), 3);
+    /**
+     * Pushes the container to clients.
+     * <p>
+     * {@code setChanged()} on its own only marks the chunk dirty for saving — it sends
+     * nothing. {@code FireBowlRenderer.extractRenderState} reads the input and output
+     * stacks off the <em>client's</em> block entity, so any slot change that skips this is
+     * invisible in the world until the chunk reloads. Same shape as
+     * {@code CampfireBlockEntity.markUpdated}.
+     * <p>
+     * Every write to {@link #items} outside {@code loadAdditional} has to end up here.
+     */
+    private void markUpdated() {
+        if (level == null) {
+            return;
         }
+
+        setChanged();
+        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+    }
+
+    @Override
+    public void setItem(int slot, ItemStack stack) {
+        ImplementedInventory.super.setItem(slot, stack);
+        markUpdated();
+    }
+
+    /**
+     * The hopper's extraction path. {@code ImplementedInventory} only marks dirty here, so
+     * without this a hopper pulling the output would leave it rendered in the bowl.
+     */
+    @Override
+    public ItemStack removeItem(int slot, int count) {
+        ItemStack removed = ImplementedInventory.super.removeItem(slot, count);
+        if (!removed.isEmpty()) {
+            markUpdated();
+        }
+
+        return removed;
+    }
+
+    /**
+     * Vanilla's "no update" in the name is about save-dirtying, not about the client. The
+     * renderer reads this container either way, so the block update still has to go out.
+     */
+    @Override
+    public ItemStack removeItemNoUpdate(int slot) {
+        ItemStack removed = ImplementedInventory.super.removeItemNoUpdate(slot);
+        if (!removed.isEmpty()) {
+            markUpdated();
+        }
+
+        return removed;
+    }
+
+    @Override
+    public void clearContent() {
+        ImplementedInventory.super.clearContent();
+        markUpdated();
     }
 }

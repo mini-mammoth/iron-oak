@@ -1,9 +1,0 @@
-{
-  "type": "iron_oak:burning",
-  "ingredient": {
-    "tag": "iron_oak:iron_infused_logs"
-  },
-  "result": "iron_oak:iron_ash",
-  "experience": 0.2
-}
-
