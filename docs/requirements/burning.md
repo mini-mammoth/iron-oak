@@ -73,18 +73,21 @@ WHEN the fire bowl is lit AND holds an input THEN it SHALL advance a cook timer 
 and on reaching the recipe's cook time SHALL replace the input with the recipe result —
 one `iron_oak:<metal>_ash` per infused log of that metal, worth 0.2 XP by the recipe.
 
-**This does not hold.** Three cook durations are observable for the same log
-(all three verified on `main`, all three pre-existing — see #28):
+**The three-duration defect is fixed; the requirement is not.** #28 was real: the same log
+burned for 200 ticks when a player inserted it, 150 after a hopper insert following a
+completed cook, and 200 again after a chunk reload — because the duration lived in a cached
+field that only the player path ever set and nothing ever persisted.
 
-| Insertion path | Duration | Cause |
-|---|---|---|
-| Player right-click | 200 ticks | `setInput` passes the recipe's cook time |
-| Hopper, after one completed cook | 150 ticks | hoppers go through `setStack`, which never sets a cook time; `litServerTick` left the field at `DEFAULT_COOKING_TOTAL_TIME` |
-| Hopper, after a chunk reload | 200 ticks | `cooking_total_time` is not written to NBT, so the field falls back to its initialiser |
+The fix **deleted the field**. `FireBowlEntity.cookingTotalTime(...)` derives the duration
+from the matched recipe on demand and falls back to `ModRecipes.DEFAULT_COOKING_TIME` when an
+input matches no recipe, so there is no stored value left to be wrong or to be lost.
+`ModRecipesTest` pins that 200-tick default out of the committed recipe JSON, and
+`FireBowlGameTest` burns a log to ash and feeds one by hopper.
 
-The recipe JSON declares no `cookingtime`, so the serializer default of 200 is the intended
-number for all paths. Whether 150 was ever meant to exist is
-[CON-Q3](../concept/README.md#open-questions).
+Two criteria still hold this open. The recipe declares 0.2 XP and nothing awards it
+([BRN-Q1](#open-questions)), and nobody has confirmed in game that both insertion paths now
+feel the same. [CON-Q3](../concept/README.md#open-questions) has lost its premise rather than
+been answered: 200 is the only duration any path can now produce.
 
 **Acceptance criteria** (verify: `runClient`, `test`, `gametest`)
 - [ ] A log takes the same time to burn whether inserted by hand or by hopper
@@ -104,8 +107,12 @@ extinguish itself.
 **Why:** this window is the whole automation design — a bowl that is being fed stays lit, a
 starved one goes out and has to be re-lit by hand (concept: *Progression*).
 
-**Partial:** `unlitTime` is not persisted, so the countdown restarts on every chunk load
-(#28). An idle bowl in a loaded-and-unloaded chunk can stay lit indefinitely.
+**Partial:** the persistence half is fixed. `unlitTime` is written as `unlit_time` and read
+back with a `0` default so a bowl saved before the fix still loads (#28), and
+`FireBowlEntityTest` round-trips it through a `ValueOutput`/`ValueInput` pair. What is
+unchecked is what a player sees — that an idle bowl really does go out after about five
+seconds, and that a log arriving inside the window is cooked without re-lighting. Both name
+`runClient`.
 
 **Acceptance criteria** (verify: `runClient`, `test`)
 - [ ] An idle lit bowl goes out after ~5 s
@@ -170,9 +177,13 @@ WHEN a burning projectile hits it THEN it SHALL also light.
 The bowl is a member of `minecraft:campfires` and carries the `WATERLOGGED` property purely
 so vanilla recognises it as lightable.
 
-**Partial:** the burning-arrow path can never fire. `FireBowlBlock.onProjectileHit` requires
-`LIT` to already be `true` before setting `LIT` to `true` — the branch is unreachable in any
-state where it would change something (#28). Flint and steel works.
+**Partial:** the burning-arrow path is fixed. `FireBowlBlock.onProjectileHit` used to require
+`LIT` to already be `true` before setting `LIT` to `true`, so the branch was unreachable in
+every state where it would have changed something (#28); it now carries
+`CampfireBlock.onProjectileHit`'s condition verbatim — unlit and not waterlogged — and
+`FireBowlGameTest` fires a flaming arrow at an unlit bowl. Flint and steel on a *loaded* bowl
+was the other half of this, fixed as #27 defect 2. None of the three criteria has been ticked
+at `runClient`.
 
 **Acceptance criteria** (verify: `runClient`, `gametest`)
 - [ ] Flint and steel lights an unlit bowl, loaded or empty
@@ -217,12 +228,14 @@ unless it is fire-immune or wearing Frost Walker boots.
 WHEN the fire bowl holds an input or an output THEN the client SHALL render that item lying
 in the bowl, and a lit bowl SHALL emit campfire smoke on ~11 % of client ticks.
 
-`FireBowlEntity` syncs through `setStack` → `updateListeners`, plus
-`toUpdatePacket`/`toInitialChunkDataNbt` so a freshly loaded chunk renders correctly.
+`FireBowlEntity` funnels every container write through `markUpdated()`, which calls
+`sendBlockUpdated`, and implements `getUpdatePacket`/`getUpdateTag` so a freshly loaded chunk
+renders correctly.
 
-**Port note:** on the 1.21.11 branch the input is stored but not rendered, and a loaded bowl
-cannot be lit — #27. Both trace to `setInput` bypassing `setStack`. On `main` the behaviour
-is correct; do not close #27 against this requirement.
+**Port note (historical):** while 1.21.11 was still a branch, the input was stored but not
+rendered there and a loaded bowl could not be lit — #27, both tracing to `setInput` bypassing
+the one method that pushes an update to clients. 1.21.11 is `main` now and both are fixed. The
+note is kept as the worked example of what a port note is for.
 
 **Acceptance criteria** (verify: `runClient`)
 - [ ] An inserted log is visible in the bowl immediately, for a second player too
@@ -248,5 +261,6 @@ is correct; do not close #27 against this requirement.
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial. BRN-03/04/07 land as `broken`/`partial` against #28, verified in the 1.20.4 source; BRN-10 records #27 as a port-only failure. |
 | 2026-08-21 | 2 | BRN-03 and BRN-06 name `test` and `gametest`, BRN-04 names `test`, BRN-07 names `gametest` (#43). The three #28 defects each have a test now, and `FireBowlGameTest` records why the BRN-05 break rules have none — `BlockEntity.preRemoveSideEffects` changed them under the mod, and BRN-Q2 has to be answered before a test can freeze either behaviour. |
+| 2026-08-21 | 3 | BRN-03, BRN-04, BRN-07 and BRN-10 describe the fixed tree (#47). All three #28 defects and both #27 defects were fixed before this catalogue merged, so the failure tables described code that no longer existed — BRN-03's cited a cached field the fix deleted. Statuses are unchanged: what each entry now names is the criterion still waiting at `runClient`, and Mojang names replace the Yarn-era ones in BRN-10. |
 
 *Last updated: 2026-08-21*

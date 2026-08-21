@@ -92,24 +92,25 @@ There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 WHEN `./gradlew runDatagen` runs THEN the emitted configured features SHALL be identical to
 the committed ones — datagen output is generated, so re-running it must be a no-op.
 
-**This is currently false.** The committed data in `src/main/generated/` is correct
-(`<metal>_jungle_tree.json` → jungle log + jungle leaves), but
-`ModConfiguredFeatures.bootstrap()` pairs three wood types with each other's shapes:
+**Fixed, and the status is blocked on something else.** #30 was real: three
+`ModConfiguredFeatures` constants were named after one wood type while holding another's key,
+and `ModSaplingGenerators` carried the mirror image of the rotation in its id strings. The
+committed JSON was correct, so nothing was inconsistent and every arm compiled — the next
+`runDatagen` would have rewritten 9 of the 18 tree features and jungle, spruce and dark oak
+saplings would have started growing each other's trees.
 
-| Registered feature | Built by | Log used |
-|---|---|---|
-| `*_JUNGLE_TREE` | `oreSpruce(...)` | `*_SPRUCE_LOG` |
-| `*_DARK_OAK_TREE` | `oreJungle(...)` | `*_JUNGLE_LOG` |
-| `*_SPRUCE_TREE` | `oreDarkOak(...)` | `*_DARK_OAK_LOG` |
+The fix renamed the constants to match the keys they hold, leaving the ids, the generated JSON
+and existing worlds untouched. `TreeMatrixTest` now walks all 18 arms from the metal and wood
+strings rather than from the constants, and `InfusedSaplingGameTest` grows three of them in a
+real world; both were seen red against a deliberately re-broken tree. `./gradlew runDatagen`
+is a clean no-op on `main`.
 
-`ModSaplingGenerators` carries the mirror image of the same rotation in its id strings
-(`COPPER_JUNGLE = generator("copper_spruce", …)`). Consequence: the next `runDatagen` will
-silently rewrite 9 of the 18 tree features and jungle/spruce/dark oak saplings will start
-growing each other's trees. The shipped 1.20.4 jar is unaffected, because it ships the
-committed JSON.
-
-**Out of scope for the documentation baseline** — fixing it is a code change in
-`area:worldgen`, tracked as #30.
+**So both gates below are green, and the status still says `broken`.** That is not an
+oversight: this entry is a build-reproducibility invariant rather than something a player can
+observe, `docs/strategy/testing.md` and `AGENTS.md` already state the same rule, and where it
+belongs is the open question in #48. The player-facing requirement #30 threatened is
+[TRE-03](#tre-03-a-grown-tree-is-made-of-infused-logs-of-its-own-metal-and-wood), which is
+`done`.
 
 **Acceptance criteria** (verify: `runDatagen`, `test`)
 - [ ] `./gradlew runDatagen` leaves `git status` clean
@@ -187,5 +188,6 @@ modifications (`ModWorldGenerator` writes `configured_feature/` only).
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial. Records the datagen/source divergence for jungle, spruce and dark oak as TRE-04 (`broken`, #30), verified against the committed generated JSON. |
 | 2026-08-21 | 2 | TRE-03 names `test` and `gametest`, TRE-04 and TRE-06 name `test` (#43). `TreeMatrixTest` walks all eighteen arms and `InfusedSaplingGameTest` grows three of them in a real world — the two halves of #30, one per layer. |
+| 2026-08-21 | 3 | TRE-04 describes the fixed tree (#47). #30 was fixed before this catalogue merged, so "this is currently false" had never been true here. Both its gates are green — `runDatagen` is a clean no-op and `TreeMatrixTest` covers the pairing — and the entry now says plainly that the status is held by #48, not by the code. |
 
 *Last updated: 2026-08-21*
