@@ -213,10 +213,37 @@ deps(build): upgrade to Minecraft 1.21.11 (#31)
 
 ### Version branches
 
-`main` tracks the newest supported Minecraft version. Older lines live on their own
-branches (`v1.18.x`, `1.19`, `v1.21.x` exist today) and CI builds `main`, `v1.18.x` and `v1.21.x`. A fix that
-applies to several lines is committed on `main` first, then cherry-picked — never
-developed twice in parallel.
+`main` is the **frontier** — it tracks the newest supported Minecraft version. When `main`
+moves on, the version it leaves behind is frozen onto its own branch, cut **from that
+version's release tag**.
+
+Branches are named `v<exact version>` — `v1.21.11`, not `v1.21.x`. The wildcard form lies as
+soon as one Minecraft family holds two supported lines, which is exactly the case for 1.21.
+
+| Track | Branch | State |
+|---|---|---|
+| 26.x | `main` | frontier |
+| 1.21.11 | `v1.21.11` | supported |
+| 1.21.1 | `v1.21.1` | planned — #54 |
+| 1.20.4, 1.19, 1.18.2 | none, `1.19`, `v1.18.x` | **archived** — no CI, no releases, no backports |
+
+Which lines are supported and why is [`docs/ops/multiloader.md`](docs/ops/multiloader.md).
+**CI builds `main` plus every supported line and nothing else** — both branch lists in
+`.github/workflows/main.yml` are exactly that set. An archive keeps its published jars and
+its history, and gets no further work.
+
+**Work goes forward first, then backwards.** Implement on `main`, then port down to the older
+lines — never develop the same change twice in parallel. But here "backport" means **port**,
+not `git cherry-pick`, because it crosses two real boundaries:
+
+- **Renames.** `Identifier` on 26.x and 1.21.11 is `ResourceLocation` on 1.21.1;
+  `ChunkSectionLayer` is `RenderType`. A cherry-pick across that does not apply.
+- **Build regime.** `main` is unobfuscated on JDK 25; the 1.21.x lines are obfuscated on
+  JDK 21 with a different Loom plugin id. Anything touching the build never cherry-picks.
+
+So budget a hand-port per backport, and expect that a change written against 26.x may need
+reworking — or rejecting — on an older line. Say which lines you ported to in the PR, and say
+it plainly when you did not port to one.
 
 `mod_version` in `gradle.properties` is `<mod>+<mc>` (e.g. `1.2.1+1.20.4`). Bump the
 Minecraft half in the same commit as the version bump, never separately.
@@ -324,6 +351,7 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
 | 2026-08-21 | 1.4 | Staleness sweep (#47). The file and line counts and the jar's "~347 files" are gone — all three had drifted, and the empty-jar bug shipped 2 files, so the check is an order of magnitude. The jar command no longer uses a glob that matches the sources jar too. |
 | 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
+| 2026-08-21 | 1.6 | Version branches rewritten (#57): `main` is the frontier, frozen lines are named `v<exact version>` (so `v1.21.x` became `v1.21.11`), 1.18.2/1.19/1.20.4 are archived, and CI builds `main` plus every supported line and nothing else. Records that a backport is a hand-port, not a cherry-pick — it crosses the `Identifier`/`ResourceLocation` rename and the obfuscated/JDK boundary. |
 | 2026-08-21 | 1.5 | Points at the new `docs/ops/multiloader.md` for which Minecraft lines and which loaders the mod ships (#21). Note for whoever converts to Architectury: the "no DeferredRegister" rule in the Registration row above is Fabric-only reasoning and has to be revisited in that PR, not worked around. |
 
 *Last updated: 2026-08-21*

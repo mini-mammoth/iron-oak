@@ -211,24 +211,32 @@ runtime, and `fabric.mod.json` has to declare a different `minecraft` range and 
 per artefact. Parallel support therefore means **two artefacts**, and that is a branch
 question, not a build-variant question.
 
-The shape is the one [`../../AGENTS.md`](../../AGENTS.md) already mandates, and which
-`v1.18.x` already runs: newest version on `main`, older lines on their own branches, a fix
-committed on `main` first and then cherry-picked — never developed twice in parallel.
+The shape is the one [`../../AGENTS.md`](../../AGENTS.md) mandates: newest version on `main`,
+frozen lines on their own branches named `v<exact version>`, work implemented on `main` first
+and then ported down — never developed twice in parallel.
 
 | Branch | Minecraft | Role |
 |---|---|---|
-| `main` | 26.2 | development; the newest supported version |
-| `v1.21.x` | 1.21.11 | maintained; cut from the 1.21.11 release tag |
+| `main` | 26.2 | frontier; the newest supported version |
+| `v1.21.11` | 1.21.11 | supported; cut from the 1.21.11 release tag |
+| `v1.21.1` | 1.21, 1.21.1 | planned — #54 |
+| `v1.18.x`, `1.19` | 1.18.2, 1.19.x | **archived** — history and published jars only |
 
-Wiring, once the tag exists:
+Wiring:
 
-- add `v1.21.x` to **both** branch lists in `.github/workflows/main.yml` — the file states in
-  a comment that the two lists are kept in sync by hand, because Actions does not reliably
-  support YAML anchors.
+- both branch lists in `.github/workflows/main.yml` are `main` plus every supported line and
+  nothing else. The file states in a comment that the two lists are kept in sync by hand,
+  because Actions does not reliably support YAML anchors — and that `v1.21.1` is listed ahead
+  of its branch on purpose, so the line is wired the moment #54 cuts it.
 - `.github/workflows/release.yml` needs **no** change: it triggers on a *published release*
-  regardless of branch, and a release cut from `v1.21.x` publishes with that branch's
+  regardless of branch, and a release cut from `v1.21.11` publishes with that branch's
   `gradle.properties`. Check `publish_game_versions` there as well — it is a judgement call
   per line, not derived from `minecraft_version`.
+
+**A backport is a port, not a cherry-pick.** It crosses the `Identifier`/`ResourceLocation`
+and `ChunkSectionLayer`/`RenderType` renames, and the obfuscated/JDK-21 vs unobfuscated/JDK-25
+build boundary. Budget a hand-port per line and say in the PR which lines you actually
+reached. See [`multiloader.md`](multiloader.md).
 
 ### What a second line actually costs
 
@@ -359,6 +367,7 @@ free release, and it is out of scope here.
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-21 | 1.4 | Branch/track model aligned with `multiloader.md` (#57): `v1.21.x` is `v1.21.11`, 1.18.2/1.19 are archived alongside 1.20.4, CI is `main` plus every supported line, and a backport is recorded as a hand-port rather than a cherry-pick. |
 | 2026-08-21 | 1.3 | 1.21.11 is verified in-game and released as `v1.3.0+1.21.11` (#19). The blocking-gate section becomes the record of a cleared gate, kept because 26.2 inherits every item on its list. Stage 3 is unblocked; cutting `v1.21.x` (#52) is next. |
 | 2026-08-21 | 1.2 | Two supported lines, not one endpoint (#50): 1.21.11 is kept on `v1.21.x` and `main` goes to 26.2, with the cost of the second line and the rejected preprocessor alternative recorded. 1.20.4 is dropped, closing that gate. Corrects the 26.2 status — `migration/26.2` carries no Java changes and is 57 commits behind, so the source port has not started and now includes porting both test layers. |
 | 2026-08-21 | 1.1 | The blocking gate accounts for the test harness (#47). Both layers are named in the evidence, and the point is sharpened rather than dropped: what they cover is listed, and none of it is on the in-game list below. The resource-rename warning credits `RegistryAssetsTest` for the half it now catches. |

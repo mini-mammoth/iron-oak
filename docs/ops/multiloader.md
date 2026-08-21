@@ -35,9 +35,9 @@ tickets. The migration mechanics for a single line live in
 
 | # | Line | Game versions announced | Source tree | Loaders |
 |---|---|---|---|---|
-| 1 | **1.21.11** | 1.21.11 | `v1.21.x` branch | Fabric |
+| 1 | **1.21.11** | 1.21.11 | `v1.21.11` branch | Fabric |
 | 2 | **26.x** | 26.1, 26.1.1, 26.1.2, **26.2** | `main` | Fabric, then NeoForge |
-| 3 | **1.21.1** | 1.21, 1.21.1 | `v1.21.1.x` branch | Fabric **and** NeoForge |
+| 3 | **1.21.1** | 1.21, 1.21.1 | `v1.21.1` branch | Fabric **and** NeoForge |
 
 Three trees, four lines — because **26.1 and 26.2 share one tree** (evidence
 [below](#261-rides-along-with-262-for-free)) and are two entries in
@@ -47,6 +47,53 @@ Three trees, four lines — because **26.1 and 26.2 share one tree** (evidence
 [Why not 1.20.1](#why-not-1201).
 
 **Forge is not a target and cannot be** — see [Forge is already gone](#forge-is-already-gone).
+
+### One branch per track, and work flows forward
+
+`main` is the **frontier**. Every frozen line is a branch named `v<exact version>`, cut from
+that version's release tag at the moment `main` moves past it.
+
+| Track | Branch | CI | Releases |
+|---|---|---|---|
+| 26.x | `main` | ✅ | ✅ |
+| 1.21.11 | `v1.21.11` | ✅ | ✅ |
+| 1.21.1 | `v1.21.1` (planned, #54) | ✅ once cut | ✅ once cut |
+| 1.20.4 | — | — | archived |
+| 1.19.x | `1.19` | — | archived |
+| 1.18.2 | `v1.18.x` | — | archived |
+
+**Not `v1.21.x`.** The wildcard name was wrong the moment this decision put two supported
+lines inside the 1.21 family — 1.21.1 and 1.21.11 have different vanilla API surfaces and
+different audiences, so a name that claims the whole family cannot distinguish them.
+
+**CI builds `main` plus every supported line and nothing else.** Both branch lists in
+`.github/workflows/main.yml` are exactly that set. `v1.21.1` is declared there before its
+branch exists, deliberately: a `push` filter for a missing branch never fires, so the line is
+wired the moment #54 cuts it, and nobody has to remember to touch two hand-synced lists.
+
+Archived lines — 1.18.2, 1.19 and 1.20.4 — keep their published jars and their history and
+get nothing else: no CI, no releases, no backports. Dropping them was decided 2026-08-21. A
+branch nobody builds must not look supported; that was the state before, and it read as
+support.
+
+### Implement forward, port backward
+
+New work lands on `main` first, then moves down the tracks. Never develop the same change
+twice in parallel — that is the rule `AGENTS.md` has always carried.
+
+The part worth budgeting for: **on this repo a backport is a hand-port, not a
+`git cherry-pick`**, because it crosses two boundaries at once.
+
+1. **Renames.** `Identifier` on 26.x and 1.21.11 is `ResourceLocation` on 1.21.1;
+   `ChunkSectionLayer` is `RenderType`. Proven from Architectury's own tree — see
+   [1.21.1 needs its own source tree](#1211-needs-its-own-source-tree).
+2. **Build regime.** `main` is unobfuscated on JDK 25 with the plain Loom plugin; the 1.21.x
+   lines are obfuscated on JDK 21 with the `-remap` variant. Anything touching `build.gradle`,
+   `gradle.properties` or the workflow never cherry-picks at all.
+
+So a feature is not "done on all lines" because it merged to `main`. Expect per-line work, and
+expect that a change written against 26.x occasionally has to be **reworked or rejected** on an
+older line rather than forced. State in the PR which lines you reached and which you did not.
 
 Expected reach: **~60 % (conservative) to ~72 % (recent-window)** of Fabric demand, plus a
 NeoForge audience that barely overlaps it. The range is the honest answer; a single number
@@ -224,10 +271,10 @@ release — 13.0 (1.21) → 14.0 (1.21.2) → 15.0 (1.21.4) → 16.1 (1.21.5) �
 18.0 (1.21.9/10) → 19.0 (1.21.11) → 20.0 (26.1) → 21.0 (26.2). They do not treat these as
 source-compatible either.
 
-**Consequence for maintenance:** the rule in `AGENTS.md` — fix on `main`, then cherry-pick —
-still holds, but a cherry-pick from a 26.x tree to the 1.21.1 tree will **not** apply
-cleanly. It crosses the `Identifier`/`ResourceLocation` and `ChunkSectionLayer`/`RenderType`
-renames. Budget a hand-fix per backport rather than discovering it under time pressure.
+**Consequence for maintenance:** implement-forward-then-port-backward still holds, but this
+is the concrete reason a backport here is a hand-port — see
+[Implement forward, port backward](#implement-forward-port-backward). A `git cherry-pick` from
+a 26.x tree onto the 1.21.1 tree does not apply: it crosses both renames above.
 
 The upside: 1.21.1 is the **friendliest Architectury target of the three** — Java 21, the
 mature `dev.architectury.loom` 1.6, and `RenderTypeRegistry` still present, so
@@ -347,14 +394,14 @@ The order is forced by two rules already in force, not by preference:
 
 So this is a queue, not a fan-out:
 
-1. **#52 — cut `v1.21.x` and build it in CI.** The hard prerequisite. The branch is cut
-   *from the release tag*, and it must land **before** `main` moves to 26.2 — otherwise the
-   1.21.11 tree exists only as a tag and every backport starts with archaeology.
+1. **#52 — cut `v1.21.11` and build it in CI.** ✅ **done.** The branch is cut *from the
+   release tag*, and it had to land **before** `main` moved to 26.2 — otherwise the 1.21.11
+   tree would exist only as a tag and every backport would start with archaeology.
 2. **#20 — port `main` to 26.2.** The largest single line. A WIP branch (`migration/26.2`)
    exists and all 52 compile errors are already enumerated in the issue.
 3. **26.1 announced alongside 26.2.** An acceptance item of #20, not a migration. Cheapest
    reach on the board.
-4. **The 1.21.1 line** — new `v1.21.1.x` branch off the 1.21.11 release tag, ported *down*.
+4. **The 1.21.1 line** (#54) — new `v1.21.1` branch off the 1.21.11 release tag, ported *down*.
 5. **The Architectury/NeoForge conversion**, piloted on 1.21.1, then applied to 26.x.
 
 Steps 4 and 5 are separate tickets on purpose. Doing the `DeferredRegister` rewrite while
@@ -387,6 +434,7 @@ and a fresh measurement, not an extrapolation from this one.
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-21 | 2 | Adds the branch/track model (#57): one branch per track named `v<exact version>` (so `v1.21.x` became `v1.21.11`), CI builds `main` plus every supported line and nothing else, 1.18.2/1.19/1.20.4 archived, and the implement-forward/port-backward rule with the two boundaries that make a backport a hand-port. |
 | 2026-08-21 | 1 | Initial version. Records the four-line / three-tree / two-loader decision, the 2026-08-21 Modrinth measurement and its method, the evidence that Forge is unavailable in Architectury, that 26.1 shares 26.2's tree, that 1.21.1 needs its own, and that Architectury abstracts neither datagen nor gametests. Supersedes the cumulative-download numbers in `version-migration.md` for planning. |
 
 *Last updated: 2026-08-21*
