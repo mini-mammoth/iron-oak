@@ -32,9 +32,8 @@ repetitive — when you add a metal or a wood type you touch every arm of it.
 
 **Before you change behaviour, read the requirement for it.**
 [`docs/requirements/README.md`](docs/requirements/README.md) states what each mechanic must
-do, whether it currently does it, and which acceptance criteria prove it — the closest thing
-this repo has to a test suite. Update the requirement and its status row in the same PR as
-the code; a behaviour change with no requirement change means one of the two is wrong. Why
+do, whether it currently does it, and which acceptance criteria prove it. Update the
+requirement and its status row in the same PR as the code; a behaviour change with no requirement change means one of the two is wrong. Why
 the mod works this way, and every tunable number with its source location, live in
 [`docs/concept/`](docs/concept/README.md).
 
@@ -53,16 +52,23 @@ the mod works this way, and every tunable number with its source location, live 
 | Build | Gradle + **Fabric Loom** | `build.gradle`, `gradle.properties` |
 | Language | Java | `src/main/java/com/minimammoth/ironoak/` |
 | Registration | plain `Registry.register` in `init/Mod*.java` — no DeferredRegister (that is Forge/NeoForge) | `init/` |
-| Data generation | Fabric datagen API, custom `runDatagen` Gradle task | `init/ModDataGenerator.java` → `src/main/generated/` |
-| Hand-written resources | recipes, loot tables, tags, models, textures, lang | `src/main/resources/{data,assets}/` |
-| Access widener | one entry, for the cooking-recipe serializer factory | `src/main/resources/iron_oak.accesswidener` |
+| Data generation | Fabric datagen API, custom `runDatagen` Gradle task — the task **inherits `client`**, because Fabric routes model providers through a client-only mixin | `init/ModDataGenerator.java` → `src/main/generated/` |
+| Hand-written resources | recipes, loot tables, tags, models, blockstates, textures, lang | `src/main/resources/{data,assets}/` |
+| Generated resources | worldgen, and the `assets/iron_oak/items/` client item definitions | `src/main/generated/` |
+| Access widener | present but **inert** — its only line is a comment, so it widens nothing | `src/main/resources/iron_oak.accesswidener` |
 | Mixins | **config exists but is empty** — no mixin classes, no `mixin` package | `src/main/resources/iron-oak.mixins.json` |
 | Resource generator | a Go helper that emits repetitive resource JSON | `scripts/generate.go` |
 | CI | GitHub Actions, `./gradlew build` on Linux + Windows | `.github/workflows/main.yml` |
 
 Version facts live in **`gradle.properties`** and nowhere else — `minecraft_version`,
-`yarn_mappings`, `loader_version`, `fabric_version`, `mod_version`. Read them before you
+`loader_version`, `loom_version`, `fabric_version`, `mod_version`. Read them before you
 write a single API call; this mod is mid-migration and the answer changes.
+
+**Mappings are Mojang official, not Yarn.** Yarn was discontinued after 1.21.11, so this
+mod migrated off it. Class names here are the Mojang ones — `Identifier`,
+`BlockBehaviour.Properties`, `BuiltInRegistries`. Any Yarn-era snippet you find online
+(`AbstractBlock.Settings`, `Registries.BLOCK`, `new Identifier(...)`) needs translating
+first: https://mappings.dev
 
 ---
 
@@ -93,32 +99,56 @@ This list is a **copy of `.github/workflows/main.yml`** and is the only definiti
 
 ```bash
 export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
-./gradlew build                 # compiles, remaps, builds the jar — the CI gate
+./gradlew build                 # compiles, remaps, builds the jar, runs the unit tests
+./gradlew runGametest           # headless server, real world — the second CI gate
 ```
 
 Add these when your change touches what they cover:
 
 ```bash
 ./gradlew runDatagen            # if you changed ModDataGenerator or anything it emits
-./gradlew runClient             # if you changed rendering, blocks, or in-world behaviour
+./gradlew runClient             # if you changed rendering, or anything the tests do not reach
 ```
 
-There is **no test suite** in this repo — `./gradlew build` runs no tests, because none
-exist. So "green" here is a weaker signal than in a repo with tests: it proves the mod
-compiles and remaps, not that it works. Anything touching in-world behaviour (fire bowl
-ticking, sapling growth, washing, recipe matching) is **not** verified by CI and must be
-checked in `runClient` before you claim it works. If you did not launch the game, say so
-in the PR instead of implying you did.
+There **is** a test suite, in two layers, and
+[`docs/strategy/testing.md`](docs/strategy/testing.md) says which layer a test belongs at.
+Read it before you write one — it is short, and it names the mistakes this codebase is set
+up to make.
+
+- **`src/test/`** — plain JUnit with the loader booted and no world, via
+  `fabric-loader-junit`. Milliseconds, and `./gradlew build` runs it, so a failing unit
+  test fails the build. This is where names, ids, maps, committed resource files and
+  numbers belong, and where the 6×3 matrix guard lives.
+- **`src/gametest/`** — a headless server, a real world and actual ticking, via
+  `fabric-gametest-api-v1`. Seconds, run by `./gradlew runGametest`, which writes JUnit XML
+  to `build/gametest/report.xml`. Its own source set, so none of it ships in the mod jar.
+
+"Green" is a stronger signal than it was, but it is not everything. **Rendering, particles,
+sound and feel are still checked only by a human**, and so is anything the gametests do not
+reach yet — `runClient` remains the gate for those, and if you did not launch the game, say
+so in the PR instead of implying you did. Every gametest that lands is one line the human
+no longer has to walk; that list is not finished.
+
+When you fix a bug, the fix ships with the test that catches it, and you write the test
+first — see
+[`docs/strategy/test-driven-development.md`](docs/strategy/test-driven-development.md) for
+where that rule applies and, just as importantly, where it does not. **Observe the red
+locally and report it in the PR; never commit red.**
 
 - Done means `gh pr checks <pr>` is green. A green local build is not proof — CI also
-  builds on Windows.
+  builds on Windows, and the workflow pins JDK 21 for the same reason you have to. Both
+  layers run on Linux and Windows, and CI uploads the JUnit XML of each.
 - `./gradlew build` is incremental and Loom caches Minecraft; the first run after a
   version bump re-downloads and decompiles and can take several minutes. That is normal,
   not a hang.
-- **The Gradle wrapper is pinned to 8.11.1 and both bounds matter.** Below 8.11 the
-  publish plugin cannot configure; on 8.12 Loom 1.5 builds an **empty jar and still
-  reports `BUILD SUCCESSFUL`**. If you touch the wrapper, verify the artefact, not the
-  exit code: `unzip -l build/libs/iron-oak-*.jar | tail -1` must show ~347 files, not 2.
+- **The Gradle wrapper is 9.5.1 on purpose — do not re-pin it to 8.11.1.** That old pin
+  is documented history from the 1.20.4 line: Loom **1.5** built an **empty jar and still
+  reported `BUILD SUCCESSFUL`** on Gradle 8.12+, so the wrapper was held at 8.11.1. This
+  line runs **Loom 1.17**, which requires Gradle 9.x and does not have that bug; pinning
+  back to 8.11.1 breaks the build outright.
+  The rule the pin protected still holds: when you touch the wrapper, Loom or Gradle,
+  **verify the artefact, not the exit code** —
+  `unzip -l build/libs/iron-oak-*.jar | tail -1` must show ~347 files, not 2.
   Details in [`docs/ops/release.md`](docs/ops/release.md).
 
 ---
@@ -227,6 +257,8 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | What the mod does, in player terms | `README.md` |
 | What a mechanic must do, and whether it does | `docs/requirements/README.md` — the status matrix |
 | Why the mod works this way, and what a number is | `docs/concept/README.md`, `docs/concept/balance.md` |
+| Which layer a test belongs at, and what a test here looks like | `docs/strategy/testing.md` |
+| Whether your change needs a test first | `docs/strategy/test-driven-development.md` |
 | Current target versions | `gradle.properties` |
 | Dispatch / gate / label process | `docs/ops/orchestration.md` |
 | Label taxonomy | `docs/ops/issue-labels.md` |
@@ -274,5 +306,6 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version. Ops model adapted from the openkegelbillard setup: worker instructions here, orchestration policy in `docs/ops/`. Records the JDK-21 constraint, the datagen direction, the 6×3 matrix rule, and that there is no test suite. |
 | 2026-08-20 | 1.1 | Points at the new `docs/concept/` and `docs/requirements/`: requirements state what each mechanic must do and whether it does, and move in the same PR as the code. |
+| 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

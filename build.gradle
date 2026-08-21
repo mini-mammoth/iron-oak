@@ -1,5 +1,8 @@
 plugins {
-    id 'fabric-loom' version '1.5-SNAPSHOT'
+    // Minecraft is still obfuscated up to 1.21.11, so the -remap variant is the right
+    // plugin. From 26.1 onwards Minecraft ships unobfuscated and the plain
+    // 'net.fabricmc.fabric-loom' plugin is used instead.
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
     id 'maven-publish'
     id 'me.modmuss50.mod-publish-plugin' version '2.2.0'
 }
@@ -7,76 +10,46 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+base {
+    archivesName = project.archives_base_name
+}
+
 repositories {
     // Add repositories to retrieve artifacts from in here.
     // You should only use this when depending on other mods because
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
 }
 
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-    // You may need to force-disable transitiveness on them.
+    // Layer 1 of docs/strategy/testing.md: plain JUnit with the loader booted and no
+    // world. The version is pinned to loader_version on purpose — loader-junit boots the
+    // very loader it ships against, and a mismatch fails at class-load time with a stack
+    // trace that blames Knot rather than the version.
+    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+
+    // fabric-loader-junit pulls in the Jupiter engine but not the parameterised runner,
+    // and the 6x3 matrix tests want one named case per arm rather than one case that
+    // stops at the first bad arm. The BOM keeps both halves on the version loader-junit
+    // was built against.
+    testImplementation platform("org.junit:junit-bom:5.10.0")
+    testImplementation "org.junit.jupiter:junit-jupiter"
 }
 
 processResources {
-    inputs.property "version", project.version
+    def version = project.version
+    inputs.property "version", version
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
-}
-
-loom {
-    accessWidenerPath = file("src/main/resources/iron_oak.accesswidener")
-
-    runs {
-        // This adds a new gradle task that runs the datagen API: "gradlew runDatagen"
-        datagen {
-            inherit server
-            name "Data Generation"
-            vmArg "-Dfabric-api.datagen"
-            vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
-            vmArg "-Dfabric-api.datagen.modid=iron_oak"
-
-            runDir "build/datagen"
-        }
-    }
-}
-
-def targetJavaVersion = 17
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 17
-}
-
-java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
-    archivesBaseName = project.archives_base_name
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    withSourcesJar()
-
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}" }
+        expand "version": version
     }
 }
 
@@ -87,6 +60,109 @@ sourceSets {
                     'src/main/generated'
             ]
         }
+    }
+
+    // Layers 2 and 3 of docs/strategy/testing.md. A source set of its own rather than
+    // src/test, because the two kinds of test have nothing in common: one is milliseconds
+    // and runs on every build, the other needs a game and a run configuration. It also
+    // means the `jar` task — which only ever packages `main` — cannot ship any of it.
+    gametest {
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/iron_oak.accesswidener")
+
+    // Loom needs to know the gametests are a mod of their own, or their classes are not
+    // remapped against the mod they test.
+    mods {
+        register("iron_oak") {
+            sourceSet sourceSets.main
+        }
+        register("iron_oak_gametest") {
+            sourceSet sourceSets.gametest
+        }
+    }
+
+    runs {
+        // This adds a new gradle task that runs the datagen API: "gradlew runDatagen"
+        //
+        // `inherit client`, not `server`. Fabric has two datagen entry points, and the
+        // model providers only exist on one of them: ModelProviderMixin — the mixin that
+        // routes FabricModelProvider's generateBlockStateModels/generateItemModels — is
+        // declared under "client" in fabric-data-generation-api-v1.client.mixins.json.
+        // On a server-side run that mixin is not applied, so a FabricModelProvider is
+        // silently bypassed and vanilla's own generators run in its place. Nothing fails;
+        // the output is simply wrong. Client-side, Fabric's MinecraftMixin runs datagen
+        // and exits before the game window opens.
+        datagen {
+            inherit client
+            name "Data Generation"
+            vmArg "-Dfabric-api.datagen"
+            vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
+            vmArg "-Dfabric-api.datagen.modid=iron_oak"
+
+            runDir "build/datagen"
+        }
+
+        // Layer 2: a headless server that places a structure per test, ticks the world and
+        // asserts on real block and entity state — "gradlew runGametest".
+        //
+        // Plain `server`, with no gametest main class of its own: fabric-gametest-api-v1
+        // mixes into net.minecraft.server.Main and, when fabric-api.gametest is set,
+        // diverts into its own headless runner and exits with the result. The report is
+        // JUnit XML, which is what makes these CI-reportable.
+        gametest {
+            server()
+            name "Game Test"
+            source "gametest"
+
+            vmArg "-Dfabric-api.gametest"
+            vmArg "-Dfabric-api.gametest.report-file=${file("build/gametest/report.xml")}"
+
+            runDir "build/gametest/run"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+// `./gradlew build` runs this, so a failing test fails the build — which is the whole
+// point of #40. See docs/strategy/testing.md for what belongs here and what does not.
+test {
+    useJUnitPlatform()
+
+    // fabric-loader-junit boots Knot from a JUnit LauncherSessionListener and defaults to
+    // the client side. Nothing under src/test touches rendering, and a server-side boot
+    // keeps client-only mixins out of the picture, so CI needs no display.
+    systemProperty "fabric.side", "server"
+
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+    }
+}
+
+java {
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    def projectName = project.name
+    inputs.property "projectName", projectName
+
+    from("LICENSE") {
+        rename { "${it}_$projectName" }
     }
 }
 
@@ -143,14 +219,8 @@ publishMods {
 // configure the maven publication
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
+        create("mavenJava", MavenPublication) {
+            from components.java
         }
     }
 

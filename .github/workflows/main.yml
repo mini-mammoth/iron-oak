@@ -29,7 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 17 ]
+        # Fabric Loom does not run on JDK 22+. 21 is what 1.21.11 targets.
+        java: [ 21 ]
         # Build on both: Loom and the resource paths behave differently on Windows.
         os: [ ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
@@ -53,8 +54,30 @@ jobs:
         if: ${{ runner.os != 'Windows' }}
         run: chmod +x ./gradlew
 
-      - name: build
+      # Runs the layer-1 tests too: `test` is wired into `build`, so a failing unit test
+      # fails here. See docs/strategy/testing.md.
+      - name: build and unit test
         run: ./gradlew build
+
+      # Layer 2. A separate step because it starts a real headless server, and because a
+      # unit-test failure and a gametest failure should not look like the same thing in the
+      # checks list. No display needed — it is a dedicated server, and the gametest runner
+      # does not ask for the EULA.
+      - name: server gametests
+        run: ./gradlew runGametest
+
+      # Both layers write JUnit XML, so the reports are worth keeping whichever way the run
+      # went — on a red run they are the only place the failure is spelled out.
+      - name: capture test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ runner.os }}-java${{ matrix.java }}
+          path: |
+            build/test-results/test/**/*.xml
+            build/reports/tests/test/**
+            build/gametest/report.xml
+          if-no-files-found: warn
 
       - name: capture build artifacts
         # Only from one OS, so the artifact name stays unique.

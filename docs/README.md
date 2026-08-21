@@ -1,7 +1,7 @@
 # docs/
 
-Four kinds of content live here. They answer different questions, and consulting the wrong
-one wastes your time.
+Several kinds of content live here. They answer different questions, and consulting the
+wrong one wastes your time.
 
 ## Concept (`docs/concept/`)
 
@@ -30,6 +30,29 @@ the single source of truth for what is implemented, partial, broken, planned or 
 This matters more here than in a repo with tests: there is no test suite, so `./gradlew
 build` proves compilation and nothing else. The acceptance criteria are the written
 regression net, and `runClient` is the gate for anything that happens in the world.
+
+## Strategy (`docs/strategy/`)
+
+**Answers the question: _why is the code written this way?_**
+
+Settled technical decisions about the artefact: how registration works and why it is not
+DeferredRegister, the client/server split, where `null` is tolerated, which of the three
+testable layers a test belongs at, and when a test comes first. They exist so those
+decisions are not re-argued in every ticket. Do not ship something that contradicts a
+strategy document without a discussion — raising the question is right, shipping the
+contradiction quietly is not.
+
+| Document | Contents |
+|----------|----------|
+| [strategy/README.md](strategy/README.md) | What "strategy" is, how it differs from concept, requirements, ops and design, and the `status` convention |
+| [strategy/testing.md](strategy/testing.md) | The three testable layers for a Fabric mod, which class in this mod belongs at each, tooling, anti-patterns |
+| [strategy/test-driven-development.md](strategy/test-driven-development.md) | Where a test comes first, where it honestly does not, and why |
+| [strategy/java.md](strategy/java.md) | Registration patterns, class-load order, the client/server sync rule, null handling, the 6×3 matrix |
+
+Both testing documents are `status: active`: #40 wired up layers 1 and 2, so `./gradlew build`
+runs the loader-JUnit layer and `./gradlew runGametest` runs the server layer. Layer 3 —
+client gametests — is the one part still ahead of the tree, and `testing.md` says so where it
+appears.
 
 ## Operations (`docs/ops/`)
 
@@ -63,6 +86,7 @@ texture, the matching image is now wrong; either update it or say so in the PR.
 > Writing code? Read [`AGENTS.md`](../AGENTS.md).
 > Deciding **what** the behaviour should be? `docs/requirements/`.
 > Wondering **why** it is that way, or what a number is? `docs/concept/`.
+> Wondering **why the code is shaped that way**, or where a test belongs? `docs/strategy/`.
 > Dispatching work to agents? `docs/ops/orchestration.md`.
 > Bumping a Minecraft version? Read `docs/ops/version-migration.md` first — it is staged
 > for a reason.
