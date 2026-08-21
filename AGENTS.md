@@ -75,21 +75,19 @@ first: https://mappings.dev
 
 ## The JDK is the single most common way to waste an hour here
 
-**Fabric Loom does not run on JDK 22+.** This machine's default is JDK 25 (sdkman), so a
-bare `./gradlew build` fails before it compiles anything, and the error does not say
-"wrong JDK" — it surfaces as a Gradle/Loom internal failure that reads like a broken
-build. The build itself is fine.
+**Fabric Loom has line-specific JDK requirements.** This machine's default is JDK 25 (sdkman).
 
-Run every Gradle command with JDK 21:
+- **26.x line (main):** Loom 1.17 runs on JDK 25. No setup needed; the default is correct.
+- **1.21.x line and earlier:** Loom does not run on JDK 22+, so every Gradle command needs JDK 21:
 
 ```bash
 export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 ./gradlew build
 ```
 
-Or `sdk use java 21.0.3-ms` for the shell. `.sdkmanrc` in the repo root records this, so
-`sdk env` picks it up. If a build fails and you have not checked `java -version`, check it
-before you debug anything else.
+Or `sdk use java 21.0.3-ms` for the shell. `.sdkmanrc` in the repo root records the
+current line's JDK, so `sdk env` picks it up. If a build fails and you have not checked
+`java -version`, check it before you debug anything else.
 
 ---
 
