@@ -63,7 +63,7 @@ public class InfusedSaplingGameTest {
         helper.succeedWhen(() -> {
             BlockState state = level.getBlockState(absolute);
             if (state.getBlock() instanceof OreInfusedSaplingBlock grower) {
-                grower.advanceTree(level, absolute, state, level.random);
+                grower.advanceTree(level, absolute, state, level.getRandom());
             }
 
             helper.assertBlockPresent(expectedLog, pos);
