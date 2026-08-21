@@ -124,11 +124,3 @@ vanilla has no such item, or Iron Oak adds its own copper nugget.
 - **No wood-type differentiation.** All six woods yield the same ash per log; the wood type
   only changes the tree shape and the log's appearance. Whether that is intended flatness or
   a missed opportunity has never been decided.
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial table, read out of `1.2.1+1.20.4`. Documents the three divergent fire-bowl cook times, the never-granted washing XP, and the unmeasured yield as open items rather than resolving them. |
-
-*Last updated: 2026-08-20*

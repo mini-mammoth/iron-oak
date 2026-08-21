@@ -161,11 +161,3 @@ Recorded, not resolved. Each is referenced from the requirement it affects.
   farmed ore? Today they use vanilla growth exactly. → [TRE-02](../requirements/trees.md)
 - **CON-Q6** Is there a target yield per tree, or is "roughly break-even by feel" the
   intended balance statement? → [`balance.md`](balance.md)
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial concept, written from the shipped 1.20.4 code. Records the loop, the six design principles, the metal/wood scope, and six open questions. No behaviour was changed. |
-
-*Last updated: 2026-08-20*

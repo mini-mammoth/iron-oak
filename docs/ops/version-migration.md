@@ -360,17 +360,3 @@ free release, and it is out of scope here.
 | `v1.21.11` cut from the tag and added to CI | before `main` moves to 26.2 | orchestrator — **done**, #52 |
 | Stage 3 started | after 1.21.11 is released | human — **in progress**, #20 |
 | Old-version branch policy | before `main` moves | human — **done**: 1.20.4, 1.19 and 1.18.2 dropped; 1.21.11 kept on `v1.21.11` |
-
----
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-21 | 1.4 | Branch/track model aligned with `multiloader.md` (#57): `v1.21.x` is `v1.21.11`, 1.18.2/1.19 are archived alongside 1.20.4, CI is `main` plus every supported line, and a backport is recorded as a hand-port rather than a cherry-pick. |
-| 2026-08-21 | 1.3 | 1.21.11 is verified in-game and released as `v1.3.0+1.21.11` (#19). The blocking-gate section becomes the record of a cleared gate, kept because 26.2 inherits every item on its list. Stage 3 is unblocked; cutting `v1.21.x` (#52) is next. |
-| 2026-08-21 | 1.2 | Two supported lines, not one endpoint (#50): 1.21.11 is kept on `v1.21.x` and `main` goes to 26.2, with the cost of the second line and the rejected preprocessor alternative recorded. 1.20.4 is dropped, closing that gate. Corrects the 26.2 status — `migration/26.2` carries no Java changes and is 57 commits behind, so the source port has not started and now includes porting both test layers. |
-| 2026-08-21 | 1.1 | The blocking gate accounts for the test harness (#47). Both layers are named in the evidence, and the point is sharpened rather than dropped: what they cover is listed, and none of it is on the in-game list below. The resource-rename warning credits `RegistryAssetsTest` for the half it now catches. |
-| 2026-08-20 | 1.0 | Initial plan. Target versions and the yarn-discontinuation constraint verified against `maven.fabricmc.net` and the Fabric porting docs; reach figures measured via the Modrinth API. |
-
-*Last updated: 2026-08-21*

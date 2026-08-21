@@ -138,12 +138,3 @@ translation key.
   the eighteen bone-meal pairings. All three run on `./gradlew build`. The counts above are
   still worth reading as the specification — the point of MAT-Q1 was that nothing enforced
   them, and now something does.
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial. Counts verified against the shipped `1.2.1+1.20.4` tree. |
-| 2026-08-21 | 2 | MAT-01, MAT-02, MAT-03 and MAT-05 name `test` as a gate (#43) — the harness from #40 checks them on every build. MAT-Q1 answered: the counts are enforced mechanically now. |
-
-*Last updated: 2026-08-21*

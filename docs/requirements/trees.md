@@ -181,13 +181,3 @@ modifications (`ModWorldGenerator` writes `configured_feature/` only).
 - **TRE-Q1** Should any wood type differ in yield or behaviour, or is the wood type purely
   cosmetic? Today it only changes shape and appearance (see
   [`../concept/balance.md`](../concept/balance.md)).
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial. Records the datagen/source divergence for jungle, spruce and dark oak as TRE-04 (`broken`, #30), verified against the committed generated JSON. |
-| 2026-08-21 | 2 | TRE-03 names `test` and `gametest`, TRE-04 and TRE-06 name `test` (#43). `TreeMatrixTest` walks all eighteen arms and `InfusedSaplingGameTest` grows three of them in a real world — the two halves of #30, one per layer. |
-| 2026-08-21 | 3 | TRE-04 describes the fixed tree (#47). #30 was fixed before this catalogue merged, so "this is currently false" had never been true here. Both its gates are green — `runDatagen` is a clean no-op and `TreeMatrixTest` covers the pairing — and the entry now says plainly that the status is held by #48, not by the code. |
-
-*Last updated: 2026-08-21*

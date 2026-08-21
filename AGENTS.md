@@ -339,19 +339,3 @@ documented decision. Give context: what you tried, which files you read, the exa
 
 **Do not ask** when the answer is in `gradle.properties`, in the Fabric docs, or one Grep
 away — and do not ask only to have your understanding confirmed. Test it instead.
-
----
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1.0 | Initial version. Ops model adapted from the openkegelbillard setup: worker instructions here, orchestration policy in `docs/ops/`. Records the JDK-21 constraint, the datagen direction, the 6×3 matrix rule, and that there is no test suite. |
-| 2026-08-20 | 1.1 | Points at the new `docs/concept/` and `docs/requirements/`: requirements state what each mechanic must do and whether it does, and move in the same PR as the code. |
-| 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
-| 2026-08-21 | 1.4 | Staleness sweep (#47). The file and line counts and the jar's "~347 files" are gone — all three had drifted, and the empty-jar bug shipped 2 files, so the check is an order of magnitude. The jar command no longer uses a glob that matches the sources jar too. |
-| 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
-| 2026-08-21 | 1.6 | Version branches rewritten (#57): `main` is the frontier, frozen lines are named `v<exact version>` (so `v1.21.x` became `v1.21.11`), 1.18.2/1.19/1.20.4 are archived, and CI builds `main` plus every supported line and nothing else. Records that a backport is a hand-port, not a cherry-pick — it crosses the `Identifier`/`ResourceLocation` rename and the obfuscated/JDK boundary. |
-| 2026-08-21 | 1.5 | Points at the new `docs/ops/multiloader.md` for which Minecraft lines and which loaders the mod ships (#21). Note for whoever converts to Architectury: the "no DeferredRegister" rule in the Registration row above is Fabric-only reasoning and has to be revisited in that PR, not worked around. |
-
-*Last updated: 2026-08-21*

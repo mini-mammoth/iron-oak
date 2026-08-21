@@ -424,17 +424,3 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
   [test-driven-development.md](test-driven-development.md) — there are places in this repo
   where that rule cannot honestly be followed, and a rule nobody follows devalues the ones
   that matter.
-
----
-
-## 📅 Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1.0 | Initial version (#39). Three layers defined for a Fabric mod and mapped onto named classes in this repo; the four bugs of 2026-08-20 (#26, #27, #28, #30) used as the evidence; the #30 matrix check written up as the worked example. Records that the harness is not wired up (#40) and the verified artefact facts as of loader 0.19.3. |
-| 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). Every named class and method re-checked against the merged tree: Mojang mappings throughout, `getSlotsForFace`/`canTakeItemThroughFace`/`saveAdditional`, `cookingTotalTime` now a derived function and a better layer-1 target, the renderer's `extractRenderState`/`submit` split giving layer 3 an explicit `hasInput` to assert. All four bugs restated as fixed. Gradle wrapper fact corrected to 9.5.1 / Loom 1.17. |
-| 2026-08-21 | 2.1 | Tests cite requirements (#43). New section on `@Requirement`: why the annotation lives in a third `testsupport` source set, why it is `RetentionPolicy.SOURCE`, and why the citations are read out of source text rather than reflectively — the reflective version needs a classpath cycle between the two test source sets. Records that `test` and `gametest` are traced `verify:` gates and that a gate token is a checked claim in both directions. |
-| 2026-08-21 | 2.0 | Layers 1 and 2 exist (#40). Status changed from proposed to adopted. Records what #40 had to resolve against the jar rather than guess: loader-junit is a `LauncherSessionListener` and needs no code, static initialisers must not touch Minecraft, tags have to be bound by hand, the gametest run configuration is a plain `server()`, `@GameTest` defaults to an 8×8×8 empty structure. `playerWillDestroy` rewritten — `BlockEntity.preRemoveSideEffects` now drops any container's contents, so both halves of the old entry were wrong. Layer 3 marked as still not wired up, and the flint-and-steel interaction question left open rather than answered. |
-| 2026-08-21 | 2.2 | The worked example describes a test that exists (#47). It said "nothing checks it today" while `TreeMatrixTest` had been checking all 18 arms since #40. The red-step consequence now records how #40 saw red after the fix had landed — by re-breaking the tree in two ways, one per layer. |
-
-*Last updated: 2026-08-21*

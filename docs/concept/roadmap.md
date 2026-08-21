@@ -74,11 +74,3 @@ conditional design phase in [`../ops/orchestration.md`](../ops/orchestration.md)
 | 1.20.4 → 1.21.11 → 26.2 migration | [`../ops/version-migration.md`](../ops/version-migration.md), issues #19, #20 |
 | NeoForge alongside Fabric | Issue #21 |
 | Known broken behaviour | The status matrix in [`../requirements/README.md`](../requirements/README.md), issues #15, #27, #28 |
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Placeholder. Harvests issue #1, the README's "coming soon", and the concept's open questions so nothing is lost before the roadmap is actually written. |
-
-*Last updated: 2026-08-20*

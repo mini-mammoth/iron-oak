@@ -208,17 +208,3 @@ what a test would have asserted, in prose.
   is one, name the issue when there is not, and leave the citation off when neither applies.
 - **No "all features must be implemented using TDD."** This document says where, and it
   means only that.
-
----
-
-## 📅 Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1.0 | Initial version (#39). Deliberately narrow: test-first for bug reproductions and matrix invariants, explicitly not for version migrations, rendering, worldgen aesthetics or the existing untested surface — with the reason given for each. Records that red must be observed for the real reason (#30's 54 findings), that red is never committed, and that a verification script is a test. |
-| 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). The four bugs restated as fixed and merged, none of them with a test. The #28 walkthrough now records what actually landed — the cached field was deleted rather than persisted — and draws the lesson that an assertion on a mechanism dies with the mechanism. The recipe-numbers and rendering rows updated for `ModRecipes.DEFAULT_COOKING_TIME` and the `extractRenderState`/`submit` split. |
-| 2026-08-21 | 2.1 | The requirement-ID deferral is gone (#43): `docs/requirements/` landed with #32, so a test that proves a requirement cites it with `@Requirement` and the citation is checked both ways. What survives of the old bullet is the word *every* — a test with no requirement behind it does not get a plausible-looking one. |
-| 2026-08-21 | 2.0 | In force (#40). Status changed from proposed to adopted. The four bugs now have their tests, each checked against a deliberately re-broken tree. The red step gains #40's finding that the two layers caught two different halves of #30 and neither subsumed the other. The untested-surface row gains the case that made the rule real: behaviour that changed under the mod got a reported finding, not a test. |
-| 2026-08-21 | 2.2 | Staleness sweep (#47). "Zero existing tests" and the zero-tests heading are gone — #40 landed them, and the argument for a narrow rule never depended on the count. The refactor section now says how far the suite reaches instead of quoting a line total, and the `runClient` checklist shrinks per gametest rather than waiting for gametests to exist. |
-
-*Last updated: 2026-08-21*
