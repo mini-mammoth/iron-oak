@@ -213,10 +213,14 @@ deps(build): upgrade to Minecraft 1.21.11 (#31)
 
 ### Version branches
 
-`main` tracks the newest supported Minecraft version. Older lines live on their own
-branches (`v1.18.x`, `1.19` exist today) and CI builds `main` and `v1.18.x`. A fix that
-applies to several lines is committed on `main` first, then cherry-picked — never
-developed twice in parallel.
+`main` tracks the newest supported Minecraft version. Every other supported line is a
+branch named `v<exact version>` — `v1.21.11` and `v1.21.1` exist today — cut from that
+version's release tag once `main` moves past it. CI builds `main` plus every supported
+line and nothing else; `v1.18.x` and `1.19` are archived and get no CI. A fix that applies
+to several lines is committed on `main` first, then cherry-picked — never developed twice
+in parallel. A cherry-pick across the `Identifier`/`ResourceLocation` boundary (1.21.11 and
+older) or the obfuscated/unobfuscated boundary (26.1 and newer) is a hand-port, not a
+clean apply — budget accordingly.
 
 `mod_version` in `gradle.properties` is `<mod>+<mc>` (e.g. `1.2.1+1.20.4`). Bump the
 Minecraft half in the same commit as the version bump, never separately.

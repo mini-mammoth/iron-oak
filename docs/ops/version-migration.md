@@ -231,9 +231,10 @@ The open issues against old versions (#11 Quilt on 1.18.2, #15 washing on an uns
 version) need a version decision before they are workable. Both are
 `status:needs-human` until then.
 
-A **1.21.1 backport** is the obvious candidate for more reach afterwards (13.7 % of
-downloads, the biggest single modpack anchor) — but it is a second maintained line, not a
-free release, and it is out of scope here.
+A **1.21.1 down-port** was the obvious candidate for more reach afterwards (13.7 % of
+downloads, the biggest single modpack anchor) — decided in #53/#54, and now its own
+maintained line on branch `v1.21.1`. This document stays the 1.20.4 → 26.2 plan; the
+down-port itself is scoped and gated separately, per `AGENTS.md` → "Version branches".
 
 ---
 
