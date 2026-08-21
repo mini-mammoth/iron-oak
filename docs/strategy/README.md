@@ -35,9 +35,13 @@ it up.
 
 | Document | Answers |
 |----------|---------|
-| [testing.md](testing.md) | Where does a test for *this* go, which of the three layers runs it, and what does `./gradlew build` actually prove? |
+| [testing.md](testing.md) | Where does a test for *this* go, which of the three layers runs it, which requirement does it cite, and what does `./gradlew build` actually prove? |
 | [test-driven-development.md](test-driven-development.md) | Does the test come first — and where does it honestly not, in a repo whose entire existing surface is untested? |
 | [java.md](java.md) | Registration, the client/server split, where `null` is tolerated, and how the 6×3 matrix constrains `ModBlocks`/`ModItems`. |
+
+`java.md` answers *why*. When what you need is the rule rather than the reason, the
+`java` skill is the same conventions as a checklist — it is generated from this document and
+defers to it on every point of substance.
 
 **Read [`java.md`](java.md) before your first non-trivial change to `src/`.** It records
 the things a reader of this codebase cannot infer in one pass — including the two that
@@ -89,6 +93,11 @@ are `active` now: #40 wired up layers 1 and 2, so both are in force. **One thing
 configuration and no test, and that section says so where it appears. Everything else in
 both documents describes something you can run.
 
+The one deferral those documents carried is also gone. `test-driven-development.md` used to
+say that no test would cite a requirement id until `docs/requirements/` existed; it does
+(#32), so tests cite it (#43), and the citation is checked in both directions rather than
+being a comment.
+
 ---
 
 ## 📅 Version History
@@ -96,6 +105,7 @@ both documents describes something you can run.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Taxonomy adapted from the openkegelbillard `docs/strategy/` split; contents written for a Fabric mod from scratch. Records the concept/strategy and strategy/ops boundaries, and the `proposed` status convention for the not-yet-wired test harness. |
+| 2026-08-21 | 1.2 | Tests cite requirements (#43). `testing.md` gains the `@Requirement` section and `test-driven-development.md` loses its requirement-ID deferral, since `docs/requirements/` landed with #32. Notes that the `java` skill is the checklist form of `java.md` and defers to it. |
 | 2026-08-21 | 1.1 | `testing.md` and `test-driven-development.md` moved from `proposed` to `active` (#40). The status-honesty section now names the one part still ahead of the tree — layer 3 — rather than the whole harness. |
 
 *Last updated: 2026-08-21*
