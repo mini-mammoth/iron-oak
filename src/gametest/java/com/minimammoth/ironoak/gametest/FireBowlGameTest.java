@@ -6,9 +6,10 @@ import com.minimammoth.ironoak.init.ModBlocks;
 import com.minimammoth.ironoak.init.ModItems;
 import com.minimammoth.ironoak.init.ModRecipes;
 import com.minimammoth.ironoak.requirements.Requirement;
-import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
@@ -35,17 +36,17 @@ public class FireBowlGameTest {
      * pin the duration and not what the duration does.
      */
     @Requirement("BRN-03")
-    @GameTest(maxTicks = ModRecipes.DEFAULT_COOKING_TIME + 100)
+    @GameTest(timeoutTicks = ModRecipes.DEFAULT_COOKING_TIME + 100)
     public void aLitBowlBurnsALogIntoAsh(GameTestHelper helper) {
         FireBowlEntity bowl = litBowlWith(helper, new ItemStack(ModItems.IRON_OAK_LOG));
 
         helper.succeedWhen(() -> {
             if (!bowl.getInput().isEmpty()) {
-                throw helper.assertionException("the log is still in the bowl after %d ticks",
-                        ModRecipes.DEFAULT_COOKING_TIME);
+                throw new GameTestAssertException(
+                        "the log is still in the bowl after " + ModRecipes.DEFAULT_COOKING_TIME + " ticks");
             }
             if (!bowl.getOutput().is(ModItems.IRON_ASH)) {
-                throw helper.assertionException("the bowl produced %s instead of iron ash", bowl.getOutput());
+                throw new GameTestAssertException("the bowl produced " + bowl.getOutput() + " instead of iron ash");
             }
         });
     }
@@ -56,7 +57,7 @@ public class FireBowlGameTest {
      * condition now matches {@code CampfireBlock}'s — unlit and not waterlogged.
      */
     @Requirement("BRN-07")
-    @GameTest(maxTicks = 100)
+    @GameTest(timeoutTicks = 100)
     public void aBurningArrowLightsAnUnlitBowl(GameTestHelper helper) {
         helper.setBlock(BOWL.below(), Blocks.STONE);
         helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
@@ -78,20 +79,20 @@ public class FireBowlGameTest {
      * regression test needs a real hopper.
      */
     @Requirement("BRN-06")
-    @GameTest(maxTicks = 100)
+    @GameTest(timeoutTicks = 100)
     public void aHopperFeedsTheBowl(GameTestHelper helper) {
         helper.setBlock(BOWL.below(), Blocks.STONE);
         helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
 
         BlockPos hopperPos = BOWL.above();
         helper.setBlock(hopperPos, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));
-        helper.getBlockEntity(hopperPos, HopperBlockEntity.class)
-                .setItem(0, new ItemStack(ModItems.IRON_OAK_LOG));
+        HopperBlockEntity hopper = helper.getBlockEntity(hopperPos);
+        hopper.setItem(0, new ItemStack(ModItems.IRON_OAK_LOG));
 
-        FireBowlEntity bowl = helper.getBlockEntity(BOWL, FireBowlEntity.class);
+        FireBowlEntity bowl = helper.getBlockEntity(BOWL);
         helper.succeedWhen(() -> {
             if (!bowl.getInput().is(ModItems.IRON_OAK_LOG)) {
-                throw helper.assertionException("the hopper did not push the log in");
+                throw new GameTestAssertException("the hopper did not push the log in");
             }
         });
     }
@@ -102,23 +103,23 @@ public class FireBowlGameTest {
      * hopper agrees.
      */
     @Requirement("BRN-06")
-    @GameTest(maxTicks = 100)
+    @GameTest(timeoutTicks = 100)
     public void aHopperBelowTakesOnlyTheOutput(GameTestHelper helper) {
         helper.setBlock(BOWL.below(2), Blocks.STONE);
         helper.setBlock(BOWL.below(), Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));
         helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
 
-        FireBowlEntity bowl = helper.getBlockEntity(BOWL, FireBowlEntity.class);
+        FireBowlEntity bowl = helper.getBlockEntity(BOWL);
         bowl.setInput(new ItemStack(ModItems.IRON_OAK_LOG));
         bowl.setItem(1, new ItemStack(ModItems.IRON_ASH));
 
-        HopperBlockEntity hopper = helper.getBlockEntity(BOWL.below(), HopperBlockEntity.class);
+        HopperBlockEntity hopper = helper.getBlockEntity(BOWL.below());
         helper.succeedWhen(() -> {
             if (!hopper.getItem(0).is(ModItems.IRON_ASH)) {
-                throw helper.assertionException("the hopper did not pull the ash out");
+                throw new GameTestAssertException("the hopper did not pull the ash out");
             }
             if (!bowl.getInput().is(ModItems.IRON_OAK_LOG)) {
-                throw helper.assertionException("the hopper stole the log out of the input slot");
+                throw new GameTestAssertException("the hopper stole the log out of the input slot");
             }
         });
     }
@@ -129,35 +130,21 @@ public class FireBowlGameTest {
      *
      * docs/strategy/testing.md asks for two gametests: breaking an unlit bowl drops its
      * contents, and breaking a lit one destroys them — the second being intended, "written
-     * down as a test so nobody fixes it by accident". Neither is true any more.
-     *
-     * Since 1.21.11, LevelChunk.setBlockState calls BlockEntity.preRemoveSideEffects
-     * whenever a block entity is removed, and its default body is:
-     *
-     *     if (this instanceof Container container && this.level != null) {
-     *         Containers.dropContents(this.level, blockPos, container);
-     *     }
-     *
-     * FireBowlEntity is a Container, so vanilla now drops the contents on every removal
-     * path. Two consequences: FireBowlBlock.playerWillDestroy's own spawnContainingItems()
-     * is redundant (it empties the container first, so nothing drops twice), and a lit bowl
-     * no longer destroys what is inside it.
-     *
-     * Verified, not inferred: a gametest that broke a lit bowl and asserted the log was gone
-     * failed with "Did not expect item of type Iron Infused Oak Log at (1, 2, 1)".
-     *
-     * Whether the lit-bowl exception should be restored is a gameplay decision with a
-     * requirement behind it, and restoring it means overriding preRemoveSideEffects. That is
-     * a behaviour change, out of scope for a test-harness ticket. Reported instead — and no
-     * test is shipped for it, because a test written against behaviour nobody has decided on
-     * would freeze it in place.
+     * down as a test so nobody fixes it by accident". On 1.21.11 neither is true any more,
+     * because LevelChunk.setBlockState there calls BlockEntity.preRemoveSideEffects — which
+     * unconditionally drops a Container's contents on every removal — whenever a block
+     * entity is removed. This hook does not exist on 1.21.1: FireBowlBlock.onRemove's own
+     * spawnContainingItems() is the only thing that drops the contents here, so both rules
+     * are real and observable on this version. Not added in this down-port to keep it a
+     * pure port rather than new coverage; report as a follow-up for whoever maintains this
+     * line.
      */
 
     private static FireBowlEntity litBowlWith(GameTestHelper helper, ItemStack input) {
         helper.setBlock(BOWL.below(), Blocks.STONE);
         helper.setBlock(BOWL, ModBlocks.FIRE_BOWL.defaultBlockState().setValue(FireBowlBlock.LIT, true));
 
-        FireBowlEntity bowl = helper.getBlockEntity(BOWL, FireBowlEntity.class);
+        FireBowlEntity bowl = helper.getBlockEntity(BOWL);
         bowl.setInput(input);
         return bowl;
     }
