@@ -42,7 +42,10 @@ orca terminal create --worktree path:<worktreePath> --title issue-<n>-<slug> \
   --command "claude --model sonnet --permission-mode bypassPermissions" --json
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 120000 --json
 orca orchestration task-create --spec "<spec>" --json
-orca orchestration dispatch --task <task_id> --to <handle> --inject --json
+orca orchestration dispatch --task <task_id> --to <handle> --json    # register, do NOT inject
+# write the preamble to a file OUTSIDE the worktree, then deliver it:
+orca orchestration dispatch --task <task_id> --to <handle> --return-preamble --dry-run --json
+orca terminal send --terminal <handle> --text "Read <briefing-path> fully and execute it." --enter --json
 orca terminal read --terminal <handle> --json       # MANDATORY: prove delivery
 ```
 
@@ -152,9 +155,22 @@ Hence step 4, every time.
 stayed at `0/200k`. A supervisor that trusts the status reports running workers that are idle
 and loses a whole interval.
 
-**Check first, then re-deliver — never both unchecked.** Poll `orca terminal read` for
-10–30 s; re-deliver only if the counter is still zero. A single read immediately after
-dispatch always shows zero and is not evidence.
+**Deliver with `terminal send`, not `--inject`.** `--inject` has failed on every dispatch
+attempted in this repo so far (#52, #20 — ledger #61), each time costing two round-trips before
+the fallback ran. `terminal send` has worked every time. So register the dispatch without
+`--inject` to get a live context, then deliver the preamble by hand. Replace `ctx_dryrun` in
+the preamble with the real id from `dispatch-show`, and write the file **outside** the worktree
+so it never lands in a commit.
+
+**Prove delivery either way.** Poll `orca terminal read` for 10–30 s. A single read immediately
+after delivery always shows zero and is not evidence.
+
+**Two ordering traps in the fallback**, both observed:
+- A task already in `dispatched` cannot be dispatched again (`only ready tasks can be
+  dispatched`). Register **once**, then deliver into that context.
+- A `--inject` attempt that fails leaves the dispatch `failed` with `capability_revoked_at`
+  set. Delivering that preamble gives the worker no `worker_done` authority — register a fresh
+  dispatch instead of reusing the dead one.
 
 - **The counter reads `0/200k` — no `k` before the slash.** A pattern like `[0-9]+k/200k`
   does not match zero, returns empty, and a branch that reads empty as "not zero" reports a
