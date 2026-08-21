@@ -6,6 +6,7 @@ import com.minimammoth.ironoak.init.ModBlocks;
 import com.minimammoth.ironoak.init.ModItems;
 import com.minimammoth.ironoak.init.ModRecipes;
 import com.minimammoth.ironoak.requirements.Requirement;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -36,7 +37,7 @@ public class FireBowlGameTest {
      * pin the duration and not what the duration does.
      */
     @Requirement("BRN-03")
-    @GameTest(timeoutTicks = ModRecipes.DEFAULT_COOKING_TIME + 100)
+    @GameTest(timeoutTicks = ModRecipes.DEFAULT_COOKING_TIME + 100, template = FabricGameTest.EMPTY_STRUCTURE)
     public void aLitBowlBurnsALogIntoAsh(GameTestHelper helper) {
         FireBowlEntity bowl = litBowlWith(helper, new ItemStack(ModItems.IRON_OAK_LOG));
 
@@ -57,7 +58,7 @@ public class FireBowlGameTest {
      * condition now matches {@code CampfireBlock}'s — unlit and not waterlogged.
      */
     @Requirement("BRN-07")
-    @GameTest(timeoutTicks = 100)
+    @GameTest(timeoutTicks = 100, template = FabricGameTest.EMPTY_STRUCTURE)
     public void aBurningArrowLightsAnUnlitBowl(GameTestHelper helper) {
         helper.setBlock(BOWL.below(), Blocks.STONE);
         helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
@@ -79,7 +80,7 @@ public class FireBowlGameTest {
      * regression test needs a real hopper.
      */
     @Requirement("BRN-06")
-    @GameTest(timeoutTicks = 100)
+    @GameTest(timeoutTicks = 100, template = FabricGameTest.EMPTY_STRUCTURE)
     public void aHopperFeedsTheBowl(GameTestHelper helper) {
         helper.setBlock(BOWL.below(), Blocks.STONE);
         helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
@@ -103,7 +104,7 @@ public class FireBowlGameTest {
      * hopper agrees.
      */
     @Requirement("BRN-06")
-    @GameTest(timeoutTicks = 100)
+    @GameTest(timeoutTicks = 100, template = FabricGameTest.EMPTY_STRUCTURE)
     public void aHopperBelowTakesOnlyTheOutput(GameTestHelper helper) {
         helper.setBlock(BOWL.below(2), Blocks.STONE);
         helper.setBlock(BOWL.below(), Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, Direction.DOWN));

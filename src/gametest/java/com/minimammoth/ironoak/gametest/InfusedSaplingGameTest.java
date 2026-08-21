@@ -3,6 +3,7 @@ package com.minimammoth.ironoak.gametest;
 import com.minimammoth.ironoak.OreInfusedSaplingBlock;
 import com.minimammoth.ironoak.init.ModBlocks;
 import com.minimammoth.ironoak.requirements.Requirement;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -26,19 +27,19 @@ import net.minecraft.world.level.block.state.BlockState;
 public class InfusedSaplingGameTest {
 
     @Requirement("TRE-03")
-    @GameTest(skyAccess = true, timeoutTicks = 200)
+    @GameTest(skyAccess = true, timeoutTicks = 200, template = FabricGameTest.EMPTY_STRUCTURE)
     public void ironSpruceSaplingGrowsIronSpruce(GameTestHelper helper) {
         assertGrowsInto(helper, ModBlocks.IRON_SPRUCE_SAPLING, ModBlocks.IRON_SPRUCE_LOG);
     }
 
     @Requirement("TRE-03")
-    @GameTest(skyAccess = true, timeoutTicks = 200)
+    @GameTest(skyAccess = true, timeoutTicks = 200, template = FabricGameTest.EMPTY_STRUCTURE)
     public void copperDarkOakSaplingGrowsCopperDarkOak(GameTestHelper helper) {
         assertGrowsInto(helper, ModBlocks.COPPER_DARK_OAK_SAPLING, ModBlocks.COPPER_DARK_OAK_LOG);
     }
 
     @Requirement("TRE-03")
-    @GameTest(skyAccess = true, timeoutTicks = 200)
+    @GameTest(skyAccess = true, timeoutTicks = 200, template = FabricGameTest.EMPTY_STRUCTURE)
     public void goldJungleSaplingGrowsGoldJungle(GameTestHelper helper) {
         assertGrowsInto(helper, ModBlocks.GOLD_JUNGLE_SAPLING, ModBlocks.GOLD_JUNGLE_LOG);
     }
