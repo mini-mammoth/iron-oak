@@ -276,6 +276,7 @@ is cheap and you should not be shy about it. The expensive mistakes in this repo
 | Label taxonomy | `docs/ops/issue-labels.md` |
 | Supervisor loop runbook | `docs/ops/orca-progress-loop.md` |
 | Migration plan and its stages | `docs/ops/version-migration.md` |
+| Which versions and loaders we ship, and why | `docs/ops/multiloader.md` |
 | How to cut a release / publish to Modrinth or CurseForge | `docs/ops/release.md` |
 | Fabric API for the current version | https://docs.fabricmc.net/ |
 | The rules for writing Java here, as a checklist | the `java` skill |
@@ -323,5 +324,6 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
 | 2026-08-21 | 1.4 | Staleness sweep (#47). The file and line counts and the jar's "~347 files" are gone — all three had drifted, and the empty-jar bug shipped 2 files, so the check is an order of magnitude. The jar command no longer uses a glob that matches the sources jar too. |
 | 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
+| 2026-08-21 | 1.5 | Points at the new `docs/ops/multiloader.md` for which Minecraft lines and which loaders the mod ships (#21). Note for whoever converts to Architectury: the "no DeferredRegister" rule in the Registration row above is Fabric-only reasoning and has to be revisited in that PR, not worked around. |
 
 *Last updated: 2026-08-21*

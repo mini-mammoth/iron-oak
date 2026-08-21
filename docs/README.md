@@ -69,6 +69,7 @@ workers — a worker reads [`AGENTS.md`](../AGENTS.md), which is deliberately sh
 | [orca-progress-loop.md](ops/orca-progress-loop.md) | Scheduled progress supervisor: locks, collecting workers, harvesting, invariants |
 | [issue-labels.md](ops/issue-labels.md) | Issue label taxonomy — a closed set; new labels need human approval |
 | [version-migration.md](ops/version-migration.md) | The staged 1.20.4 → 1.21.11 → 26.2 migration and its gates |
+| [multiloader.md](ops/multiloader.md) | Which Minecraft lines and which loaders we ship, the reach measurement behind that, and what Architectury does not abstract |
 | [release.md](ops/release.md) | Cutting a release and publishing to Modrinth and CurseForge |
 
 Design documents (`docs/design/`) do not exist yet and are only created for work that changes
