@@ -62,12 +62,27 @@ sourceSets {
         }
     }
 
+    // The @Requirement annotation and nothing else. It belongs to neither test layer and
+    // has to compile in both, so it cannot live in either of their source sets: layer 1 is
+    // src/test and layer 2 is src/gametest, and the two share no classpath.
+    //
+    // Deliberately dependency-free — no Minecraft, no JUnit, no Loom involvement. The
+    // annotation is RetentionPolicy.SOURCE, so it is erased at compile time and appears on
+    // no runtime classpath and in no artefact; both source sets below take it as a
+    // compile-only dependency for that reason.
+    testsupport {
+    }
+
+    test {
+        compileClasspath += sourceSets.testsupport.output
+    }
+
     // Layers 2 and 3 of docs/strategy/testing.md. A source set of its own rather than
     // src/test, because the two kinds of test have nothing in common: one is milliseconds
     // and runs on every build, the other needs a game and a run configuration. It also
     // means the `jar` task — which only ever packages `main` — cannot ship any of it.
     gametest {
-        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output + sourceSets.testsupport.output
         runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
     }
 }

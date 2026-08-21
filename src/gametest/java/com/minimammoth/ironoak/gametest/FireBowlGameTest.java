@@ -5,6 +5,7 @@ import com.minimammoth.ironoak.FireBowlEntity;
 import com.minimammoth.ironoak.init.ModBlocks;
 import com.minimammoth.ironoak.init.ModItems;
 import com.minimammoth.ironoak.init.ModRecipes;
+import com.minimammoth.ironoak.requirements.Requirement;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,6 +34,7 @@ public class FireBowlGameTest {
      * no way to observe that without ticking a world, which is why the layer-1 test can only
      * pin the duration and not what the duration does.
      */
+    @Requirement("BRN-03")
     @GameTest(maxTicks = ModRecipes.DEFAULT_COOKING_TIME + 100)
     public void aLitBowlBurnsALogIntoAsh(GameTestHelper helper) {
         FireBowlEntity bowl = litBowlWith(helper, new ItemStack(ModItems.IRON_OAK_LOG));
@@ -53,6 +55,7 @@ public class FireBowlGameTest {
      * true before setting it to true, so a burning arrow could never light the bowl. The
      * condition now matches {@code CampfireBlock}'s — unlit and not waterlogged.
      */
+    @Requirement("BRN-07")
     @GameTest(maxTicks = 100)
     public void aBurningArrowLightsAnUnlitBowl(GameTestHelper helper) {
         helper.setBlock(BOWL.below(), Blocks.STONE);
@@ -74,6 +77,7 @@ public class FireBowlGameTest {
      * duration is derived — but the bug lived at the seam between two real inserters, so the
      * regression test needs a real hopper.
      */
+    @Requirement("BRN-06")
     @GameTest(maxTicks = 100)
     public void aHopperFeedsTheBowl(GameTestHelper helper) {
         helper.setBlock(BOWL.below(), Blocks.STONE);
@@ -97,6 +101,7 @@ public class FireBowlGameTest {
      * back out of the input slot. {@code getSlotsForFace} says so at layer 1; this proves a
      * hopper agrees.
      */
+    @Requirement("BRN-06")
     @GameTest(maxTicks = 100)
     public void aHopperBelowTakesOnlyTheOutput(GameTestHelper helper) {
         helper.setBlock(BOWL.below(2), Blocks.STONE);

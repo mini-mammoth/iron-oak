@@ -3,6 +3,7 @@ package com.minimammoth.ironoak.init;
 import com.google.gson.JsonObject;
 import com.minimammoth.ironoak.BootstrappedGame;
 import com.minimammoth.ironoak.Resources;
+import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
@@ -47,6 +48,7 @@ class RegistryAssetsTest {
         return modIds(BuiltInRegistries.BLOCK.keySet());
     }
 
+    @Requirement("MAT-02")
     @ParameterizedTest(name = "{0}")
     @MethodSource("items")
     void itemHasAClientItemDefinition(Identifier id) {
@@ -58,6 +60,7 @@ class RegistryAssetsTest {
                 () -> id + " points its client item definition at another item's model");
     }
 
+    @Requirement("MAT-02")
     @ParameterizedTest(name = "{0}")
     @MethodSource("items")
     void itemHasTheModelItsDefinitionPointsAt(Identifier id) {
@@ -65,6 +68,7 @@ class RegistryAssetsTest {
                 () -> "no model for " + id);
     }
 
+    @Requirement("MAT-02")
     @ParameterizedTest(name = "{0}")
     @MethodSource("blocks")
     void blockHasABlockstate(Identifier id) {
@@ -72,6 +76,8 @@ class RegistryAssetsTest {
                 () -> "no blockstate for " + id);
     }
 
+    @Requirement("MAT-02")
+    @Requirement("TRE-06")
     @ParameterizedTest(name = "{0}")
     @MethodSource("blocks")
     void blockHasTheLootTableItDeclares(Identifier id) {
@@ -90,6 +96,7 @@ class RegistryAssetsTest {
      * key via {@code useBlockDescriptionPrefix}, so asking the item for its own description
      * id is what catches a block item that lost that call and now shows a raw key.
      */
+    @Requirement("MAT-05")
     @Test
     void everyRegisteredThingHasAnEnglishName() {
         Map<String, String> lang = Resources.jsonOrFail("assets/" + MOD_ID + "/lang/en_us.json")
@@ -113,6 +120,7 @@ class RegistryAssetsTest {
      * The creative tab is the other half of #26 — it went missing along with the textures,
      * and it is what a player notices first.
      */
+    @Requirement("MAT-02")
     @Test
     void theCreativeTabIsRegistered() {
         assertTrue(BuiltInRegistries.CREATIVE_MODE_TAB.containsKey(ModItems.DEFAULT_ITEM_GROUP),

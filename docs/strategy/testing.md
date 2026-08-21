@@ -27,7 +27,9 @@ related:
 
 This document is the **how**: which layer a test belongs at, what runs it, and what a test
 in this repo actually looks like. For the **when** — does the test come before the code —
-see [test-driven-development.md](test-driven-development.md).
+see [test-driven-development.md](test-driven-development.md). For **which requirement a test
+proves**, and why that citation is checked in both directions, see *Citing the requirement a
+test proves* below.
 
 ---
 
@@ -180,6 +182,71 @@ retired seven of its lines. The rest of the list is still walked by hand.
 
 ---
 
+## Citing the requirement a test proves
+
+A test names the **issue** it came from in its javadoc, and that is still asked for below.
+An issue says why the test was written; it is a moment, and prose. It cannot answer the one
+question worth asking of [`docs/requirements/`](../requirements/README.md): *which
+requirement has nothing proving it?*
+
+So a test that proves a requirement also cites it:
+
+```java
+@Requirement("MAT-02")
+@Test
+void everyFeatureKeyHasCommittedJson() { … }
+```
+
+`@Requirement` is repeatable — a test that proves two requirements says so twice rather than
+picking the closer one — and it works identically at both layers. Three facts about how it is
+built, because none of them is guessable:
+
+- It lives in a third source set, **`src/testsupport`**, which depends on nothing. Layer 1 is
+  `src/test` and layer 2 is `src/gametest`; those two share no classpath, so an annotation
+  both of them use can live in neither.
+- It is **`RetentionPolicy.SOURCE`**. Nothing reads it reflectively, so it is erased at
+  compile time and reaches no runtime classpath and no artefact. Check it the way
+  `AGENTS.md` says to check the jar — by looking:
+  `unzip -l build/libs/iron-oak-*.jar | grep -ic requirement` must be 0.
+- The citations are therefore read out of the **source text**, by
+  `RequirementTracingTest`. A reflective reader would need the layer-2 classes on the
+  layer-1 classpath while layer 2 already needs the annotation, and no arrangement of source
+  sets satisfies both. Reading text is also the only way to see both layers without running
+  either.
+
+### The gate token is a claim, and the claim is checked
+
+`docs/requirements/` gained two `verify:` gates for this — `test` and `gametest` — and unlike
+the other four they are traced. A requirement naming one of them asserts that a test at that
+layer proves part of it, and `RequirementTracingTest` fails the build on either half of a
+broken link:
+
+| Failure | What it means |
+|---|---|
+| A citation names an id that is not in `docs/requirements/` | A typo, or a renumbering the index forbids. |
+| A requirement claims `test`/`gametest` and nothing at that layer cites it | The requirement claims coverage it does not have — usually because the last test citing it was deleted or renamed. |
+
+Adding `test` to a requirement without writing one fails `./gradlew build`. So does deleting
+the last test for a requirement that still claims it. That is the whole point: without the
+second rule the gate token would rot exactly like every other hand-maintained cross-reference.
+
+`RequirementTracingTest` also holds the catalogue to its own stated rule — that the index's
+status matrix and the domain files "are the same fact written twice; a mismatch is a bug in
+the docs" — and checks the headline tally against the table it counts.
+
+**Two things it deliberately does not do.** It does not require a test to cite a requirement:
+`ImplementedInventoryTest` pins the defaults of an internal helper that no requirement
+describes, and a false citation there would be worse than none. And it enforces no coverage
+number — a requirement with no gate token is simply not claiming automated coverage, which is
+the honest state for most of the thirty-six. See *What this strategy deliberately does not do*
+below.
+
+A gate token means a test proves **part** of the requirement, not all of it. Most of these
+requirements have acceptance criteria no automated gate can reach; the criteria stay the
+specification, and `runClient` stays the gate for anything in-world.
+
+---
+
 ## The worked example: the #30 matrix test
 
 This is what a test in this repo actually looks like, and it is not hypothetical. The
@@ -276,18 +343,23 @@ Two constraints inherited from `AGENTS.md` that apply to the harness as much as 
 
 ---
 
-## Where tests will live (intended, #40 decides)
+## Where tests live
 
 ```
 src/test/java/com/minimammoth/ironoak/…               layer 1, loader-junit
 src/gametest/java/com/minimammoth/ironoak/gametest/…  layer 2
 src/gametest/resources/fabric.mod.json                its fabric-gametest entrypoints
+src/testsupport/java/…/requirements/Requirement.java  the @Requirement annotation, and only that
 ```
 
 Two directories rather than one, because the two kinds have nothing in common: one is
 milliseconds and runs on every build, the other needs a game and a run configuration. Not
 co-located with `src/main` — Loom's source sets and the remapper make co-location a fight
 with no prize.
+
+`testsupport` is a third, and it holds one annotation. It exists because the other two share
+no classpath and both need it — see *Citing the requirement a test proves* above. It depends
+on nothing at all: no Minecraft, no JUnit, no Loom mod registration.
 
 `gametest` is a source set of its own, registered with Loom as a second mod
 (`iron_oak_gametest`) so its classes are remapped against the mod they test, and carrying
@@ -325,6 +397,8 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
 | Asserting on a display string from `lang/en_us.json` | It is localisable, and `de_de` exists. | Assert the translation **key** resolves; leave the text to the translator. |
 | A gametest that sleeps, or asserts after a fixed tick count | Flaky by construction, and a flaky gametest gets disabled and then deleted. | Drive ticks explicitly and assert on state, not on elapsed time. |
 | A throwaway verification script | #30, verbatim. | Check it in. |
+| Citing the nearest plausible requirement because a test "should" have one | `RequirementTracingTest` then reports that requirement as proven while nothing proves it — strictly worse than no citation, because it is read as coverage. | Cite the requirement the test actually proves, or none. `ImplementedInventoryTest` correctly has none. |
+| Adding `test` to a requirement's `verify:` list before the test exists | It fails `./gradlew build` — the gate list is a claim, and the claim is checked. | Write the test, cite the requirement, then add the gate token. |
 | Adding a test that needs a newer Loom, Gradle or Minecraft | `AGENTS.md`: a version bump is never a side effect. | Report it. It belongs in an `area:build` ticket. |
 
 ---
@@ -337,6 +411,10 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
   `runClient` for anything in-world.
 - **No mocking framework.** Nothing in this mod is worth a mock. Everything is either a
   value (layer 1) or a world (layer 2).
+- **No requirement-coverage number, and no rule that every test cites a requirement.** The
+  tracing test checks that the claims which *are* made are true; it does not count them.
+  Twenty-three of the thirty-six requirements name no automated gate, and most of those
+  honestly cannot — `runClient` is still the only thing that can see a particle.
 - **No snapshot tests of generated JSON.** Idempotence of `runDatagen` is the real
   assertion, and `git status --short` already makes it.
 - **No blanket "tests before implementation" rule.** See
@@ -352,6 +430,7 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Three layers defined for a Fabric mod and mapped onto named classes in this repo; the four bugs of 2026-08-20 (#26, #27, #28, #30) used as the evidence; the #30 matrix check written up as the worked example. Records that the harness is not wired up (#40) and the verified artefact facts as of loader 0.19.3. |
 | 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). Every named class and method re-checked against the merged tree: Mojang mappings throughout, `getSlotsForFace`/`canTakeItemThroughFace`/`saveAdditional`, `cookingTotalTime` now a derived function and a better layer-1 target, the renderer's `extractRenderState`/`submit` split giving layer 3 an explicit `hasInput` to assert. All four bugs restated as fixed. Gradle wrapper fact corrected to 9.5.1 / Loom 1.17. |
+| 2026-08-21 | 2.1 | Tests cite requirements (#43). New section on `@Requirement`: why the annotation lives in a third `testsupport` source set, why it is `RetentionPolicy.SOURCE`, and why the citations are read out of source text rather than reflectively — the reflective version needs a classpath cycle between the two test source sets. Records that `test` and `gametest` are traced `verify:` gates and that a gate token is a checked claim in both directions. |
 | 2026-08-21 | 2.0 | Layers 1 and 2 exist (#40). Status changed from proposed to adopted. Records what #40 had to resolve against the jar rather than guess: loader-junit is a `LauncherSessionListener` and needs no code, static initialisers must not touch Minecraft, tags have to be bound by hand, the gametest run configuration is a plain `server()`, `@GameTest` defaults to an 8×8×8 empty structure. `playerWillDestroy` rewritten — `BlockEntity.preRemoveSideEffects` now drops any container's contents, so both halves of the old entry were wrong. Layer 3 marked as still not wired up, and the flint-and-steel interaction question left open rather than answered. |
 
 *Last updated: 2026-08-21*

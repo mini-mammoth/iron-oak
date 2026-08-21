@@ -5,6 +5,7 @@ import com.minimammoth.ironoak.BootstrappedGame;
 import com.minimammoth.ironoak.Matrix;
 import com.minimammoth.ironoak.OreInfusedSaplingBlock;
 import com.minimammoth.ironoak.Resources;
+import com.minimammoth.ironoak.requirements.Requirement;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -55,6 +56,8 @@ class TreeMatrixTest {
         return Matrix.arms();
     }
 
+    @Requirement("TRE-03")
+    @Requirement("TRE-04")
     @ParameterizedTest(name = "{0}")
     @MethodSource("arms")
     void saplingGrowsItsOwnMetalAndWood(Matrix.Arm arm) {
@@ -88,6 +91,7 @@ class TreeMatrixTest {
                 () -> arm.prefix() + "_tree has the wrong leaves — it is shaped like another wood type");
     }
 
+    @Requirement("MAT-01")
     @ParameterizedTest(name = "{0}")
     @MethodSource("arms")
     void logIsRegistered(Matrix.Arm arm) {
@@ -100,6 +104,7 @@ class TreeMatrixTest {
      * assertion: eighteen generators, no more and no fewer. An extra one means a rename left
      * an orphan behind; a missing one means an arm was forgotten.
      */
+    @Requirement("MAT-01")
     @Test
     void thereAreExactlyEighteenGenerators() {
         assertEquals(Matrix.arms().size(), ModSaplingGenerators.featureByName().size(),
@@ -110,6 +115,7 @@ class TreeMatrixTest {
      * Every feature the generators point at has to have been emitted. A key with no file is
      * a sapling that silently refuses to grow.
      */
+    @Requirement("MAT-02")
     @Test
     void everyFeatureKeyHasCommittedJson() {
         ModSaplingGenerators.featureByName().forEach((name, key) -> {

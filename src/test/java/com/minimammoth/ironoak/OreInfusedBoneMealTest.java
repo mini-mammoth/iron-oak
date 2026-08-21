@@ -1,5 +1,6 @@
 package com.minimammoth.ironoak;
 
+import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
@@ -30,6 +31,7 @@ class OreInfusedBoneMealTest {
         return Matrix.METALS;
     }
 
+    @Requirement("INF-02")
     @ParameterizedTest(name = "{0}")
     @MethodSource("metals")
     void boneMealInfusesEveryWoodWithItsOwnMetal(String metal) {

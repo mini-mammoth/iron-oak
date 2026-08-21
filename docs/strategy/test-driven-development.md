@@ -195,11 +195,14 @@ what a test would have asserted, in prose.
 - **No test-review-before-implementation gate.** There is one reviewer and an agent
   workflow; a rule that tests must be approved before code begins would stall every
   ticket. Tests are reviewed with the PR they land in.
-- **No requirement-ID annotation on every test** until `docs/requirements/` exists on
-  `main` (it lands with #32). Once it does, name the requirement in the test when there is
-  one — `TRE-04` for the matrix, for instance — and name the issue when there is not.
-  Inventing a citation scheme before the thing being cited exists is bookkeeping for its
-  own sake.
+- **No requirement-ID annotation on every test.** The catalogue exists now (#32) and a test
+  that proves a requirement cites it — `@Requirement("TRE-04")` on the matrix test, and the
+  gate token in the requirement makes that citation mandatory in both directions. See
+  [testing.md](testing.md#citing-the-requirement-a-test-proves). But *every* is still wrong:
+  `ImplementedInventoryTest` pins the defaults of an internal helper that no requirement
+  describes, and the nearest plausible id would be worse than none — the tracing test would
+  then report a requirement as proven when nothing proves it. Cite the requirement when there
+  is one, name the issue when there is not, and leave the citation off when neither applies.
 - **No "all features must be implemented using TDD."** This document says where, and it
   means only that.
 
@@ -211,6 +214,7 @@ what a test would have asserted, in prose.
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Deliberately narrow: test-first for bug reproductions and matrix invariants, explicitly not for version migrations, rendering, worldgen aesthetics or the existing untested surface — with the reason given for each. Records that red must be observed for the real reason (#30's 54 findings), that red is never committed, and that a verification script is a test. |
 | 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). The four bugs restated as fixed and merged, none of them with a test. The #28 walkthrough now records what actually landed — the cached field was deleted rather than persisted — and draws the lesson that an assertion on a mechanism dies with the mechanism. The recipe-numbers and rendering rows updated for `ModRecipes.DEFAULT_COOKING_TIME` and the `extractRenderState`/`submit` split. |
+| 2026-08-21 | 2.1 | The requirement-ID deferral is gone (#43): `docs/requirements/` landed with #32, so a test that proves a requirement cites it with `@Requirement` and the citation is checked both ways. What survives of the old bullet is the word *every* — a test with no requirement behind it does not get a plausible-looking one. |
 | 2026-08-21 | 2.0 | In force (#40). Status changed from proposed to adopted. The four bugs now have their tests, each checked against a deliberately re-broken tree. The red step gains #40's finding that the two layers caught two different halves of #30 and neither subsumed the other. The untested-surface row gains the case that made the rule real: behaviour that changed under the mod got a reported finding, not a test. |
 
 *Last updated: 2026-08-21*

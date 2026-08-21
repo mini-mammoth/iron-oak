@@ -32,7 +32,8 @@ repetitive — when you add a metal or a wood type you touch every arm of it.
 
 **Before you change behaviour, read the requirement for it.**
 [`docs/requirements/README.md`](docs/requirements/README.md) states what each mechanic must
-do, whether it currently does it, and which acceptance criteria prove it. Update the
+do, whether it currently does it, and which acceptance criteria prove it. A test cites the
+requirement it proves with `@Requirement` — see `docs/strategy/testing.md`. Update the
 requirement and its status row in the same PR as the code; a behaviour change with no requirement change means one of the two is wrong. Why
 the mod works this way, and every tunable number with its source location, live in
 [`docs/concept/`](docs/concept/README.md).
@@ -242,6 +243,9 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
   bulky and tells you nothing a provider class won't. Grep it at most.
 - **`ModBlocks.java` and `ModItems.java` are long but shallow** — the same three lines
   repeated across the matrix. Read one arm, not all eighteen.
+- **The `java` skill is the checklist; `docs/strategy/java.md` is the reasoning.** Invoke the
+  skill before you write Java here — it is short and it names the traps. Read `java.md` when
+  you need to know why a rule exists, or before your first non-trivial change to `src/`.
 - **Do not read the decompiled Minecraft sources to answer an API question.** Use the
   `minecraft-fabric-lookup` skill — it resolves the question against the jar in seconds.
   Extract one class if you must read vanilla source; opening the sources jar to browse
@@ -259,6 +263,7 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | Why the mod works this way, and what a number is | `docs/concept/README.md`, `docs/concept/balance.md` |
 | Which layer a test belongs at, and what a test here looks like | `docs/strategy/testing.md` |
 | Whether your change needs a test first | `docs/strategy/test-driven-development.md` |
+| Which requirement a test proves, and how to cite it | `docs/strategy/testing.md` — the `@Requirement` section |
 | Current target versions | `gradle.properties` |
 | Dispatch / gate / label process | `docs/ops/orchestration.md` |
 | Label taxonomy | `docs/ops/issue-labels.md` |
@@ -266,6 +271,8 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | Migration plan and its stages | `docs/ops/version-migration.md` |
 | How to cut a release / publish to Modrinth or CurseForge | `docs/ops/release.md` |
 | Fabric API for the current version | https://docs.fabricmc.net/ |
+| The rules for writing Java here, as a checklist | the `java` skill |
+| Why the Java is shaped that way | `docs/strategy/java.md` |
 | What a Minecraft symbol is called | https://mappings.dev, or the `minecraft-fabric-lookup` skill |
 | Whether a Minecraft class/method still exists in this version | the `minecraft-fabric-lookup` skill — never answer this from memory |
 
@@ -307,5 +314,6 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | 2026-08-20 | 1.0 | Initial version. Ops model adapted from the openkegelbillard setup: worker instructions here, orchestration policy in `docs/ops/`. Records the JDK-21 constraint, the datagen direction, the 6×3 matrix rule, and that there is no test suite. |
 | 2026-08-20 | 1.1 | Points at the new `docs/concept/` and `docs/requirements/`: requirements state what each mechanic must do and whether it does, and move in the same PR as the code. |
 | 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
+| 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
 
 *Last updated: 2026-08-21*

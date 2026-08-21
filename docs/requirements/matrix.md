@@ -2,8 +2,8 @@
 domain: Matrix
 domain_code: MAT
 status: active
-last_updated: 2026-08-20
-version: 1
+last_updated: 2026-08-21
+version: 2
 related:
   - README.md
   - trees.md
@@ -54,7 +54,7 @@ with no exception:
 **Why:** a missing arm is not a cosmetic gap — a sapling whose configured feature is absent
 crashes on growth, and a missing lang key ships as a raw translation string.
 
-**Acceptance criteria** (verify: `build`, `inspect`)
+**Acceptance criteria** (verify: `build`, `inspect`, `test`)
 - [ ] 18 log blocks and 18 sapling blocks are registered
 - [ ] 36 loot tables exist under `data/iron_oak/loot_tables/blocks/`
 - [ ] 18 configured features exist under `src/main/generated/.../configured_feature/`
@@ -75,7 +75,7 @@ be merged — the incomplete work is reported instead.
 matrix is all-or-nothing"); it is restated here as a requirement so a matrix gap is a failed
 requirement and not just a style note.
 
-**Acceptance criteria** (verify: `inspect`)
+**Acceptance criteria** (verify: `inspect`, `test`)
 - [ ] No registered block or item lacks a model, texture, loot table or lang key
 - [ ] No sapling references a configured feature that does not exist
 - [ ] `./gradlew runClient` reaches the creative menu with every mod item rendering
@@ -91,7 +91,7 @@ WHEN a recipe needs "any log of this metal" THEN it SHALL use
 
 This tag is what makes one burning recipe per metal sufficient instead of eighteen.
 
-**Acceptance criteria** (verify: `inspect`)
+**Acceptance criteria** (verify: `inspect`, `test`)
 - [ ] Each of the three block tags lists exactly six logs
 - [ ] The three item tags mirror them
 - [ ] `data/iron_oak/recipes/burning_<metal>_ash.json` matches on the tag, not on items
@@ -121,7 +121,7 @@ translation key.
 
 `en_us.json` is the only language file; there is no translation obligation beyond English.
 
-**Acceptance criteria** (verify: `runClient`, `inspect`)
+**Acceptance criteria** (verify: `runClient`, `inspect`, `test`)
 - [ ] No `block.iron_oak.*` / `item.iron_oak.*` key appears untranslated in-game
 - [ ] Names follow the shipped pattern `"<Metal> Infused <Wood> Log"` / `"… Sapling"`
 - [ ] The item group has a name
@@ -130,15 +130,20 @@ translation key.
 
 ## Open questions
 
-- **MAT-Q1** Should MAT-01's counts be enforced mechanically? There is no test suite, so
-  every criterion above is checked by hand today. A datagen-time assertion or a small
-  `scripts/` check would turn the matrix rule into a gate — but that is code, not
-  documentation.
+- **MAT-Q1** ~~Should MAT-01's counts be enforced mechanically?~~ **Answered: yes (#40).**
+  There is a test suite now, and the matrix rule is a gate rather than a hand check:
+  `TreeMatrixTest` walks all eighteen arms from the sapling id to the committed feature JSON
+  and asserts there are exactly eighteen generators, `RegistryAssetsTest` derives its file
+  list from the registries so a new arm cannot be missed, and `OreInfusedBoneMealTest` pins
+  the eighteen bone-meal pairings. All three run on `./gradlew build`. The counts above are
+  still worth reading as the specification — the point of MAT-Q1 was that nothing enforced
+  them, and now something does.
 
 ## Version History
 
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial. Counts verified against the shipped `1.2.1+1.20.4` tree. |
+| 2026-08-21 | 2 | MAT-01, MAT-02, MAT-03 and MAT-05 name `test` as a gate (#43) — the harness from #40 checks them on every build. MAT-Q1 answered: the counts are enforced mechanically now. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

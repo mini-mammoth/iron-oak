@@ -2,8 +2,8 @@
 domain: Infusion
 domain_code: INF
 status: active
-last_updated: 2026-08-20
-version: 1
+last_updated: 2026-08-21
+version: 2
 related:
   - README.md
   - trees.md
@@ -54,7 +54,7 @@ and wood type, in its default state.
 **Accepted saplings:** oak, birch, acacia, jungle, spruce, dark oak — declared explicitly
 per metal as a `Map<Block, Block>` in `ModItems`, not by tag.
 
-**Acceptance criteria** (verify: `runClient`)
+**Acceptance criteria** (verify: `runClient`, `test`)
 - [ ] Each of the 6 vanilla saplings converts, for each of the 3 metals (18 combinations)
 - [ ] The resulting block is the infused sapling of the *same* wood type
 - [ ] An **already infused** sapling is not converted again and consumes nothing (it is not
@@ -129,5 +129,6 @@ raw-ore-backed item on a vanilla effect.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial, from the shipped 1.20.4 behaviour. |
+| 2026-08-21 | 2 | INF-02 names `test` as a gate (#43): `OreInfusedBoneMealTest` pins all eighteen bone-meal pairings on every build. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*
