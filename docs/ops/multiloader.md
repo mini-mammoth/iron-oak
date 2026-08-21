@@ -2,7 +2,6 @@
 domain: Operations
 domain_code: OPS
 status: active
-last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - version-migration.md
