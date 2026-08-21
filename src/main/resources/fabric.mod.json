@@ -26,11 +26,10 @@
   "mixins": [
     "iron-oak.mixins.json"
   ],
-  "accessWidener": "iron_oak.accesswidener",
   "depends": {
     "fabricloader": ">=0.19.3",
     "fabric-api": "*",
-    "minecraft": "~1.21.11",
-    "java": ">=21"
+    "minecraft": ">=26.1",
+    "java": ">=25"
   }
 }
