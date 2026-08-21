@@ -119,8 +119,13 @@ those live in the workflow, because they need the tokens.
 
   ```bash
   ./gradlew clean build
-  unzip -l build/libs/iron-oak-*.jar | tail -1   # expect ~347 files, not 2
+  # Not iron-oak-*.jar: that glob also matches the sources jar, and unzip -l over two
+  # archives prints "0 files" — which reads like the empty-jar bug you are checking for.
+  unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
   ```
+
+  Expect **hundreds** of files. The number grows with every arm of the matrix, so it is the
+  order of magnitude that carries the signal — the bug shipped a jar of **2**.
 - **Neither API is idempotent.** Uploading the same version twice creates two files.
   The workflow has a `concurrency` group with `cancel-in-progress: false` for that
   reason; do not "fix" it into cancelling.
@@ -139,5 +144,6 @@ those live in the workflow, because they need the tokens.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version. Automated publishing via `mod-publish-plugin` 2.2.0 (#22). |
+| 2026-08-21 | 1.1 | The jar check no longer names a file count (#47). "~347" had drifted to 395 while sitting in three documents; the empty-jar bug shipped 2 files, so the order of magnitude is the whole signal. The command is also fixed to exclude the sources jar. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

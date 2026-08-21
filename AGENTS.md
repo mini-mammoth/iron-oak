@@ -148,8 +148,15 @@ locally and report it in the PR; never commit red.**
   line runs **Loom 1.17**, which requires Gradle 9.x and does not have that bug; pinning
   back to 8.11.1 breaks the build outright.
   The rule the pin protected still holds: when you touch the wrapper, Loom or Gradle,
-  **verify the artefact, not the exit code** —
-  `unzip -l build/libs/iron-oak-*.jar | tail -1` must show ~347 files, not 2.
+  **verify the artefact, not the exit code**. The mod jar holds hundreds of files; the bug
+  shipped **2**, so the check is an order of magnitude, not an exact count:
+
+  ```bash
+  unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
+  ```
+
+  Not `build/libs/iron-oak-*.jar` — that glob also matches the sources jar, and `unzip -l`
+  over two archives prints `0 files`, which reads like the very bug you are checking for.
   Details in [`docs/ops/release.md`](docs/ops/release.md).
 
 ---
@@ -236,8 +243,8 @@ Minecraft half in the same commit as the version bump, never separately.
 
 ## Reading code without burning your context
 
-The Java here is small — 19 files, the largest around 180 lines — so reading is cheap and
-you should not be shy about it. The expensive mistakes in this repo are elsewhere:
+The Java here is small — twenty-odd files, none longer than a few hundred lines — so reading
+is cheap and you should not be shy about it. The expensive mistakes in this repo are elsewhere:
 
 - **Never open `src/main/generated/`, `build/`, or `.gradle/`.** Generated worldgen JSON is
   bulky and tells you nothing a provider class won't. Grep it at most.
@@ -314,6 +321,7 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | 2026-08-20 | 1.0 | Initial version. Ops model adapted from the openkegelbillard setup: worker instructions here, orchestration policy in `docs/ops/`. Records the JDK-21 constraint, the datagen direction, the 6×3 matrix rule, and that there is no test suite. |
 | 2026-08-20 | 1.1 | Points at the new `docs/concept/` and `docs/requirements/`: requirements state what each mechanic must do and whether it does, and move in the same PR as the code. |
 | 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
+| 2026-08-21 | 1.4 | Staleness sweep (#47). The file and line counts and the jar's "~347 files" are gone — all three had drifted, and the empty-jar bug shipped 2 files, so the check is an order of magnitude. The jar command no longer uses a glob that matches the sources jar too. |
 | 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
 
 *Last updated: 2026-08-21*

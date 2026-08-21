@@ -2,12 +2,13 @@
 domain: Strategy
 domain_code: JAVA
 status: active
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - README.md
   - testing.md
   - ../ops/version-migration.md
+  - ../../.claude/skills/java/SKILL.md
 ---
 
 # Java Guidelines
@@ -17,7 +18,7 @@ related:
 that have already cost real bugs.
 
 Read it before your first non-trivial change to `src/`. It is short because the codebase is
-small: 20 files, roughly 1,850 lines, the largest around 360.
+small: twenty-odd files, a couple of thousand lines, the largest a few hundred.
 
 **Two things to know before you read a name here.**
 
@@ -363,5 +364,6 @@ nullable super call in `Optional.ofNullable(...).orElse(...)`.
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Writes down what `AGENTS.md` only implies: the `Registry.register` pattern and why Fabric has no `DeferredRegister`, class-load order as a load-bearing property of `init/`, "the id is the contract and the constant name is not" (#30), the server-authoritative-plus-explicit-sync rule (#27), the persisted-field rule (#28), the tolerated nulls with reasons, and how the 6×3 matrix constrains the shape of `ModBlocks`/`ModItems`. |
 | 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). Mojang mappings replace the earlier caveat about two Minecraft lines; Java 21, not 17; registration updated for the 1.21.2 key-in-settings change; #27, #28 and #30 restated as fixed, with `markUpdated` as the sync funnel and `cookingTotalTime` as derived rather than cached; the nullable-`level` inconsistency recorded as resolved; the access widener corrected to inert. |
+| 2026-08-21 | 1.2 | Counts dropped (#47). The file and line totals in the opening are now an order of magnitude, and the `java` skill's per-feature tallies went with them — a hand-written count of `var` sites rots on the next feature PR, while the rule it justified does not. The skill is listed in `related`: it is the checklist form of this document, and a PR that changes one changes the other. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

@@ -59,8 +59,8 @@ crashes on growth, and a missing lang key ships as a raw translation string.
 - [ ] 36 loot tables exist under `data/iron_oak/loot_tables/blocks/`
 - [ ] 18 configured features exist under `src/main/generated/.../configured_feature/`
 - [ ] Every registered block and item has a lang key; no key is orphaned
-- [ ] The jar contains ~347 files (see [`../ops/release.md`](../ops/release.md)) — a
-      collapsed count means an empty-jar build, not a matrix gap
+- [ ] The jar contains hundreds of files (see [`../ops/release.md`](../ops/release.md)) — a
+      collapsed count of 2 means an empty-jar build, not a matrix gap
 
 ---
 
