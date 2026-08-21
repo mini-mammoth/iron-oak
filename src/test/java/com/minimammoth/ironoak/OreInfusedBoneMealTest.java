@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * each. That is eighteen pairings written out by hand with no compiler checking that the
  * metal on the left matches the metal on the right — the same shape as #30, one layer up.
  */
+@ExtendWith(BootstrappedGame.class)
 class OreInfusedBoneMealTest {
 
     static List<String> metals() {
@@ -32,8 +33,6 @@ class OreInfusedBoneMealTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("metals")
     void boneMealInfusesEveryWoodWithItsOwnMetal(String metal) {
-        BootstrappedGame.ensure();
-
         Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse("iron_oak:" + metal + "_bone_meal"));
         assertNotNull(item, () -> metal + " bone meal is not registered");
 

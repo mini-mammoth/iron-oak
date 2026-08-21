@@ -40,12 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RegistryAssetsTest {
 
     static List<Identifier> items() {
-        BootstrappedGame.ensure();
         return modIds(BuiltInRegistries.ITEM.keySet());
     }
 
     static List<Identifier> blocks() {
-        BootstrappedGame.ensure();
         return modIds(BuiltInRegistries.BLOCK.keySet());
     }
 
