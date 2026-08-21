@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "iron_oak_gametest",
+  "version": "1.0.0",
+  "name": "Iron Oak Game Tests",
+  "description": "Server gametests for Iron Oak. Never shipped — a source set of its own, so the mod jar cannot contain it.",
+  "license": "LicenseRef-IronOak-1.0",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "com.minimammoth.ironoak.gametest.FireBowlGameTest",
+      "com.minimammoth.ironoak.gametest.InfusedSaplingGameTest"
+    ]
+  },
+  "depends": {
+    "iron_oak": "*",
+    "fabric-gametest-api-v1": "*"
+  }
+}
