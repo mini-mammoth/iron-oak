@@ -5,9 +5,7 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.Containers;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -15,6 +13,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -137,45 +136,43 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
     /**
      * You can place any log into the fire bowl. But only one at a time.
      * <p>
-     * The three return values are not interchangeable, and this block needs all three
-     * because it is both a container you empty by hand and a block you can set alight.
      * {@code ServerPlayerGameMode.useItemOn} — and its identical client twin
      * {@code MultiPlayerGameMode.performUseItemOn} — dispatches like this:
      * <ol>
-     *   <li>a {@code Success} ({@code SUCCESS} / {@code SUCCESS_SERVER} / {@code CONSUME})
-     *       ends the interaction here;</li>
-     *   <li>{@code TRY_WITH_EMPTY_HAND} runs {@link #useWithoutItem} next, and only if
-     *       <em>that</em> does not consume does the held item get a turn;</li>
-     *   <li>{@code PASS} skips {@link #useWithoutItem} entirely and goes straight to
-     *       {@code itemStack.useOn(...)}.</li>
+     *   <li>this hook runs first, even with an empty hand;</li>
+     *   <li>a consuming result ({@code SUCCESS} / {@code CONSUME} / {@code
+     *       CONSUME_PARTIAL} / {@code FAIL}) ends the interaction here;</li>
+     *   <li>{@code PASS_TO_DEFAULT_BLOCK_INTERACTION} on the main hand runs
+     *       {@link #useWithoutItem} next, and only if <em>that</em> does not consume does
+     *       the held item get a turn via {@code itemStack.useOn(...)};</li>
+     *   <li>{@code SKIP_DEFAULT_BLOCK_INTERACTION} skips {@link #useWithoutItem} and goes
+     *       straight to {@code itemStack.useOn(...)}.</li>
      * </ol>
-     * So {@code PASS}, not {@code TRY_WITH_EMPTY_HAND}, is what hands an item this block
-     * has no use for back to that item — it is the direct successor of 1.20.4's
-     * {@code ActionResult.PASS}. {@code TRY_WITH_EMPTY_HAND} sent flint and steel into
-     * {@link #useWithoutItem}, which consumed the interaction whenever the bowl had
-     * something to remove, so a loaded bowl could not be lit.
+     * So an empty hand has to be handed off explicitly — there is no
+     * {@code TRY_WITH_EMPTY_HAND} on this version — and {@code PASS_TO_DEFAULT_BLOCK_INTERACTION}
+     * is what does that.
      */
     @Override
-    protected InteractionResult useItemOn(ItemStack stackInHand, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    protected ItemInteractionResult useItemOn(ItemStack stackInHand, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
-            return InteractionResult.PASS;
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
-        // An empty hand is not an item interaction. TRY_WITH_EMPTY_HAND is what routes it
-        // on to useWithoutItem, which takes the contents back out. Safe on both sides: the
-        // contents are synced, so the client predicts the same answer the server will give.
+        // An empty hand is not an item interaction; let it fall through to useWithoutItem,
+        // which takes the contents back out. Safe on both sides: the contents are synced,
+        // so the client predicts the same answer the server will give.
         if (stackInHand.isEmpty()) {
-            return InteractionResult.TRY_WITH_EMPTY_HAND;
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
         // Burning recipes only resolve on a ServerLevel, so the client genuinely cannot
         // tell an insertable log from a flint and steel. CONSUME suppresses the client's
-        // own prediction of the held item without claiming a swing — the swing then comes
-        // from whatever the server decides. This is the shape CampfireBlock uses when it
-        // knows it would handle the item but is not on the server. The interaction packet
-        // is sent regardless of what is returned here, so the server still gets its say.
+        // own prediction of the held item without claiming a swing. This is the shape
+        // CampfireBlock uses when it knows it would handle the item but is not on the
+        // server. The interaction packet is sent regardless of what is returned here, so
+        // the server still gets its say.
         if (!(world instanceof ServerLevel serverLevel)) {
-            return InteractionResult.CONSUME;
+            return ItemInteractionResult.CONSUME;
         }
 
         // Only asked whether a recipe exists — the duration is the entity's business, and it
@@ -185,7 +182,7 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
             // bowl whose input is already occupied, because getRecipeFor guards on that —
             // which is what made the old `!entity.getInput().isEmpty()` check below
             // unreachable. 1.20.4 returned PASS in exactly this situation too.
-            return InteractionResult.PASS;
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
 
         // One log at a time; getRecipeFor already refused if the input slot is taken.
@@ -196,37 +193,35 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
         world.playSound(player, pos, SoundEvents.WOOD_PLACE, SoundSource.BLOCKS, 1f, 1f);
         stackInHand.shrink(1);
 
-        // SUCCESS_SERVER, not SUCCESS: the client returned CONSUME above and therefore did
-        // not swing, so the swing has to be driven from here. Only a Success whose
-        // swingSource is SERVER makes ServerGamePacketListenerImpl swing the arm.
-        return InteractionResult.SUCCESS_SERVER;
+        return ItemInteractionResult.SUCCESS;
     }
 
     /**
-     * Drop the stored items before the block goes away. {@code onRemove} was replaced by
-     * {@code affectNeighborsAfterRemoval}, which runs after the block entity is gone — so
-     * the contents have to be spawned here, while it still exists.
+     * Drop the stored items before the block goes away, then hand off to vanilla's own
+     * neighbour update. There is no separate {@code affectNeighborsAfterRemoval} hook on
+     * this version — {@code onRemove} still does both, while the block entity is still
+     * there to read.
      */
     @Override
-    public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
-        if (!Boolean.TRUE.equals(state.getValue(LIT))
-                && world.getBlockEntity(pos) instanceof FireBowlEntity fireBowl) {
-            // A burning fire bowl loses its contents. :/
-            fireBowl.spawnContainingItems();
+    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (!state.is(newState.getBlock())) {
+            if (Boolean.TRUE.equals(state.getValue(LIT))) {
+                // A burning fire bowl loses its contents. :/
+                return;
+            }
+
+            if (world.getBlockEntity(pos) instanceof FireBowlEntity fireBowl) {
+                fireBowl.spawnContainingItems();
+            }
+
+            super.onRemove(state, world, pos, newState, movedByPiston);
         }
-
-        return super.playerWillDestroy(world, pos, state, player);
     }
 
     @Override
-    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean movedByPiston) {
-        Containers.updateNeighboursAfterDestroy(state, world, pos);
-    }
-
-    @Override
-    protected void entityInside(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean bl) {
+    public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
         doFireDamage(state, world, entity);
-        super.entityInside(state, world, pos, entity, effectApplier, bl);
+        super.entityInside(state, world, pos, entity);
     }
 
     /**
@@ -294,7 +289,7 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
     }
 
     @Override
-    public boolean canPlaceLiquid(@Nullable LivingEntity placer, BlockGetter world, BlockPos pos, BlockState state, Fluid fluid) {
+    public boolean canPlaceLiquid(@Nullable Player placer, BlockGetter world, BlockPos pos, BlockState state, Fluid fluid) {
         return state.getValue(LIT) && fluid.is(FluidTags.WATER);
     }
 
