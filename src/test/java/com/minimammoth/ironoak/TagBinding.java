@@ -14,7 +14,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -71,6 +73,7 @@ public final class TagBinding {
     }
 
     private static <T> void bind(Registry<T> registry, ResourceKey<? extends Registry<T>> registryKey, String directory) {
+        Map<TagKey<T>, List<Holder<T>>> tags = new HashMap<>();
         for (String metal : Matrix.METALS) {
             String name = metal + "_infused_logs";
             JsonObject json = Resources.jsonOrFail("data/iron_oak/tags/" + directory + "/" + name + ".json");
@@ -83,7 +86,8 @@ public final class TagBinding {
             }
 
             TagKey<T> tag = TagKey.create(registryKey, Identifier.fromNamespaceAndPath("iron_oak", name));
-            ((WritableRegistry<T>) registry).bindTag(tag, entries);
+            tags.put(tag, entries);
         }
+        ((WritableRegistry<T>) registry).bindTags(tags);
     }
 }

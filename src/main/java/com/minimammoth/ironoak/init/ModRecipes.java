@@ -2,12 +2,15 @@ package com.minimammoth.ironoak.init;
 
 import com.minimammoth.ironoak.BurningRecipe;
 import com.minimammoth.ironoak.WashingRecipe;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.Recipe;
 
 import static com.minimammoth.ironoak.IronOak.MOD_ID;
 
@@ -31,14 +34,18 @@ public class ModRecipes {
 
     static {
         BURNING_RECIPE_TYPE = registerType(BurningRecipe.KEY);
+        MapCodec<BurningRecipe> burningMapCodec = AbstractCookingRecipe.cookingMapCodec(BurningRecipe::new, DEFAULT_COOKING_TIME);
+        StreamCodec burningStreamCodec = AbstractCookingRecipe.cookingStreamCodec(BurningRecipe::new);
         BURNING_RECIPE_SERIALIZER = Registry.register(BuiltInRegistries.RECIPE_SERIALIZER,
                 Identifier.fromNamespaceAndPath(MOD_ID, BurningRecipe.KEY),
-                new AbstractCookingRecipe.Serializer<>(BurningRecipe::new, DEFAULT_COOKING_TIME));
+                new RecipeSerializer<>(burningMapCodec, burningStreamCodec));
 
         WASHING_RECIPE_TYPE = registerType(WashingRecipe.KEY);
+        MapCodec<WashingRecipe> washingMapCodec = AbstractCookingRecipe.cookingMapCodec(WashingRecipe::new, DEFAULT_COOKING_TIME);
+        StreamCodec washingStreamCodec = AbstractCookingRecipe.cookingStreamCodec(WashingRecipe::new);
         WASHING_RECIPE_SERIALIZER = Registry.register(BuiltInRegistries.RECIPE_SERIALIZER,
                 Identifier.fromNamespaceAndPath(MOD_ID, WashingRecipe.KEY),
-                new AbstractCookingRecipe.Serializer<>(WashingRecipe::new, DEFAULT_COOKING_TIME));
+                new RecipeSerializer<>(washingMapCodec, washingStreamCodec));
     }
 
     private static <T extends AbstractCookingRecipe> RecipeType<T> registerType(String key) {

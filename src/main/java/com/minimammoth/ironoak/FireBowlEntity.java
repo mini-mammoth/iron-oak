@@ -182,7 +182,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
     }
 
     public static void clientTick(Level world, BlockPos pos, BlockState state, FireBowlEntity fireBowl) {
-        RandomSource random = world.random;
+        RandomSource random = world.getRandom();
         if (random.nextFloat() < 0.11F) {
             for (var i = 0; i < random.nextInt(2) + 2; ++i) {
                 CampfireBlock.makeParticles(world, pos, false, false);
@@ -206,7 +206,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
 
                 var recipeInput = new SingleRecipeInput(input);
                 var result = recipe
-                        .map(burningRecipe -> burningRecipe.value().assemble(recipeInput, world.registryAccess()))
+                        .map(burningRecipe -> burningRecipe.value().assemble(recipeInput))
                         .orElse(input);
 
                 if (output.isEmpty()) {
@@ -214,7 +214,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
                 } else if (ItemStack.isSameItem(output, result) && output.getCount() < output.getMaxStackSize()) {
                     output.grow(1);
                 } else {
-                    Containers.dropContents(world, pos, new SimpleContainer(result));
+                    Containers.dropContents(world, pos, new SimpleContainer(result.copy()));
                 }
 
                 world.playSound(null, pos, SoundEvents.GENERIC_BURN, SoundSource.BLOCKS, 1f, 0.5f);

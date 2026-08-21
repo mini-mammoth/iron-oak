@@ -6,14 +6,19 @@ import com.minimammoth.ironoak.init.ModRecipes;
 import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
@@ -50,6 +55,27 @@ class FireBowlEntityTest {
         return new FireBowlEntity(BlockPos.ZERO, ModBlocks.FIRE_BOWL.defaultBlockState());
     }
 
+    /**
+     * In 26.2, ItemStack constructors require components to be bound to holders.
+     * This method binds empty components to the holder if not already bound.
+     */
+    private static ItemStack itemStack(Item item) {
+        return itemStack(item, 1);
+    }
+
+    /**
+     * In 26.2, ItemStack constructors require components to be bound to holders.
+     * This method binds empty components to the holder if not already bound.
+     */
+    @SuppressWarnings("unchecked")
+    private static ItemStack itemStack(Item item, int count) {
+        Holder<Item> holder = item.builtInRegistryHolder();
+        if (holder instanceof net.minecraft.core.Holder.Reference<Item> refHolder && !refHolder.areComponentsBound()) {
+            refHolder.bindComponents(DataComponentMap.EMPTY);
+        }
+        return new ItemStack(holder, count);
+    }
+
     // ---- the hopper contract: a pure switch over Direction -------------------------
 
     @Requirement("BRN-06")
@@ -75,8 +101,8 @@ class FireBowlEntityTest {
     @Test
     void onlyTheOutputCanBePulledOut() {
         FireBowlEntity bowl = fireBowl();
-        assertTrue(bowl.canTakeItemThroughFace(OUTPUT_SLOT, new ItemStack(ModItems.IRON_ASH), Direction.DOWN));
-        assertFalse(bowl.canTakeItemThroughFace(INPUT_SLOT, new ItemStack(ModItems.IRON_OAK_LOG), Direction.DOWN),
+        assertTrue(bowl.canTakeItemThroughFace(OUTPUT_SLOT, itemStack(ModItems.IRON_ASH), Direction.DOWN));
+        assertFalse(bowl.canTakeItemThroughFace(INPUT_SLOT, itemStack(ModItems.IRON_OAK_LOG), Direction.DOWN),
                 "a hopper must not steal the log back out of the input slot");
     }
 
@@ -89,7 +115,7 @@ class FireBowlEntityTest {
     @Requirement("BRN-06")
     @Test
     void nothingCanBePutInWithoutAServer() {
-        assertFalse(fireBowl().canPlaceItemThroughFace(INPUT_SLOT, new ItemStack(ModItems.IRON_OAK_LOG), Direction.UP));
+        assertFalse(fireBowl().canPlaceItemThroughFace(INPUT_SLOT, itemStack(ModItems.IRON_OAK_LOG), Direction.UP));
     }
 
     // ---- cook duration: #28 defect 3 -----------------------------------------------
@@ -148,14 +174,14 @@ class FireBowlEntityTest {
     @Test
     void bothSlotsSurviveASave() {
         FireBowlEntity bowl = fireBowl();
-        bowl.setInput(new ItemStack(ModItems.IRON_OAK_LOG));
-        bowl.setItem(OUTPUT_SLOT, new ItemStack(ModItems.IRON_ASH, 3));
+        bowl.setInput(itemStack(ModItems.IRON_OAK_LOG));
+        bowl.setItem(OUTPUT_SLOT, itemStack(ModItems.IRON_ASH, 3));
 
         FireBowlEntity reloaded = loadedFrom(saveOf(bowl));
 
-        assertTrue(ItemStack.matches(new ItemStack(ModItems.IRON_OAK_LOG), reloaded.getInput()),
+        assertTrue(ItemStack.matches(itemStack(ModItems.IRON_OAK_LOG), reloaded.getInput()),
                 () -> "input came back as " + reloaded.getInput());
-        assertTrue(ItemStack.matches(new ItemStack(ModItems.IRON_ASH, 3), reloaded.getOutput()),
+        assertTrue(ItemStack.matches(itemStack(ModItems.IRON_ASH, 3), reloaded.getOutput()),
                 () -> "output came back as " + reloaded.getOutput());
     }
 
@@ -168,7 +194,7 @@ class FireBowlEntityTest {
     @Test
     void aFreshInputResetsTheProgress() {
         FireBowlEntity bowl = loadedFrom(state(150, 0));
-        bowl.setInput(new ItemStack(ModItems.IRON_OAK_LOG));
+        bowl.setInput(itemStack(ModItems.IRON_OAK_LOG));
 
         assertEquals(0, saveOf(bowl).getIntOr("cooking_time", -1),
                 "the incoming log inherited the previous log's progress");
@@ -209,8 +235,12 @@ class FireBowlEntityTest {
     }
 
     private static RecipeHolder<BurningRecipe> burningRecipeTaking(int cookTime) {
-        BurningRecipe recipe = new BurningRecipe("", CookingBookCategory.MISC,
-                Ingredient.of(ModItems.IRON_OAK_LOG), new ItemStack(ModItems.IRON_ASH), 0.2f, cookTime);
+        Recipe.CommonInfo commonInfo = new Recipe.CommonInfo(true);
+        AbstractCookingRecipe.CookingBookInfo bookInfo = new AbstractCookingRecipe.CookingBookInfo(CookingBookCategory.MISC, "");
+        // Use itemStackTemplate which creates an ItemStackTemplate from an Item
+        ItemStackTemplate output = new ItemStackTemplate(ModItems.IRON_ASH);
+        BurningRecipe recipe = new BurningRecipe(commonInfo, bookInfo,
+                Ingredient.of(ModItems.IRON_OAK_LOG), output, 0.2f, cookTime);
         ResourceKey<Recipe<?>> key = ResourceKey.create(Registries.RECIPE, Identifier.parse("iron_oak:test_burning"));
         return new RecipeHolder<>(key, recipe);
     }

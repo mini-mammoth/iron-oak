@@ -9,12 +9,16 @@ import com.minimammoth.ironoak.Resources;
 import com.minimammoth.ironoak.TagBinding;
 import com.minimammoth.ironoak.WashingRecipe;
 import com.minimammoth.ironoak.requirements.Requirement;
+import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
@@ -127,7 +131,7 @@ class ModRecipesTest {
 
         assertEquals(ModRecipes.DEFAULT_COOKING_TIME, recipe.cookingTime());
         assertEquals("iron_oak:" + metal + "_shred", resultId(recipe));
-        assertTrue(recipe.input().test(new ItemStack(item("iron_oak:" + metal + "_ash"))),
+        assertTrue(recipe.input().test(itemStack("iron_oak:" + metal + "_ash")),
                 () -> "washing_" + metal + "_shred does not accept " + metal + " ash");
     }
 
@@ -140,13 +144,35 @@ class ModRecipesTest {
     }
 
     private static String resultId(AbstractCookingRecipe recipe) {
-        ItemStack result = recipe.assemble(new SingleRecipeInput(ItemStack.EMPTY), registries);
-        return BuiltInRegistries.ITEM.getKey(result.getItem()).toString();
+        // In 26.2, assemble() requires components to be bound, which they aren't in
+        // a test environment. Instead, use the public accessor.
+        ItemStackTemplate template;
+        if (recipe instanceof BurningRecipe burningRecipe) {
+            template = burningRecipe.getResultTemplate();
+        } else if (recipe instanceof WashingRecipe washingRecipe) {
+            template = washingRecipe.getResultTemplate();
+        } else {
+            throw new IllegalArgumentException("Unknown recipe type: " + recipe.getClass());
+        }
+        return BuiltInRegistries.ITEM.getKey(template.item().value()).toString();
     }
 
     private static Item item(String id) {
         Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
         assertNotNull(item, () -> id + " is not registered");
         return item;
+    }
+
+    private static ItemStack itemStack(String id) {
+        // In 26.2, ItemStack requires components to be bound to holders.
+        // We need to bind components to the holder before creating the ItemStack.
+        Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
+        assertNotNull(item, () -> id + " is not registered");
+        // Get the holder and bind empty components if not already bound
+        net.minecraft.core.Holder<Item> holder = item.builtInRegistryHolder();
+        if (holder instanceof net.minecraft.core.Holder.Reference<Item> refHolder && !refHolder.areComponentsBound()) {
+            refHolder.bindComponents(net.minecraft.core.component.DataComponentMap.EMPTY);
+        }
+        return new ItemStack(holder);
     }
 }
