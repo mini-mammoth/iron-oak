@@ -21,8 +21,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
 import net.minecraft.world.SimpleContainer;
@@ -71,34 +69,38 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      * Call {@code BlockEntity.markDirty} to enforce a save.
      */
     @Override
-    protected void saveAdditional(ValueOutput out) {
-        super.saveAdditional(out);
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
 
-        ContainerHelper.saveAllItems(out.child("input"), NonNullList.of(ItemStack.EMPTY, getInput()));
-        out.putInt("cooking_time", cookingTime);
-        out.putInt("unlit_time", unlitTime);
-        ContainerHelper.saveAllItems(out.child("output"), NonNullList.of(ItemStack.EMPTY, getOutput()));
+        tag.put("input", ContainerHelper.saveAllItems(new CompoundTag(), NonNullList.of(ItemStack.EMPTY, getInput()), registries));
+        tag.putInt("cooking_time", cookingTime);
+        tag.putInt("unlit_time", unlitTime);
+        tag.put("output", ContainerHelper.saveAllItems(new CompoundTag(), NonNullList.of(ItemStack.EMPTY, getOutput()), registries));
     }
 
     /**
      * Restores state for entity from world save.
      */
     @Override
-    protected void loadAdditional(ValueInput in) {
-        super.loadAdditional(in);
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
 
-        in.child("input").ifPresent(child -> items.set(INPUT_SLOT, readSingle(child)));
-        cookingTime = in.getIntOr("cooking_time", 0);
+        if (tag.contains("input")) {
+            items.set(INPUT_SLOT, readSingle(tag.getCompound("input"), registries));
+        }
+        cookingTime = tag.getInt("cooking_time");
         // New in #28. A bowl saved before that has no such key, and 0 is the right answer
         // for one: it means the idle countdown starts fresh, which is what used to happen
-        // to every bowl on every load.
-        unlitTime = in.getIntOr("unlit_time", 0);
-        in.child("output").ifPresent(child -> items.set(OUTPUT_SLOT, readSingle(child)));
+        // to every bowl on every load. getInt already falls back to 0 for a missing key.
+        unlitTime = tag.getInt("unlit_time");
+        if (tag.contains("output")) {
+            items.set(OUTPUT_SLOT, readSingle(tag.getCompound("output"), registries));
+        }
     }
 
-    private static ItemStack readSingle(ValueInput in) {
+    private static ItemStack readSingle(CompoundTag tag, HolderLookup.Provider registries) {
         var list = NonNullList.withSize(1, ItemStack.EMPTY);
-        ContainerHelper.loadAllItems(in, list);
+        ContainerHelper.loadAllItems(tag, list, registries);
         return list.get(0);
     }
 
