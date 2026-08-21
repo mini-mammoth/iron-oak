@@ -123,12 +123,3 @@ raw-ore-backed item on a vanilla effect.
   is a fall-out of the class hierarchy, not a decision anyone recorded.
 - **CON-Q1** Deterministic infusion vs. the "has a chance" javadoc — see
   [INF-03](#inf-03-infusion-always-succeeds).
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial, from the shipped 1.20.4 behaviour. |
-| 2026-08-21 | 2 | INF-02 names `test` as a gate (#43): `OreInfusedBoneMealTest` pins all eighteen bone-meal pairings on every build. |
-
-*Last updated: 2026-08-21*

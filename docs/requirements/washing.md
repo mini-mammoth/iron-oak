@@ -129,12 +129,3 @@ unexplained, and rather than `broken` because nobody has reproduced it.
 - **WSH-Q1** Should a water cauldron be a valid washing target? It is the intuitive guess for
   most players and would cost one condition (WSH-03), but it also half-answers CON-Q4 and
   should not be added by accident.
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial. WSH-04 records the README's long-standing "coming soon" as `planned`; WSH-05 keeps #15 visible as unreproduced rather than silently `done`. |
-| 2026-08-21 | 2 | WSH-01 names `test` as a gate (#43): `ModRecipesTest` decodes all three washing recipes through the serializer that will read them in game. |
-
-*Last updated: 2026-08-21*
