@@ -9,10 +9,14 @@ related:
   - orca-progress-loop.md
 ---
 
-# Version Migration — 1.20.4 → 26.2
+# Version Migration — 1.20.4 → 1.21.11 + 26.2
 
 `main` now targets **Minecraft 1.21.11** (`mod_version=1.3.0+1.21.11`), migrated up from
-1.20.4. The goal is **26.2**, with a **1.21.11 release tagged on the way**.
+1.20.4.
+
+**The endpoint is two supported lines, not one.** 1.21.11 is released and then kept on its
+own branch; `main` moves on to 26.2. Both are maintained. See
+[Two supported lines](#two-supported-lines) for what that costs and how a fix reaches both.
 
 This document is the plan and the gate list. It is process policy, not a task briefing —
 workers get scoped tickets, not this file.
@@ -68,9 +72,11 @@ the next planning round rather than trusting these.
 |---|---|
 | Yarn → Mojang official mappings, still on 1.20.4 | **done**, build green |
 | 1.20.4 → 1.21.11 | **done**, build green, `runDatagen` green |
-| 1.21.11 in-game verification | **not done** — blocking gate, see below |
-| 1.21.11 release tag | not done |
-| 1.21.11 → 26.2 | toolchain proven, ~52 source errors remain (branch `migration/26.2`) |
+| 1.21.11 in-game verification | **done** — walked 2026-08-21, passed (#19) |
+| 1.21.11 release tag | **done** — `v1.3.0+1.21.11`, published to Modrinth and CurseForge |
+| `v1.21.x` branch cut and wired into CI | not done — after the tag |
+| 1.21.11 → 26.2 | **not started** in source. Toolchain proven only; see below |
+| 1.20.4 line | **dropped** — decided 2026-08-21 |
 
 ---
 
@@ -126,14 +132,23 @@ line at all.
 
 ---
 
-## The blocking gate: nothing has been verified in-game
+## The 1.21.11 gate — cleared 2026-08-21
 
-`./gradlew build`, `./gradlew runGametest` and `./gradlew runDatagen` are green. That is the
-whole of the evidence, and it is narrower than it sounds: the two test layers cover ids,
+**Passed.** The in-game loop was walked on 2026-08-21 and reported working, `v1.3.0+1.21.11`
+is tagged at `5df3263`, and both platforms have the jar (#19). The list below is kept because
+it is the reason the gate existed, and because **26.2 inherits every item on it** — see
+Stage 3.
+
+The mechanical evidence at the tag, for the record: `./gradlew build` green with 326 unit
+tests, `./gradlew runGametest` green with seven gametests, and the jar checked as an artefact
+at 396 files rather than trusted from its exit code.
+
+Keep the shape of this in mind when 26.2 comes up: `./gradlew build`, `runGametest` and
+`runDatagen` being green is narrower evidence than it sounds. The two test layers cover ids,
 committed resources, the 6×3 matrix and the fire bowl's ticking, and **nothing in the list
-below**. For everything here, a green build says the mod compiles and remaps.
+below**. For everything here, a green build says only that the mod compiles and remaps.
 
-Several changes in the 1.21.11 migration are behavioural and can only be checked by
+Several changes in the 1.21.11 migration were behavioural and could only be checked by
 playing:
 
 - **`ofLegacyCopy` vs `ofFullCopy`** on block settings. `ofFullCopy` also copies the source
@@ -175,11 +190,90 @@ Acceptance for 1.21.11, in `runClient`:
 
 ---
 
+## Two supported lines
+
+**Decided 2026-08-21: 1.21.11 and 26.2 are both supported, on separate branches.**
+
+One jar cannot serve both. The divergence is the whole build regime, not a handful of
+renames:
+
+| | 1.21.11 | 26.2 |
+|---|---|---|
+| Mappings | obfuscated, remapped | unobfuscated |
+| Loom plugin | `net.fabricmc.fabric-loom-remap` | `net.fabricmc.fabric-loom` |
+| Mod dependencies | `modImplementation` + a `mappings` line | `implementation`, no `mappings` line |
+| Java | 21 | 25 |
+| Fabric API | pre-26.1 package names | official names |
+
+Java settles it on its own: a class file compiled at release 25 does not load on a JDK 21
+runtime, and `fabric.mod.json` has to declare a different `minecraft` range and `java` floor
+per artefact. Parallel support therefore means **two artefacts**, and that is a branch
+question, not a build-variant question.
+
+The shape is the one [`../../AGENTS.md`](../../AGENTS.md) already mandates, and which
+`v1.18.x` already runs: newest version on `main`, older lines on their own branches, a fix
+committed on `main` first and then cherry-picked — never developed twice in parallel.
+
+| Branch | Minecraft | Role |
+|---|---|---|
+| `main` | 26.2 | development; the newest supported version |
+| `v1.21.x` | 1.21.11 | maintained; cut from the 1.21.11 release tag |
+
+Wiring, once the tag exists:
+
+- add `v1.21.x` to **both** branch lists in `.github/workflows/main.yml` — the file states in
+  a comment that the two lists are kept in sync by hand, because Actions does not reliably
+  support YAML anchors.
+- `.github/workflows/release.yml` needs **no** change: it triggers on a *published release*
+  regardless of branch, and a release cut from `v1.21.x` publishes with that branch's
+  `gradle.properties`. Check `publish_game_versions` there as well — it is a judgement call
+  per line, not derived from `minecraft_version`.
+
+### What a second line actually costs
+
+Per gameplay change: one cherry-pick, and **two** in-game verification passes, because
+`runClient` is the gate for rendering and feel on both lines and a green build proves neither.
+Per release: two cuts, two changelogs. That is the price of the download share, and it is
+why the 1.20.4 line was dropped rather than kept as a third.
+
+The requirements catalogue is already built for this: status is stated against `main`, and a
+requirement that only fails on the other line keeps its `main` status and names the port
+issue in a **port note** — as [BRN-10](../requirements/burning.md#brn-10-show-what-is-inside)
+did for #27 while 1.21.11 was still a branch. Do not add a per-branch status column.
+
+### Why not a preprocessor
+
+[Stonecutter](https://github.com/kikugie/stonecutter) builds N version jars from one source
+tree, and was considered. Rejected here: the divergence is concentrated in `FireBowlBlock`,
+`FireBowlEntity` and the fire bowl renderer — exactly the classes the migration rewrote — so
+it would mean conditional blocks threaded through the most interesting code in the mod, plus
+a per-version Loom plugin id, to save duplicating twenty-odd Java files. An
+Architectury-style common/platform split solves a different problem: multiple **loaders**
+(#21), not multiple Minecraft versions.
+
+Revisit if a third line ever becomes necessary.
+
+---
+
 ## Stage 3 — 26.2, and the traps it inherits
 
 Stages 1 and 2 are done — see **Status** above. Their step-by-step plans have been retired
 from this document rather than left to rot: what is worth keeping from them is recorded in
 "The ordering, corrected" and "What `migrateMappings` cannot do".
+
+**`migration/26.2` is not a usable base.** It reads as "almost done" and is not:
+
+- it changes **exactly three files** — `build.gradle`, `gradle.properties`,
+  `fabric.mod.json`. There are **no Java changes on it at all**; the ~52 source errors are
+  entirely unaddressed.
+- it is **57 commits behind `main`** (merge-base `330f4ae`, from before the test harness),
+  which is why diffing it against `main` looks like it deletes the whole test suite.
+
+So the source port has not started, and it is now bigger than that branch ever saw: both test
+layers from #40 and the `RequirementCatalogue` from #43 have to be ported too, and
+`RequirementTracingTest` fails the build if a gate token loses its citation. Re-apply the
+12-line toolchain diff on current `main` and treat the rest as new work; do not rebase the
+branch.
 
 Two warnings from those stages are **not** historical, because 26.1+ renames things again
 and every one of them will bite a second time:
@@ -223,9 +317,13 @@ the obvious place for one.
 
 ## What happens to the old versions
 
-`main` moves to the newest supported version. The 1.20.4 line becomes a branch if it is
-worth keeping — that is a **human decision** and is not made here. Existing branches:
-`v1.18.x`, `1.19`, plus unmerged `restone_leaves`.
+`main` moves to the newest supported version. **The 1.20.4 line is dropped — decided
+2026-08-21.** It sits at ~2 % of Fabric API downloads and is falling, and a third maintained
+line would cost a third in-game pass per fix (see "What a second line actually costs"). It is
+not branched and not published against; the last release on it, `1.2.1+1.20.4`, stays up.
+
+Existing branches: `v1.18.x`, `1.19`, plus unmerged `restone_leaves`. Neither old branch is
+maintained; they are history, and only `v1.18.x` is still built by CI.
 
 The open issues against old versions (#11 Quilt on 1.18.2, #15 washing on an unstated
 version) need a version decision before they are workable. Both are
@@ -243,10 +341,11 @@ free release, and it is out of scope here.
 |---|---|---|
 | Plan approved | before the first `area:build` ticket | human — **done** |
 | Mapping migration build green | before starting the version bump | orchestrator — a mapping-only change must not alter behaviour — **done** |
-| 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on the worker's `runClient` evidence |
-| 1.21.11 release tagged | after stage 2 | human |
-| Stage 3 started | after 1.21.11 is released | human |
-| Old-version branch policy | before `main` moves | human |
+| 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on `runClient` evidence — **done** 2026-08-21 |
+| 1.21.11 release tagged | after stage 2 | human — **done**, `v1.3.0+1.21.11` |
+| `v1.21.x` cut from the tag and added to CI | before `main` moves to 26.2 | orchestrator — **next**, #52 |
+| Stage 3 started | after 1.21.11 is released | human — **unblocked** |
+| Old-version branch policy | before `main` moves | human — **done**: 1.20.4 dropped, 1.21.11 kept on `v1.21.x` |
 
 ---
 
@@ -254,6 +353,8 @@ free release, and it is out of scope here.
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-21 | 1.3 | 1.21.11 is verified in-game and released as `v1.3.0+1.21.11` (#19). The blocking-gate section becomes the record of a cleared gate, kept because 26.2 inherits every item on its list. Stage 3 is unblocked; cutting `v1.21.x` (#52) is next. |
+| 2026-08-21 | 1.2 | Two supported lines, not one endpoint (#50): 1.21.11 is kept on `v1.21.x` and `main` goes to 26.2, with the cost of the second line and the rejected preprocessor alternative recorded. 1.20.4 is dropped, closing that gate. Corrects the 26.2 status — `migration/26.2` carries no Java changes and is 57 commits behind, so the source port has not started and now includes porting both test layers. |
 | 2026-08-21 | 1.1 | The blocking gate accounts for the test harness (#47). Both layers are named in the evidence, and the point is sharpened rather than dropped: what they cover is listed, and none of it is on the in-game list below. The resource-rename warning credits `RegistryAssetsTest` for the half it now catches. |
 | 2026-08-20 | 1.0 | Initial plan. Target versions and the yarn-discontinuation constraint verified against `maven.fabricmc.net` and the Fabric porting docs; reach figures measured via the Modrinth API. |
 
