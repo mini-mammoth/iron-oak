@@ -2,7 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [ main, v1.18.x ]
+    # INVARIANT: `main` plus every SUPPORTED line in docs/ops/multiloader.md, and nothing
+    # else. Archived lines (`v1.18.x`, `1.19`) get no CI. `v1.21.1` is listed before its
+    # branch exists on purpose — a push filter for a missing branch never fires, so the line
+    # is wired the moment #54 cuts it. See AGENTS.md -> Version branches.
+    #
+    # This is the 1.21.11 line: JDK 21, obfuscated Minecraft, the `-remap` Loom plugin. Do
+    # not port `main`'s JDK 25 here.
+    branches: [ main, v1.21.11, v1.21.1 ]
     # A docs-only change cannot break the build, so don't spend a runner on it.
     # `.github/**` is deliberately NOT ignored — a workflow change must run the workflow.
     # The list is duplicated below on purpose: GitHub Actions does not reliably support
@@ -15,7 +22,8 @@ on:
       - '.gitignore'
       - 'LICENSE'
   pull_request:
-    branches: [ main, v1.18.x ]
+    # Keep in sync with the `push` list above by hand — see the note there.
+    branches: [ main, v1.21.11, v1.21.1 ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
