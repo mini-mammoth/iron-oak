@@ -326,8 +326,8 @@ So: drain the queue, land the bump, then resume. The staged plan and its gates l
   context window. When that is not enough the model compacts, loses context, re-reads the
   same files and compacts again: a **compaction loop** that looks like work from outside
   and never delivers. The detection signal is a **falling** token counter. In this repo
-  the Java is small (19 files, largest ~180 lines), so the driver is different from a
-  typical web project — the reading surface that actually blows the window here is
+  the Java is small (twenty-odd files, none longer than a few hundred lines), so the driver
+  is different from a typical web project — the reading surface that actually blows the window here is
   **generated worldgen JSON, decompiled Minecraft sources, and `runClient` log output**.
   Consequences for scoping:
   - A ticket with several independent work items is **split** into several tickets and
@@ -502,7 +502,7 @@ gh label create <name> --description <d> --color <hex>   # human-only
 
 | Date | Version | Changes |
 |------|---------|---------|
-| 2026-08-21 | 1.1 | The review gate names both test layers (#47). Auto-approval requires `runGametest` as well as `build`, and human review is justified by what the tests do not reach rather than by their absence — #40 built them. |
+| 2026-08-21 | 1.1 | The review gate names both test layers (#47). Auto-approval requires `runGametest` as well as `build`, and human review is justified by what the tests do not reach rather than by their absence — #40 built them. The Java-size figure in the context-budget section is an order of magnitude now, not a count. |
 | 2026-08-20 | 1.0 | Adapted from the openkegelbillard orchestration policy. Kept the Orca CLI protocol and the dispatch/briefing failure modes (imported, flagged as such). Replaced the EARS/requirements phase with a conditional design phase; added the rules this repo needs: JDK-21 in every briefing, serial version migrations, Loom cache behaviour across worktrees, datagen output committed with its source, "compiles ≠ works" because there is no test suite, and triage of player bug reports. |
 
 *Last updated: 2026-08-21*

@@ -368,9 +368,9 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
    problem. Instead: harvest existing work (`git status --short`, recipe below), re-cut the
    remainder SMALLER and dispatch it as its own ticket.
 
-   [iron-oak] WHAT BLOWS THE WINDOW HERE IS NOT THE SOURCE. The Java is small — 19 files,
-   largest ~180 lines — so the usual "three big files fill half the window" driver does not
-   apply. The context sinks in this repo are:
+   [iron-oak] WHAT BLOWS THE WINDOW HERE IS NOT THE SOURCE. The Java is small — twenty-odd
+   files, none longer than a few hundred lines — so the usual "three big files fill half the
+   window" driver does not apply. The context sinks in this repo are:
    - `src/main/generated/` — bulky generated worldgen JSON, and a worker will read it to
      "get oriented" unless told not to.
    - decompiled Minecraft sources — Loom makes them navigable, and they are enormous. A
