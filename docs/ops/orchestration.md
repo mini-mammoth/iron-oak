@@ -2,7 +2,7 @@
 domain: Orchestration
 domain_code: INF
 status: active
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 version: 1
 related:
   - ../../AGENTS.md
@@ -95,12 +95,14 @@ Do not manufacture a design doc for a one-line fix.
 ### Phase 3: Review (conditional — auto or human)
 
 - **Auto-approval** requires all of: the change is confined to one `area:*`, `./gradlew
-  build` is green in CI on both Linux and Windows, and the change does **not** touch
-  in-world behaviour.
-- **Human review otherwise** — and in this repo that catches more than it would elsewhere,
-  because **there is no test suite**. CI proves the mod compiles and remaps; it proves
-  nothing about whether the fire bowl still burns. Anything touching runtime behaviour
-  goes to a human gate with the worker's `runClient` observations attached.
+  build` and `./gradlew runGametest` are green in CI on both Linux and Windows, and the
+  change does **not** touch in-world behaviour the gametests do not reach.
+- **Human review otherwise** — and in this repo that still catches more than it would
+  elsewhere, because **the tests do not reach everything the player sees**. CI proves the mod
+  compiles and remaps and that both test layers pass; it proves nothing about whether the
+  fire bowl still *looks* like it is burning. Anything touching runtime behaviour outside
+  what the gametests cover goes to a human gate with the worker's `runClient` observations
+  attached.
 - **Any gate failure or human request → human decision.**
 
 ### Human steering
@@ -500,6 +502,7 @@ gh label create <name> --description <d> --color <hex>   # human-only
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-21 | 1.1 | The review gate names both test layers (#47). Auto-approval requires `runGametest` as well as `build`, and human review is justified by what the tests do not reach rather than by their absence — #40 built them. |
 | 2026-08-20 | 1.0 | Adapted from the openkegelbillard orchestration policy. Kept the Orca CLI protocol and the dispatch/briefing failure modes (imported, flagged as such). Replaced the EARS/requirements phase with a conditional design phase; added the rules this repo needs: JDK-21 in every briefing, serial version migrations, Loom cache behaviour across worktrees, datagen output committed with its source, "compiles ≠ works" because there is no test suite, and triage of player bug reports. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*
