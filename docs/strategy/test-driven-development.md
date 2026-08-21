@@ -1,8 +1,8 @@
 ---
 domain: Strategy
 domain_code: TDD
-status: proposed
-last_updated: 2026-08-20
+status: active
+last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - README.md
@@ -12,9 +12,10 @@ related:
 
 # Test-Driven Development
 
-> **Nothing here is runnable yet.** There is no `src/test`, no test task, and
-> `./gradlew build` runs zero tests. The harness is **#40**. This document says what to do
-> once there is somewhere to put a test — and, just as importantly, where the rule stops.
+> **This is in force now.** #40 landed the harness: `src/test` runs inside
+> `./gradlew build`, `src/gametest` runs under `./gradlew runGametest`, and both report to
+> CI on Linux and Windows. There is somewhere to put a test, so the rule below applies —
+> and, just as importantly, so does where it stops.
 
 [testing.md](testing.md) is the **how**: three layers, which class belongs at which. This
 document is the **when**.
@@ -41,8 +42,11 @@ fixed and merged. Look at what they were: #26 and #30 were *invariants* — a fi
 for every registered id; a name must match the id it holds. #27 and #28 were *defects with
 an exact, deterministic reproduction*, written down in the issue before anyone touched the
 code. Those are the two cases where test-first costs almost nothing and pays immediately.
-None of the four fixes shipped with a test, because there is nowhere to put one; that is
-what #40 is for.
+None of the four fixes shipped with a test, because at the time there was nowhere to put
+one. #40 went back and wrote them: the #26 and #30 invariants as layer-1 tests, and #28's
+save-format and hopper defects at layer 1 and 2 respectively. Every one of them was checked
+against a deliberately re-broken tree before being trusted — see the red-step evidence in
+that PR.
 
 ---
 
@@ -65,6 +69,15 @@ findings are what a red step looks like.
 So: **run the new test against the unfixed tree and read the failure message.** If it does
 not name the defect, the test is not testing the defect. And if you cannot get it to fail —
 say so in the PR rather than shipping a test that only ever passes.
+
+For a bug that is already fixed, that means re-breaking the tree on purpose, running the
+test, and reverting. #40 did exactly this and it paid twice over. Rotating only the
+generator *names*, the way #30 had them, failed the layer-1 matrix test with
+`iron_oak:copper_spruce_sapling grows with the wrong generator` — and left every gametest
+green, because the in-world outcome was unchanged. Rotating the feature *keys* as well
+failed the gametests with `Expected block Iron Infused Spruce Log: got Iron Infused Dark
+Oak Log`. Two halves of one bug, each invisible to the other layer. Neither test subsumes
+the other, and a single red step would have hidden that.
 
 The one thing you never do is commit red. `AGENTS.md` asks for a commit per work item; a
 commit that leaves CI failing poisons the branch for everyone who bisects it. **Observe the
@@ -110,7 +123,7 @@ Each of these has a reason, and the reason is the point. "It is hard" is not on 
 | **A version migration** | You cannot write the test before the API, because the API shape is the unknown. The 1.20.4 → 1.21.11 migration split `onUse` into `useItemOn`/`useWithoutItem`, turned three tick and NBT hooks into differently-shaped ones, and changed interaction return values in a way that #27 turned into a real behavioural regression. Writing a test against a signature you have not resolved yet produces a test of your assumption. **Order here: resolve the API against the jar, make it compile, then write the test that pins the behaviour you had to reason about** — and write it in the same PR, because that reasoning is the thing that will be lost. The fix for #27 did the next best thing available without a harness: it put the whole return-value argument in a javadoc on `useItemOn`. Prose is a weaker guard than a test, and better than nothing. |
 | **Rendering, particles, sound, feel** | `FireBowlRenderer.submit` is matrix pushes, translations and a rotation. There is no assertion that distinguishes "right" from "0.2 blocks too low", and inventing one produces a test that fails on every legitimate tweak. What *is* testable is the snapshot it draws from: since 1.21.9 `extractRenderState` copies the state into a `FireBowlRenderState`, so *"the client has the item"* is a boolean on an object — `state.hasInput`. That is #27 defect 1, and it is a client gametest. See [testing.md](testing.md). |
 | **Worldgen shape and aesthetics** | `oreJungle` places a straight trunk, blob foliage, cocoa beans and vines. Whether that looks like a jungle tree is a judgement, and pinning the exact `TreeFeatureConfig` in a test only guarantees a failure the next time someone tunes it. What is testable — and what actually broke — is that the jungle key holds the jungle shape and the jungle metal. Test the wiring, not the silhouette. |
-| **The existing untested surface** | ~1,850 lines, no tests. Retrofitting the lot is a project nobody has commissioned, and a mass of tests written blind against current behaviour would freeze the bugs in place — #28 found three defects that had been sitting there since the 1.20.4 line, unchanged and unnoticed. Do not open that PR. |
+| **The existing untested surface** | Retrofitting the lot is a project nobody has commissioned, and a mass of tests written blind against current behaviour would freeze the bugs in place — #28 found three defects that had been sitting there since the 1.20.4 line, unchanged and unnoticed. Do not open that PR. #40 hit this rule head-on: the drop-on-break behaviour turned out to have changed under the mod, and rather than pin whatever it now does, it shipped no test and reported the finding. **Behaviour nobody has decided on does not get a test.** |
 | **A pure `docs/` change** | This one included. |
 
 ---
@@ -198,5 +211,6 @@ what a test would have asserted, in prose.
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Deliberately narrow: test-first for bug reproductions and matrix invariants, explicitly not for version migrations, rendering, worldgen aesthetics or the existing untested surface — with the reason given for each. Records that red must be observed for the real reason (#30's 54 findings), that red is never committed, and that a verification script is a test. |
 | 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). The four bugs restated as fixed and merged, none of them with a test. The #28 walkthrough now records what actually landed — the cached field was deleted rather than persisted — and draws the lesson that an assertion on a mechanism dies with the mechanism. The recipe-numbers and rendering rows updated for `ModRecipes.DEFAULT_COOKING_TIME` and the `extractRenderState`/`submit` split. |
+| 2026-08-21 | 2.0 | In force (#40). Status changed from proposed to adopted. The four bugs now have their tests, each checked against a deliberately re-broken tree. The red step gains #40's finding that the two layers caught two different halves of #30 and neither subsumed the other. The untested-surface row gains the case that made the rule real: behaviour that changed under the mod got a reported finding, not a test. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

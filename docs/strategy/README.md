@@ -2,7 +2,7 @@
 domain: Strategy
 domain_code: STR
 status: active
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - ../README.md
@@ -83,9 +83,11 @@ Each document carries a `status` in its frontmatter, and it means what it says:
 | `active` | In force. Follow it. |
 | `proposed` | The decision is settled, the infrastructure is not. The document names the ticket that builds it and says plainly what does not exist yet. |
 
-`testing.md` and `test-driven-development.md` are `proposed` today: the test harness they
-describe is **not wired up** — see #40. They describe the target, not the present. Do not
-read them as instructions to run a task that does not exist.
+`testing.md` and `test-driven-development.md` were `proposed` when they were written and
+are `active` now: #40 wired up layers 1 and 2, so both are in force. **One thing in
+`testing.md` is still ahead of the tree** — layer 3, client gametests, has no run
+configuration and no test, and that section says so where it appears. Everything else in
+both documents describes something you can run.
 
 ---
 
@@ -94,5 +96,6 @@ read them as instructions to run a task that does not exist.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Taxonomy adapted from the openkegelbillard `docs/strategy/` split; contents written for a Fabric mod from scratch. Records the concept/strategy and strategy/ops boundaries, and the `proposed` status convention for the not-yet-wired test harness. |
+| 2026-08-21 | 1.1 | `testing.md` and `test-driven-development.md` moved from `proposed` to `active` (#40). The status-honesty section now names the one part still ahead of the tree — layer 3 — rather than the whole harness. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

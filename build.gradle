@@ -28,6 +28,19 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Layer 1 of docs/strategy/testing.md: plain JUnit with the loader booted and no
+    // world. The version is pinned to loader_version on purpose — loader-junit boots the
+    // very loader it ships against, and a mismatch fails at class-load time with a stack
+    // trace that blames Knot rather than the version.
+    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+
+    // fabric-loader-junit pulls in the Jupiter engine but not the parameterised runner,
+    // and the 6x3 matrix tests want one named case per arm rather than one case that
+    // stops at the first bad arm. The BOM keeps both halves on the version loader-junit
+    // was built against.
+    testImplementation platform("org.junit:junit-bom:5.10.0")
+    testImplementation "org.junit.jupiter:junit-jupiter"
 }
 
 processResources {
@@ -40,8 +53,38 @@ processResources {
     }
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDirs += [
+                    'src/main/generated'
+            ]
+        }
+    }
+
+    // Layers 2 and 3 of docs/strategy/testing.md. A source set of its own rather than
+    // src/test, because the two kinds of test have nothing in common: one is milliseconds
+    // and runs on every build, the other needs a game and a run configuration. It also
+    // means the `jar` task — which only ever packages `main` — cannot ship any of it.
+    gametest {
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+}
+
 loom {
     accessWidenerPath = file("src/main/resources/iron_oak.accesswidener")
+
+    // Loom needs to know the gametests are a mod of their own, or their classes are not
+    // remapped against the mod they test.
+    mods {
+        register("iron_oak") {
+            sourceSet sourceSets.main
+        }
+        register("iron_oak_gametest") {
+            sourceSet sourceSets.gametest
+        }
+    }
 
     runs {
         // This adds a new gradle task that runs the datagen API: "gradlew runDatagen"
@@ -63,11 +106,45 @@ loom {
 
             runDir "build/datagen"
         }
+
+        // Layer 2: a headless server that places a structure per test, ticks the world and
+        // asserts on real block and entity state — "gradlew runGametest".
+        //
+        // Plain `server`, with no gametest main class of its own: fabric-gametest-api-v1
+        // mixes into net.minecraft.server.Main and, when fabric-api.gametest is set,
+        // diverts into its own headless runner and exits with the result. The report is
+        // JUnit XML, which is what makes these CI-reportable.
+        gametest {
+            server()
+            name "Game Test"
+            source "gametest"
+
+            vmArg "-Dfabric-api.gametest"
+            vmArg "-Dfabric-api.gametest.report-file=${file("build/gametest/report.xml")}"
+
+            runDir "build/gametest/run"
+        }
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
+}
+
+// `./gradlew build` runs this, so a failing test fails the build — which is the whole
+// point of #40. See docs/strategy/testing.md for what belongs here and what does not.
+test {
+    useJUnitPlatform()
+
+    // fabric-loader-junit boots Knot from a JUnit LauncherSessionListener and defaults to
+    // the client side. Nothing under src/test touches rendering, and a server-side boot
+    // keeps client-only mixins out of the picture, so CI needs no display.
+    systemProperty "fabric.side", "server"
+
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+    }
 }
 
 java {
@@ -86,16 +163,6 @@ jar {
 
     from("LICENSE") {
         rename { "${it}_$projectName" }
-    }
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDirs += [
-                    'src/main/generated'
-            ]
-        }
     }
 }
 

@@ -92,25 +92,45 @@ This list is a **copy of `.github/workflows/main.yml`** and is the only definiti
 
 ```bash
 export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
-./gradlew build                 # compiles, remaps, builds the jar — the CI gate
+./gradlew build                 # compiles, remaps, builds the jar, runs the unit tests
+./gradlew runGametest           # headless server, real world — the second CI gate
 ```
 
 Add these when your change touches what they cover:
 
 ```bash
 ./gradlew runDatagen            # if you changed ModDataGenerator or anything it emits
-./gradlew runClient             # if you changed rendering, blocks, or in-world behaviour
+./gradlew runClient             # if you changed rendering, or anything the tests do not reach
 ```
 
-There is **no test suite** in this repo — `./gradlew build` runs no tests, because none
-exist. So "green" here is a weaker signal than in a repo with tests: it proves the mod
-compiles and remaps, not that it works. Anything touching in-world behaviour (fire bowl
-ticking, sapling growth, washing, recipe matching) is **not** verified by CI and must be
-checked in `runClient` before you claim it works. If you did not launch the game, say so
-in the PR instead of implying you did.
+There **is** a test suite, in two layers, and
+[`docs/strategy/testing.md`](docs/strategy/testing.md) says which layer a test belongs at.
+Read it before you write one — it is short, and it names the mistakes this codebase is set
+up to make.
+
+- **`src/test/`** — plain JUnit with the loader booted and no world, via
+  `fabric-loader-junit`. Milliseconds, and `./gradlew build` runs it, so a failing unit
+  test fails the build. This is where names, ids, maps, committed resource files and
+  numbers belong, and where the 6×3 matrix guard lives.
+- **`src/gametest/`** — a headless server, a real world and actual ticking, via
+  `fabric-gametest-api-v1`. Seconds, run by `./gradlew runGametest`, which writes JUnit XML
+  to `build/gametest/report.xml`. Its own source set, so none of it ships in the mod jar.
+
+"Green" is a stronger signal than it was, but it is not everything. **Rendering, particles,
+sound and feel are still checked only by a human**, and so is anything the gametests do not
+reach yet — `runClient` remains the gate for those, and if you did not launch the game, say
+so in the PR instead of implying you did. Every gametest that lands is one line the human
+no longer has to walk; that list is not finished.
+
+When you fix a bug, the fix ships with the test that catches it, and you write the test
+first — see
+[`docs/strategy/test-driven-development.md`](docs/strategy/test-driven-development.md) for
+where that rule applies and, just as importantly, where it does not. **Observe the red
+locally and report it in the PR; never commit red.**
 
 - Done means `gh pr checks <pr>` is green. A green local build is not proof — CI also
-  builds on Windows, and the workflow pins JDK 21 for the same reason you have to.
+  builds on Windows, and the workflow pins JDK 21 for the same reason you have to. Both
+  layers run on Linux and Windows, and CI uploads the JUnit XML of each.
 - `./gradlew build` is incremental and Loom caches Minecraft; the first run after a
   version bump re-downloads and decompiles and can take several minutes. That is normal,
   not a hang.
@@ -228,6 +248,8 @@ you should not be shy about it. The expensive mistakes in this repo are elsewher
 | Need to know… | Read |
 |---|---|
 | What the mod does, in player terms | `README.md` |
+| Which layer a test belongs at, and what a test here looks like | `docs/strategy/testing.md` |
+| Whether your change needs a test first | `docs/strategy/test-driven-development.md` |
 | Current target versions | `gradle.properties` |
 | Dispatch / gate / label process | `docs/ops/orchestration.md` |
 | Label taxonomy | `docs/ops/issue-labels.md` |
@@ -274,5 +296,6 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version. Ops model adapted from the openkegelbillard setup: worker instructions here, orchestration policy in `docs/ops/`. Records the JDK-21 constraint, the datagen direction, the 6×3 matrix rule, and that there is no test suite. |
+| 2026-08-21 | 1.1 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

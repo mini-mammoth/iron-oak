@@ -1,8 +1,8 @@
 ---
 domain: Strategy
 domain_code: TEST
-status: proposed
-last_updated: 2026-08-20
+status: active
+last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - README.md
@@ -13,16 +13,17 @@ related:
 
 # Testing Strategy
 
-> **The harness described here does not exist yet.**
+> **Layers 1 and 2 exist and run. Layer 3 does not.**
 >
-> Today there is **no `src/test`**, no test configuration in `build.gradle`, and
-> `./gradlew build` runs **zero tests**. Wiring it up — the `fabric-loader-junit`
-> dependency, a gametest run configuration, CI reporting — is **#40**, deliberately a
-> separate `area:build` ticket.
+> #40 landed the harness this document was written to specify:
+> `fabric-loader-junit` in `src/test`, run by `./gradlew build`; a gametest run
+> configuration in `src/gametest`, run by `./gradlew runGametest`; both reporting JUnit
+> XML on Linux and Windows in CI.
 >
-> This document is the target shape, written down first so that #40 builds the right
-> thing and so that the first tests land in the right place. Everything below marked
-> *intended* is not runnable yet. Nothing here licenses you to claim a test passed.
+> **Layer 3 — client gametests — is still not wired up.** `fabric-client-gametest-api-v1`
+> is on the classpath, but there is no run configuration and no client test. Nothing below
+> about layer 3 is runnable, and the interaction-semantics question at the end of that
+> section is still open.
 
 This document is the **how**: which layer a test belongs at, what runs it, and what a test
 in this repo actually looks like. For the **when** — does the test come before the code —
@@ -58,7 +59,7 @@ the game. That is where the first tests go.
 |---|---|---|---|---|
 | **1 — Loader unit tests** | plain JUnit in the JVM, loader booted, no world | `net.fabricmc:fabric-loader-junit` | milliseconds | classes, registries, ids, maps, committed resource files |
 | **2 — Server gametests** | a real headless server, a real world, a structure per test | `fabric-gametest-api-v1` | seconds | ticking, block entities, entities, hoppers, growth, save round-trips |
-| **3 — Client gametests** | a real client attached to a real server | `fabric-client-gametest-api-v1` | tens of seconds | what the client *has* — resolved models, synced block-entity state |
+| **3 — Client gametests** *(not wired up)* | a real client attached to a real server | `fabric-client-gametest-api-v1` | tens of seconds | what the client *has* — resolved models, synced block-entity state |
 
 **Write the test at the lowest layer that can fail for the real reason.** Pushing a test
 up a layer buys nothing and costs wall-clock; pushing it *down* past the reason it can
@@ -77,7 +78,20 @@ trap. `ItemStack.EMPTY`, `Blocks.OAK_SAPLING` and `BuiltInRegistries.ITEM` all n
 has been bootstrapped. Layer 1 is not "no Minecraft" — it is **"no world"**.
 `fabric-loader-junit` exists exactly for that: it boots the loader inside an ordinary
 JUnit run, so Minecraft classes and registries are reachable without starting the game.
-The precise bootstrap incantation is #40's to settle against the jar.
+It is a JUnit `LauncherSessionListener`, so adding the dependency is the whole
+installation — it starts Knot before the first test class and needs no code.
+
+What it does *not* do is bootstrap Minecraft or invoke the mod's entrypoint, because no
+game was started. `BootstrappedGame` does both, once per JVM, and every test class carries
+`@ExtendWith(BootstrappedGame.class)`. **Do not touch a Minecraft class from a static
+initialiser in a test** — static initialisers run when JUnit loads the class, before any
+extension has run, and touching `BuiltInRegistries` that early poisons its class
+initialiser for every test that follows. Resolve registries in `@BeforeAll` or on demand.
+
+Tags are the other thing no world hands you: nothing loads a data pack at layer 1, so every
+`TagKey` is unbound and touching one throws. `TagBinding` binds the mod's three
+`*_infused_logs` tags out of the committed JSON, which is also how the recipe tests prove
+those files name items that exist.
 
 What belongs here, by name:
 
@@ -89,15 +103,29 @@ What belongs here, by name:
 | `ImplementedInventory` defaults | `isEmpty()` over a `NonNullList`; `removeItem(slot, count)` calling `setChanged()` only when the result is non-empty; `setItem` clamping to `getMaxStackSize()` **after** it has already stored the stack, which means it mutates the caller's instance. Construct it with `ImplementedInventory.ofSize(2)` — no block entity, no level. Worth pairing with the observation that `FireBowlEntity` overrides four of these defaults purely to add the client sync. |
 | `OreInfusedBoneMeal`'s infusion map | The constructor takes a `Map<Block, Block>`; `ModItems` hand-builds three of them with `Map.of(...)`. Assert each map has exactly six entries, keyed by the six vanilla saplings, valued by the **same metal's** sapling for the **same wood**. This is the #30 failure class on the item side of the matrix, and it is six lines of test. |
 | `BurningRecipe` / `WashingRecipe` cook time | Both are thin subclasses of `AbstractCookingRecipe`; all the behaviour is in the serializer and the JSON. `ModRecipes` registers `new AbstractCookingRecipe.Serializer<>(BurningRecipe::new, DEFAULT_COOKING_TIME)`, all three burning recipes omit `cookingtime` in their JSON and therefore take that default, and `FireBowlEntity` reads the duration back out with `holder.value().cookingTime()`. Run the serializer's codec over the committed `data/iron_oak/recipe/*.json` and assert the input item and the cook time. No level, no fire. |
-| `FireBowlEntity` save/load round-trip | `saveAdditional` into a fresh `ValueOutput`, `loadAdditional` on a second entity, compare. This is the regression guard for [#28](https://github.com/mini-mammoth/iron-oak/issues/28) defect 2, where `unlitTime` was never written and the idle countdown restarted on every world load; it is persisted as `unlit_time` now. A block entity is constructible without a level (`new FireBowlEntity(pos, state)`), so the round-trip needs no server — but note that a `ValueInput`/`ValueOutput` pair is not a bare `CompoundTag` any more, so #40 has to settle how one is built in a test. |
+| `FireBowlEntity` save/load round-trip | `saveAdditional` into a fresh `ValueOutput`, `loadAdditional` on a second entity, compare. This is the regression guard for [#28](https://github.com/mini-mammoth/iron-oak/issues/28) defect 2, where `unlitTime` was never written and the idle countdown restarted on every world load; it is persisted as `unlit_time` now. A block entity is constructible without a level (`new FireBowlEntity(pos, state)`), so the round-trip needs no server. A `ValueInput`/`ValueOutput` pair is not a bare `CompoundTag` any more: build them with `TagValueOutput.createWithContext(reporter, registries)` and `TagValueInput.create(reporter, registries, tag)`, and pass a `ProblemReporter.Collector` rather than `ProblemReporter.DISCARDING` so a serialisation problem fails the test instead of vanishing. |
 | The 6×3 matrix | The worked example below. |
 | Registry ↔ assets consistency | For every id in `BuiltInRegistries.ITEM`/`BLOCK` with namespace `iron_oak`, assert the asset files that id requires exist — the `items/` definition, the model it points at, the blockstate. Nothing but the registry list and the filesystem. This is the test that would have caught #26, where 15 magenta cubes in a creative search were precisely the mod's 15 `iron_*` entries. Since the fix, `ModModelGenerator` emits the `items/` layer by walking the registry, so this test also guards the thing that walk assumes: that every mod item has a matching `iron_oak:item/<id>` model. |
 
 ### Layer 2 — Server gametests
 
-`fabric-gametest-api-v1` (4.0.21) is **already on the classpath** via `fabric-api` — it
-shows up in the `runClient` mod list. Its report file is JUnit XML, so gametests are
-CI-reportable once #40 gives them a run configuration.
+`fabric-gametest-api-v1` (4.0.21) is **already on the classpath** via `fabric-api`. Its
+report file is JUnit XML, so gametests are CI-reportable, and #40 gave them a run
+configuration: `./gradlew runGametest`.
+
+Three facts about its shape, resolved against the jar rather than remembered, because none
+of them is guessable:
+
+- **The run configuration is a plain `server()` with no main class of its own.** The API
+  mixes into `net.minecraft.server.Main` and diverts into its own headless runner when
+  `-Dfabric-api.gametest` is set, then exits with the result. A failing gametest is a
+  non-zero exit, which is what lets it gate CI.
+- **Tests are found through a `fabric-gametest` entrypoint**, and a test is a `public void`
+  method taking a single `GameTestHelper`. Not static, not returning anything.
+- **`@GameTest` defaults `structure` to `fabric-gametest-api-v1:empty`**, an 8×8×8 empty
+  box the API ships. None of the gametests in this repo needs structure NBT of its own;
+  they build what they need with `helper.setBlock`. That 8-block ceiling is worth
+  remembering when a test grows a tree.
 
 A gametest places a structure, ticks the world, and asserts on real block and entity
 state. That is the only honest way to test the things `AGENTS.md` already warns CI does
@@ -111,7 +139,7 @@ not cover:
 | Burning arrow lights the bowl | #28 defect 1: the guard in `onProjectileHit` used to require `LIT` to already be `true` before setting `LIT` to `true`, so the body was unreachable in every state where it would have done anything. It now matches `CampfireBlock.onProjectileHit` — unlit and not waterlogged. Needs a projectile in a level. |
 | Infused sapling growth | The in-world proof for #30 — plant `iron_spruce_sapling`, force growth, assert the logs placed are `iron_oak:iron_spruce_log`. The layer-1 matrix test asserts the wiring; this asserts the outcome. |
 | `OreInfusedAsh.use` | Raycast to water, match a `WashingRecipe`, spawn the shred as an `ItemEntity` with a pickup delay. Three world interactions in one method. |
-| `FireBowlBlock.playerWillDestroy` | Breaking an unlit bowl drops its contents; breaking a lit one destroys them. That second one is *intended* — write it down as a test so nobody "fixes" it by accident. The drop has to happen here rather than in `affectNeighborsAfterRemoval`, which runs after the block entity is already gone; a test is the only thing that would notice if those two were swapped back. |
+| `FireBowlBlock.playerWillDestroy` | **Both halves of this are now wrong, and no test was shipped for it — see the comment in `FireBowlGameTest`.** Since 1.21.11, `LevelChunk.setBlockState` calls `BlockEntity.preRemoveSideEffects`, whose default body drops the contents of any `Container` block entity. `FireBowlEntity` is one, so vanilla drops the contents on every removal path: `playerWillDestroy`'s own `spawnContainingItems()` is redundant, and a lit bowl no longer destroys what is inside it. Whether the lit-bowl exception should be restored — by overriding `preRemoveSideEffects` — is a gameplay decision with a requirement behind it, not a test-harness one. |
 | `canPlaceItemThroughFace` | Needs a recipe lookup, which needs a `ServerLevel`. |
 
 ### Layer 3 — Client gametests
@@ -139,16 +167,16 @@ The other resident of this layer is the #26 class of failure: whether an item's 
 cheaper — do that first, and reach for layer 3 only for the resolution itself.
 
 Interaction semantics (#27 defect 2: flint and steel on a loaded bowl must fall through to
-the flint and steel) sit on the boundary. Whether the server gametest harness can drive a
-player use-interaction, or whether it needs a client, is a question for #40 to resolve
-against the actual API — not to guess.
+the flint and steel) sit on the boundary. `GameTestHelper` does offer `useBlock(pos, player)`
+and `makeMockServerPlayerInLevel()`, so a server gametest can probably drive it — but #40
+did not, and "probably" is not a claim. Still open.
 
 ### Not a layer: the `runClient` checklist
 
-Until #40 lands, **a human launching `./gradlew runClient` is the only gate that covers
-in-world behaviour**, and `AGENTS.md` is explicit that you must say so in the PR rather
-than imply you did it. That does not change when the harness arrives. It only shrinks:
-every gametest that lands is one line the human no longer has to walk.
+**A human launching `./gradlew runClient` is still the only gate that covers rendering,
+sound and feel**, and `AGENTS.md` is explicit that you must say so in the PR rather than
+imply you did it. The harness did not remove that gate; it shrank it. Seven gametests have
+retired seven of its lines. The rest of the list is still walked by hand.
 
 ---
 
@@ -222,9 +250,9 @@ the next version bump, and treat that re-check as part of the migration gate in
 
 | Artefact | Version | State |
 |---|---|---|
-| `net.fabricmc:fabric-loader-junit` | 0.19.3 | Exists on `maven.fabricmc.net`, matches this mod's loader version exactly. Boots the loader inside an ordinary JUnit run. **Not yet a dependency — #40.** |
-| `fabric-gametest-api-v1` | 4.0.21 | Already on the classpath via `fabric-api`; appears in the `runClient` mod list. Ships `net/fabricmc/fabric/api/gametest/v1/GameTest.class`. |
-| `fabric-client-gametest-api-v1` | 6.0.0 | Likewise present. |
+| `net.fabricmc:fabric-loader-junit` | 0.19.3 | A `testImplementation` dependency, pinned to `loader_version` — it boots the very loader it ships against, and a mismatch fails at class-load time with a stack trace that blames Knot rather than the version. It pulls in the Jupiter engine but **not** the parameterised runner, so `org.junit.jupiter:junit-jupiter` is declared alongside it. |
+| `fabric-gametest-api-v1` | 4.0.21 | Already on the classpath via `fabric-api`. Driven by the `runGametest` run configuration. |
+| `fabric-client-gametest-api-v1` | 6.0.0 | Present, and **unused** — layer 3 is not wired up. |
 
 The gametest API reads these system properties, which is how #40 will drive it from Gradle
 and CI:
@@ -251,17 +279,30 @@ Two constraints inherited from `AGENTS.md` that apply to the harness as much as 
 ## Where tests will live (intended, #40 decides)
 
 ```
-src/test/java/com/minimammoth/ironoak/…      layer 1, loader-junit
-src/gametest/java/com/minimammoth/ironoak/…  layers 2 and 3, plus their structure NBT
+src/test/java/com/minimammoth/ironoak/…               layer 1, loader-junit
+src/gametest/java/com/minimammoth/ironoak/gametest/…  layer 2
+src/gametest/resources/fabric.mod.json                its fabric-gametest entrypoints
 ```
 
 Two directories rather than one, because the two kinds have nothing in common: one is
 milliseconds and runs on every build, the other needs a game and a run configuration. Not
 co-located with `src/main` — Loom's source sets and the remapper make co-location a fight
-with no prize. The exact source-set wiring, the entrypoint registration and the CI job are
-#40's call; if it finds a better shape, it changes this section in the same PR.
+with no prize.
 
-Naming: mirror the class under test (`FireBowlEntityTest`, `ModConfiguredFeaturesTest`).
+`gametest` is a source set of its own, registered with Loom as a second mod
+(`iron_oak_gametest`) so its classes are remapped against the mod they test, and carrying
+its own `fabric.mod.json` because the entrypoint has to be declared somewhere. It also
+means the `jar` task — which only ever packages `main` — cannot ship any of it. That is
+worth checking rather than assuming:
+
+```bash
+unzip -l build/libs/iron-oak-*.jar | grep -ic gametest   # must be 0
+```
+
+`src/test` needs no such care: Gradle never packages a test source set.
+
+Naming: mirror the class under test (`FireBowlEntityTest`, `ModRecipesTest`), or the
+invariant when a test spans several (`TreeMatrixTest`, `RegistryAssetsTest`).
 When a test exists because of a bug, name the issue in the test's own comment — a test
 whose reason is `// #28: cookingTotalTime is not persisted` survives a refactor that would
 otherwise delete it as pointless.
@@ -311,5 +352,6 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Three layers defined for a Fabric mod and mapped onto named classes in this repo; the four bugs of 2026-08-20 (#26, #27, #28, #30) used as the evidence; the #30 matrix check written up as the worked example. Records that the harness is not wired up (#40) and the verified artefact facts as of loader 0.19.3. |
 | 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). Every named class and method re-checked against the merged tree: Mojang mappings throughout, `getSlotsForFace`/`canTakeItemThroughFace`/`saveAdditional`, `cookingTotalTime` now a derived function and a better layer-1 target, the renderer's `extractRenderState`/`submit` split giving layer 3 an explicit `hasInput` to assert. All four bugs restated as fixed. Gradle wrapper fact corrected to 9.5.1 / Loom 1.17. |
+| 2026-08-21 | 2.0 | Layers 1 and 2 exist (#40). Status changed from proposed to adopted. Records what #40 had to resolve against the jar rather than guess: loader-junit is a `LauncherSessionListener` and needs no code, static initialisers must not touch Minecraft, tags have to be bound by hand, the gametest run configuration is a plain `server()`, `@GameTest` defaults to an 8×8×8 empty structure. `playerWillDestroy` rewritten — `BlockEntity.preRemoveSideEffects` now drops any container's contents, so both halves of the old entry were wrong. Layer 3 marked as still not wired up, and the flint-and-steel interaction question left open rather than answered. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*
