@@ -313,7 +313,7 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version. Ops model adapted from the openkegelbillard setup: worker instructions here, orchestration policy in `docs/ops/`. Records the JDK-21 constraint, the datagen direction, the 6×3 matrix rule, and that there is no test suite. |
 | 2026-08-20 | 1.1 | Points at the new `docs/concept/` and `docs/requirements/`: requirements state what each mechanic must do and whether it does, and move in the same PR as the code. |
-| 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
 | 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
+| 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
 
 *Last updated: 2026-08-21*
