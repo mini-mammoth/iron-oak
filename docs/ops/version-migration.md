@@ -75,6 +75,8 @@ the next planning round rather than trusting these.
 | 1.21.11 release tag | **done** — `v1.3.0+1.21.11`, published to Modrinth and CurseForge |
 | `v1.21.11` branch cut and wired into CI | **done** — #52; CI green on Linux and Windows, both layers |
 | 1.21.11 → 26.2 | **done**, build green, `runDatagen` green, `runGametest` green — #20 |
+| 26.2 in-game verification | **done** — walked 2026-08-21, passed (#20) |
+| 26.1 announced alongside 26.2 | **done** — shipped jar verified in-game on 26.1.2 (#20) |
 | 1.20.4 line | **dropped** — decided 2026-08-21 |
 | 1.18.2 and 1.19 lines | **dropped** — decided 2026-08-21; archived, not built |
 

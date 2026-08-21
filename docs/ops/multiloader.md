@@ -167,10 +167,32 @@ The 26.1 → 26.2 delta is 27 commits concentrated in the **event system** (`Eve
 `EventResultHolder` added, `Event`/`EventFactory` reworked) — which is why Architectury's major
 went 20.0 → 21.0, and which **this mod does not use**.
 
-So 26.1 is extra entries in `publish_game_versions` plus one `runClient` pass, not a port. It
-belongs to #20 as an acceptance item.
+So 26.1 is extra entries in `publish_game_versions` plus one `runClient` pass, not a port.
 
-> This is a verified exception for 26.1/26.2, **not** a general rule about adjacent versions.
+**Verified in-game on 2026-08-21** (#20): the shipped `1.4.0+26.2` jar loads and plays on
+Minecraft 26.1.2. Server reached `Done`, the client created a world and was played through the
+loop, and the log carried no mod-relevant WARN or ERROR.
+
+### How to verify a ride-along line
+
+The method matters, because the obvious version of this test proves the wrong thing.
+
+**Test the shipped jar against the older line's Fabric API. Do not recompile against the older
+version.** A recompile tests an artefact that never ships. The real risk is version skew: the
+jar is compiled against Fabric API for the *newest* line (here `0.158.0+26.2`) while a player
+on the older one runs that line's Fabric API (here `0.155.2+26.1.2`).
+
+Narrow it statically first, then launch:
+
+1. Diff the Fabric API symbols the jar can load at runtime against the older line's Fabric API
+   — **method level, not just class level**, or `NoSuchMethodError` slips through. For 26.1
+   every public member the mod calls was present, which left only vanilla differences.
+2. Confirm the jar ships no test or gametest classes, so absent test-only API is irrelevant.
+3. Then one headless `runServer` — cheap, and it proves class loading and registration.
+4. Then `runClient` for what no build can see: models, render layers, the creative tab.
+
+> 26.1/26.2 sharing a tree is a **verified exception**, not a general rule about adjacent
+> versions.
 > It does not hold for 1.21.10 → 1.21.11.
 
 ---
@@ -286,7 +308,7 @@ versions thrash the shared Loom cache. So this is a queue, not a fan-out.
    archaeology.
 2. **#20 — port `main` to 26.2.** The largest single line; all 52 compile errors are
    enumerated in the issue.
-3. **26.1 announced alongside 26.2** — an acceptance item of #20.
+3. **26.1 announced alongside 26.2** — done and verified in-game (#20).
 4. **#54 — the 1.21.1 line**, cut from the 1.21.11 release tag and ported *down*.
 5. **#21 — the Architectury/NeoForge conversion**, piloted on 1.21.1, then applied to 26.x.
 
