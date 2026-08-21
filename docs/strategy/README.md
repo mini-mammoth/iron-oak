@@ -39,9 +39,10 @@ it up.
 | [test-driven-development.md](test-driven-development.md) | Does the test come first — and where does it honestly not, in a repo whose entire existing surface is untested? |
 | [java.md](java.md) | Registration, the client/server split, where `null` is tolerated, and how the 6×3 matrix constrains `ModBlocks`/`ModItems`. |
 
-`java.md` answers *why*. When what you need is the rule rather than the reason, the
-`java` skill is the same conventions as a checklist — it is generated from this document and
-defers to it on every point of substance.
+`java.md` answers *why*. When what you need is the rule rather than the reason, the `java`
+skill (`.claude/skills/java/`) is the same conventions in checklist form, for use while you
+are typing rather than before you start. It defers to this document on every point of
+substance, and a PR that changes one changes the other.
 
 **Read [`java.md`](java.md) before your first non-trivial change to `src/`.** It records
 the things a reader of this codebase cannot infer in one pass — including the two that
