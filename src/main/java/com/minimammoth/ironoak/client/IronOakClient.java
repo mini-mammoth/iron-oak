@@ -6,9 +6,9 @@ import com.minimammoth.ironoak.init.ModEntityTypes;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.RenderType;
 
 @Environment(EnvType.CLIENT)
 public class IronOakClient implements ClientModInitializer {
@@ -16,7 +16,7 @@ public class IronOakClient implements ClientModInitializer {
     public void onInitializeClient() {
         // Saplings and the fire bowl need the cutout layer, otherwise their transparent
         // pixels render black.
-        BlockRenderLayerMap.putBlocks(ChunkSectionLayer.CUTOUT,
+        BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(),
                 ModBlocks.COPPER_OAK_SAPLING,
                 ModBlocks.GOLD_OAK_SAPLING,
                 ModBlocks.IRON_OAK_SAPLING,
