@@ -220,15 +220,21 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
    - TURN ENDED EARLY: no error, tail ends at the prompt. The model finished its turn without
      delivering — observed with every acceptance criterion implemented but no commit, no PR,
      no worker_done, then 49 minutes idle.
-   - COMPACTION LOOP: the counter FELL. It can only fall if the context was compacted; the
-     worker then re-reads what it already read, fills the window, compacts again. From
-     outside this looks like work — running, tail moving, no error — and never delivers.
-     Compare the counter against LAST ROUND'S VALUE, not against zero. Fallen once is normal.
-     Fallen twice with no commit is the loop: do NOT follow up (that grows the context that IS
-     the problem) — harvest, then re-cut the remainder SMALLER as its own ticket.
-   The counter is coarse: it rounds to whole `k`, so a worker at 90k looks flat for minutes
-   while working. Better signals: `latestCursor` from `orca terminal read --json` between two
-   reads (unchanged = no output), and the newest file mtime in the worktree.
+   - COMPACTION LOOP: the context was compacted and the worker re-reads what it already read,
+     fills the window, compacts again. From outside this looks like work — running, tail
+     moving, no error — and never delivers. Detect it from the WORKTREE: output keeps coming
+     (latestCursor moves) while `git log --oneline` gains NO commit across rounds. One
+     compaction is normal. Two rounds of output with no new commit is the loop: do NOT follow
+     up (that grows the context that IS the problem) — harvest, then re-cut the remainder
+     SMALLER as its own ticket.
+   NEVER BUILD A CHECK ON THE STATUS-LINE FORMAT. It is agent-specific and changes under you:
+   `vibe` printed `0/200k`, `claude` prints `↓ 24.7k tokens` with no denominator, so a pattern
+   written for one silently never fires for the other — the poll hangs, or a working worker is
+   reported dead. The signals that survive an agent change:
+     orca terminal read --terminal <h> --json   # latestCursor differs between reads = output
+     git -C <worktree> log --oneline            # a commit is proof
+     git -C <worktree> status --porcelain       # uncommitted progress
+   Read the tail with a human eye when diagnosing; do not grep it for a shape.
 
    [iron-oak] A LONG FIRST BUILD IS NOT A STALL. Loom downloads and decompiles Minecraft
    before anything compiles — minutes, more after a version bump — and the counter can sit
@@ -269,9 +275,10 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
         `claude --model sonnet --permission-mode bypassPermissions` — never `vibe`, never the
         runtime default.
      c2) check the fresh worktree's base (below)
-     d) VERIFY DELIVERY: `orca terminal read` — counter > 0. `--inject` can report ok and move
-        the task to `dispatched` with nothing in the TUI. No proof = no worker: re-deliver via
-        the recipe in orchestration.md.
+     d) VERIFY DELIVERY: `orca terminal read` twice — `latestCursor` must move, or the tail
+        must visibly show the briefing being read. Do NOT grep for a token counter; see the
+        status-line rule below. No proof = no worker: re-deliver via the recipe in
+        orchestration.md.
         CHECK FIRST, THEN RE-DELIVER — NEVER BOTH. A `terminal send` into a terminal that
         already has the briefing runs it a SECOND time; the worker redoes finished work and
         may force-push over its own accepted commit, invalidating your acceptance.
