@@ -182,8 +182,17 @@ so vanilla recognises it as lightable.
 every state where it would have changed something (#28); it now carries
 `CampfireBlock.onProjectileHit`'s condition verbatim — unlit and not waterlogged — and
 `FireBowlGameTest` fires a flaming arrow at an unlit bowl. Flint and steel on a *loaded* bowl
-was the other half of this, fixed as #27 defect 2. None of the three criteria has been ticked
-at `runClient`.
+was the other half of this, fixed as #27 defect 2.
+
+On this line (`v1.21.1`, #54), the #27 defect 2 shape reappeared during the down-port:
+`useItemOn`'s "no recipe matches this held item" branch returned
+`ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION`, which runs `useWithoutItem`
+first — and on a loaded bowl, `useWithoutItem`'s own `SUCCESS` (spawning the contents)
+consumed the interaction before flint and steel's `useOn` ever ran. Fixed to
+`SKIP_DEFAULT_BLOCK_INTERACTION`, which is this version's "let the item act" value.
+`FireBowlGameTest.flintAndSteelLightsAnEmptyBowl` and `.flintAndSteelLightsALoadedBowl` now
+cover both halves in `gametest`. None of the three criteria has been ticked at `runClient`
+on this line.
 
 **Acceptance criteria** (verify: `runClient`, `gametest`)
 - [ ] Flint and steel lights an unlit bowl, loaded or empty

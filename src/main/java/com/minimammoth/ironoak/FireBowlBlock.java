@@ -155,7 +155,7 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stackInHand, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!(world.getBlockEntity(pos) instanceof FireBowlEntity entity)) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         }
 
         // An empty hand is not an item interaction; let it fall through to useWithoutItem,
@@ -178,11 +178,20 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
         // Only asked whether a recipe exists — the duration is the entity's business, and it
         // derives it from the recipe rather than being handed it here.
         if (entity.getRecipeFor(serverLevel, stackInHand).isEmpty()) {
-            // Nothing this block can do with the held item. Also covers a log offered to a
-            // bowl whose input is already occupied, because getRecipeFor guards on that —
-            // which is what made the old `!entity.getInput().isEmpty()` check below
-            // unreachable. 1.20.4 returned PASS in exactly this situation too.
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            // Nothing this block can do with the held item — including flint and steel,
+            // which is not a burning ingredient either. SKIP, not PASS_TO_DEFAULT_BLOCK_
+            // INTERACTION: the latter would run useWithoutItem next, and on a loaded bowl
+            // useWithoutItem's own SUCCESS (spawning the contents) would consume the
+            // interaction before flint and steel's own useOn ever runs — the exact #27
+            // defect 2 shape ("a fire bowl containing a log swallowed the flint and
+            // steel"), just reached through this version's ItemInteractionResult instead
+            // of TRY_WITH_EMPTY_HAND. SKIP goes straight to itemStack.useOn(...), which is
+            // what 1.20.4's plain PASS and 1.21.11's PASS both did here.
+            //
+            // Also covers a log offered to a bowl whose input is already occupied, because
+            // getRecipeFor guards on that — which is what made the old
+            // `!entity.getInput().isEmpty()` check below unreachable.
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         }
 
         // One log at a time; getRecipeFor already refused if the input slot is taken.

@@ -12,8 +12,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
@@ -70,6 +74,58 @@ public class FireBowlGameTest {
         arrow.setDeltaMovement(0.0, -0.6, 0.0);
 
         helper.succeedWhen(() -> helper.assertBlockProperty(BOWL, BlockStateProperties.LIT, true));
+    }
+
+    /**
+     * BRN-07, empty half: flint and steel is not a burning ingredient, so
+     * {@code useItemOn} must hand off to {@code itemStack.useOn(...)} — which is where
+     * {@code FlintAndSteelItem} recognises the bowl as lightable via the
+     * {@code minecraft:campfires} tag and sets {@code LIT} itself.
+     */
+    @Requirement("BRN-07")
+    @GameTest(timeoutTicks = 20, template = FabricGameTest.EMPTY_STRUCTURE)
+    public void flintAndSteelLightsAnEmptyBowl(GameTestHelper helper) {
+        helper.setBlock(BOWL.below(), Blocks.STONE);
+        helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
+
+        lightWithFlintAndSteel(helper);
+
+        helper.succeedWhen(() -> helper.assertBlockProperty(BOWL, BlockStateProperties.LIT, true));
+    }
+
+    /**
+     * #27 defect 2, re-expressed for this version's {@code ItemInteractionResult}: a bowl
+     * holding a log (or ash) must still hand flint and steel off to
+     * {@code itemStack.useOn(...)}. {@code useItemOn} returning
+     * {@code PASS_TO_DEFAULT_BLOCK_INTERACTION} instead of {@code
+     * SKIP_DEFAULT_BLOCK_INTERACTION} for "no recipe matches this item" would run
+     * {@code useWithoutItem} first, whose own {@code SUCCESS} — spawning the loaded
+     * contents — consumes the interaction before flint and steel ever gets a turn. That is
+     * exactly the shape of the original defect, just reached through a different enum.
+     */
+    @Requirement("BRN-07")
+    @GameTest(timeoutTicks = 20, template = FabricGameTest.EMPTY_STRUCTURE)
+    public void flintAndSteelLightsALoadedBowl(GameTestHelper helper) {
+        helper.setBlock(BOWL.below(), Blocks.STONE);
+        helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
+
+        FireBowlEntity bowl = helper.getBlockEntity(BOWL);
+        bowl.setInput(new ItemStack(ModItems.IRON_OAK_LOG));
+
+        lightWithFlintAndSteel(helper);
+
+        helper.succeedWhen(() -> {
+            helper.assertBlockProperty(BOWL, BlockStateProperties.LIT, true);
+            if (!bowl.getInput().is(ModItems.IRON_OAK_LOG)) {
+                throw new GameTestAssertException("flint and steel emptied the bowl instead of lighting it");
+            }
+        });
+    }
+
+    private static void lightWithFlintAndSteel(GameTestHelper helper) {
+        Player player = helper.makeMockPlayer(GameType.CREATIVE);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FLINT_AND_STEEL));
+        helper.useBlock(BOWL, player);
     }
 
     /**

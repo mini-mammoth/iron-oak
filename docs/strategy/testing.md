@@ -169,9 +169,12 @@ The other resident of this layer is the #26 class of failure: whether an item's 
 cheaper — do that first, and reach for layer 3 only for the resolution itself.
 
 Interaction semantics (#27 defect 2: flint and steel on a loaded bowl must fall through to
-the flint and steel) sit on the boundary. `GameTestHelper` does offer `useBlock(pos, player)`
-and `makeMockServerPlayerInLevel()`, so a server gametest can probably drive it — but #40
-did not, and "probably" is not a claim. Still open.
+the flint and steel) sit on the boundary. `GameTestHelper` offers `useBlock(pos, player)`
+and `makeMockPlayer(GameType)` (give the mock player the item via
+`setItemInHand` before calling `useBlock`), so a server gametest can drive it — confirmed on
+`v1.21.1` (#54), where the same defect shape reappeared through that version's
+`ItemInteractionResult` and `FireBowlGameTest.flintAndSteelLightsALoadedBowl` (alongside the
+empty-bowl half) both proves the fix and fails without it.
 
 ### Not a layer: the `runClient` checklist
 
