@@ -254,13 +254,3 @@ note is kept as the worked example of what a port note is for.
 - **BRN-Q2** Should a lit bowl really destroy its contents when broken, or was that a
   shortcut? The code comment ("all items get lost. :/") reads more like a shrug than a
   decision.
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial. BRN-03/04/07 land as `broken`/`partial` against #28, verified in the 1.20.4 source; BRN-10 records #27 as a port-only failure. |
-| 2026-08-21 | 2 | BRN-03 and BRN-06 name `test` and `gametest`, BRN-04 names `test`, BRN-07 names `gametest` (#43). The three #28 defects each have a test now, and `FireBowlGameTest` records why the BRN-05 break rules have none — `BlockEntity.preRemoveSideEffects` changed them under the mod, and BRN-Q2 has to be answered before a test can freeze either behaviour. |
-| 2026-08-21 | 3 | BRN-03, BRN-04, BRN-07 and BRN-10 describe the fixed tree (#47). All three #28 defects and both #27 defects were fixed before this catalogue merged, so the failure tables described code that no longer existed — BRN-03's cited a cached field the fix deleted. Statuses are unchanged: what each entry now names is the criterion still waiting at `runClient`, and Mojang names replace the Yarn-era ones in BRN-10. |
-
-*Last updated: 2026-08-21*

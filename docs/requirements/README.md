@@ -214,13 +214,3 @@ sit in their own file. Neither is a work item until someone answers it.
 - Player-visible mechanics or a new subsystem? A design document comes first — see the
   conditional design phase in [`../ops/orchestration.md`](../ops/orchestration.md).
 - Writing code? [`AGENTS.md`](../../AGENTS.md) is still the file that tells you how.
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial baseline: 36 requirements across six domains, read out of `1.2.1+1.20.4`. Wires #15, #27, #28 and the newly filed #30 to the requirements they break. |
-| 2026-08-21 | 2 | `verify:` gains `test` and `gametest` (#43), now that #40 has built both layers. Thirteen requirements name one of them, and the claim is checked in both directions by `RequirementTracingTest` — a test cites its requirement with `@Requirement`. MAT-Q1 answered: the matrix counts are enforced mechanically. |
-| 2026-08-21 | 3 | Re-baselined onto the tree it describes (#47). The version anchor pointed at 1.20.4 and `1.2.1+1.20.4`; `main` had moved to 1.21.11 the day before this catalogue merged, and four entries still described code the fixes for #27, #28 and #30 had already deleted. Statuses and the tally are untouched — a status moves at the gate it names — and #48 asks whether TRE-04 and the MAT domain belong here at all. |
-
-*Last updated: 2026-08-21*

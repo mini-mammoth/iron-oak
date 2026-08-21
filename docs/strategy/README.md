@@ -98,16 +98,3 @@ The one deferral those documents carried is also gone. `test-driven-development.
 say that no test would cite a requirement id until `docs/requirements/` existed; it does
 (#32), so tests cite it (#43), and the citation is checked in both directions rather than
 being a comment.
-
----
-
-## 📅 Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1.0 | Initial version (#39). Taxonomy adapted from the openkegelbillard `docs/strategy/` split; contents written for a Fabric mod from scratch. Records the concept/strategy and strategy/ops boundaries, and the `proposed` status convention for the not-yet-wired test harness. |
-| 2026-08-21 | 1.2 | Tests cite requirements (#43). `testing.md` gains the `@Requirement` section and `test-driven-development.md` loses its requirement-ID deferral, since `docs/requirements/` landed with #32. Notes that the `java` skill is the checklist form of `java.md` and defers to it. |
-| 2026-08-21 | 1.3 | Staleness sweep (#47). The #32 deferral is gone — concept and requirements have landed — and the TDD row no longer calls the whole existing surface untested, since part of it now has tests. |
-| 2026-08-21 | 1.1 | `testing.md` and `test-driven-development.md` moved from `proposed` to `active` (#40). The status-honesty section now names the one part still ahead of the tree — layer 3 — rather than the whole harness. |
-
-*Last updated: 2026-08-21*
