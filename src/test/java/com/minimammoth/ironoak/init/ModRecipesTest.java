@@ -5,9 +5,10 @@ import com.google.gson.JsonObject;
 import com.minimammoth.ironoak.BootstrappedGame;
 import com.minimammoth.ironoak.BurningRecipe;
 import com.minimammoth.ironoak.Matrix;
-import com.minimammoth.ironoak.TagBinding;
 import com.minimammoth.ironoak.Resources;
+import com.minimammoth.ironoak.TagBinding;
 import com.minimammoth.ironoak.WashingRecipe;
+import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -69,6 +70,8 @@ class ModRecipesTest {
         return Matrix.METALS;
     }
 
+    @Requirement("BRN-03")
+    @Requirement("WSH-01")
     @Test
     void bothRecipeTypesAreRegistered() {
         for (String key : List.of("burning", "washing")) {
@@ -78,6 +81,7 @@ class ModRecipesTest {
         }
     }
 
+    @Requirement("BRN-03")
     @ParameterizedTest(name = "{0}")
     @MethodSource("metals")
     void burningInfusedLogsYieldsThatMetalsAsh(String metal) {
@@ -95,6 +99,7 @@ class ModRecipesTest {
      * silently cannot be turned into ash; an extra one is a gold log that burns into iron ash.
      * Neither crashes, so neither is visible without this.
      */
+    @Requirement("MAT-03")
     @ParameterizedTest(name = "{0}")
     @MethodSource("metals")
     void burningTakesExactlyThatMetalsSixLogs(String metal) {
@@ -113,6 +118,7 @@ class ModRecipesTest {
         assertEquals(expected, accepted, () -> "burning_" + metal + "_ash burns the wrong set of logs");
     }
 
+    @Requirement("WSH-01")
     @ParameterizedTest(name = "{0}")
     @MethodSource("metals")
     void washingAshYieldsThatMetalsShred(String metal) {

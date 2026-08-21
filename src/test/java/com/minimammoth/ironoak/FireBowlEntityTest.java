@@ -3,6 +3,7 @@ package com.minimammoth.ironoak;
 import com.minimammoth.ironoak.init.ModBlocks;
 import com.minimammoth.ironoak.init.ModItems;
 import com.minimammoth.ironoak.init.ModRecipes;
+import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
@@ -51,22 +52,26 @@ class FireBowlEntityTest {
 
     // ---- the hopper contract: a pure switch over Direction -------------------------
 
+    @Requirement("BRN-06")
     @Test
     void hoppersBelowMayOnlyReachTheOutput() {
         assertArrayEquals(new int[]{OUTPUT_SLOT}, fireBowl().getSlotsForFace(Direction.DOWN));
     }
 
+    @Requirement("BRN-06")
     @Test
     void hoppersAboveMayOnlyReachTheInput() {
         assertArrayEquals(new int[]{INPUT_SLOT}, fireBowl().getSlotsForFace(Direction.UP));
     }
 
+    @Requirement("BRN-06")
     @ParameterizedTest
     @EnumSource(value = Direction.class, names = {"NORTH", "SOUTH", "WEST", "EAST"})
     void hoppersAtTheSideReachBothSlots(Direction side) {
         assertArrayEquals(new int[]{INPUT_SLOT, OUTPUT_SLOT}, fireBowl().getSlotsForFace(side));
     }
 
+    @Requirement("BRN-06")
     @Test
     void onlyTheOutputCanBePulledOut() {
         FireBowlEntity bowl = fireBowl();
@@ -81,6 +86,7 @@ class FireBowlEntityTest {
      * it must refuse rather than throw — that refusal is the only half of it this layer can
      * see; the accepting half is a gametest.
      */
+    @Requirement("BRN-06")
     @Test
     void nothingCanBePutInWithoutAServer() {
         assertFalse(fireBowl().canPlaceItemThroughFace(INPUT_SLOT, new ItemStack(ModItems.IRON_OAK_LOG), Direction.UP));
@@ -94,11 +100,13 @@ class FireBowlEntityTest {
      * back to the same constant here. #28 collapsed two disagreeing defaults into that one
      * number, and nothing but this pins them together.
      */
+    @Requirement("BRN-03")
     @Test
     void anInputWithNoRecipeBurnsForTheDefaultTime() {
         assertEquals(ModRecipes.DEFAULT_COOKING_TIME, FireBowlEntity.cookingTotalTime(Optional.empty()));
     }
 
+    @Requirement("BRN-03")
     @Test
     void aMatchedRecipeSuppliesItsOwnCookTime() {
         assertEquals(42, FireBowlEntity.cookingTotalTime(Optional.of(burningRecipeTaking(42))),
@@ -113,6 +121,7 @@ class FireBowlEntityTest {
      * time its chunk came back. The key it is persisted under is {@code unlit_time}, and a
      * saved world depends on that spelling.
      */
+    @Requirement("BRN-04")
     @Test
     void theIdleCountdownSurvivesASave() {
         CompoundTag saved = saveOf(loadedFrom(state(17, 37)));
@@ -125,6 +134,7 @@ class FireBowlEntityTest {
      * A bowl saved before #28 has no {@code unlit_time} key at all, and must load as a bowl
      * whose countdown starts fresh rather than as one that throws.
      */
+    @Requirement("BRN-04")
     @Test
     void aPre28SaveLoadsWithTheCountdownAtZero() {
         CompoundTag old = state(17, 37);
@@ -134,6 +144,7 @@ class FireBowlEntityTest {
                 "a bowl with no unlit_time key must load — and then save — with the countdown at zero");
     }
 
+    @Requirement("BRN-03")
     @Test
     void bothSlotsSurviveASave() {
         FireBowlEntity bowl = fireBowl();
@@ -153,6 +164,7 @@ class FireBowlEntityTest {
      * path reset it, so a hopper-inserted log inherited whatever the previous one had left.
      * The reset now lives in {@code setItem}, which both paths go through.
      */
+    @Requirement("BRN-03")
     @Test
     void aFreshInputResetsTheProgress() {
         FireBowlEntity bowl = loadedFrom(state(150, 0));
