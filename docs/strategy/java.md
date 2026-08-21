@@ -355,15 +355,3 @@ nullable super call in `Optional.ofNullable(...).orElse(...)`.
 | Change `gradle.properties`, `build.gradle`, the Gradle wrapper or `.github/` in a feature PR | `AGENTS.md`: a version bump is never a side effect. It makes the PR unreviewable and unrevertable. Report it and let it be an `area:build` ticket. In particular do not re-pin the wrapper to 8.11.1 — that pin belonged to the 1.20.4 line and Loom 1.17 needs Gradle 9.x. |
 | "Unify" the mod id and the artifact id | `iron_oak` (underscore) and `iron-oak` (hyphen) are both load-bearing. |
 | Answer a Minecraft API question from memory | Use the `minecraft-fabric-lookup` skill. #26, #27 and #28 all have a version-drift component; guessing produced code that compiled and did the wrong thing. |
-
----
-
-## 📅 Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1.0 | Initial version (#39). Writes down what `AGENTS.md` only implies: the `Registry.register` pattern and why Fabric has no `DeferredRegister`, class-load order as a load-bearing property of `init/`, "the id is the contract and the constant name is not" (#30), the server-authoritative-plus-explicit-sync rule (#27), the persisted-field rule (#28), the tolerated nulls with reasons, and how the 6×3 matrix constrains the shape of `ModBlocks`/`ModItems`. |
-| 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). Mojang mappings replace the earlier caveat about two Minecraft lines; Java 21, not 17; registration updated for the 1.21.2 key-in-settings change; #27, #28 and #30 restated as fixed, with `markUpdated` as the sync funnel and `cookingTotalTime` as derived rather than cached; the nullable-`level` inconsistency recorded as resolved; the access widener corrected to inert. |
-| 2026-08-21 | 1.2 | Counts dropped (#47). The file and line totals in the opening are now an order of magnitude, and the `java` skill's per-feature tallies went with them — a hand-written count of `var` sites rots on the next feature PR, while the rule it justified does not. The skill is listed in `related`: it is the checklist form of this document, and a PR that changes one changes the other. |
-
-*Last updated: 2026-08-21*

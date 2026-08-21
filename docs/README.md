@@ -83,6 +83,26 @@ Screenshots and GIFs referenced from [`README.md`](../README.md) — the craftin
 fire bowl, the processing steps. Player-facing documentation. If you change a recipe or a
 texture, the matching image is now wrong; either update it or say so in the PR.
 
+## How these documents are written
+
+Four rules, because these docs are read under context pressure by people and by agents with a
+finite window. Prose costs someone else's attention.
+
+1. **State the current truth, not how it was reached.** A document says what is true now. The
+   deliberation that produced it — options weighed, orderings corrected, who said what — is in
+   the PR and in `git log`, which is better at it.
+2. **No version-history tables, no changelogs.** They duplicate `git log` and grow forever.
+   `last_updated` in the frontmatter is enough; `git log -p <file>` is the history.
+3. **Keep rationale only where it changes what the reader does.** "Loom 1.5 shipped an empty
+   jar and still reported success" stays, because it is why you check the artefact instead of
+   the exit code. A retelling of how the rule was discovered does not.
+4. **A rule is one rule.** Trigger, action, and — where it is not obvious — the one-line reason.
+   If a rule needs three paragraphs to justify itself, it is probably two rules or none.
+
+Applies to everything under `docs/`, to `AGENTS.md`, and to issue and PR bodies. When you
+find yourself adding the same caveat a third time, that is a signal the underlying rule is
+wrong, not that it needs more explanation.
+
 ## Rule of thumb
 
 > Writing code? Read [`AGENTS.md`](../AGENTS.md).
@@ -92,3 +112,5 @@ texture, the matching image is now wrong; either update it or say so in the PR.
 > Dispatching work to agents? `docs/ops/orchestration.md`.
 > Bumping a Minecraft version? Read `docs/ops/version-migration.md` first — it is staged
 > for a reason.
+> Which versions and loaders we ship? `docs/ops/multiloader.md`.
+> Writing or editing a document here? The four rules above.

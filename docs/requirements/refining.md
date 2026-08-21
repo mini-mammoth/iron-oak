@@ -106,11 +106,3 @@ mined one, and therefore usable to craft more infused bone meal.
 - **REF-Q1** Should shreds have a blasting recipe? Vanilla treats ore-adjacent items as
   blast-furnace material; shreds are furnace-only today, which is inconsistent with the
   raw ore they represent.
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1 | Initial. REF-03 records copper's missing nugget as a provisional `wontfix` rather than an accidental gap. |
-
-*Last updated: 2026-08-20*

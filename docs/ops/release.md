@@ -140,14 +140,3 @@ those live in the workflow, because they need the tokens.
   file *on the pushed ref* — a line whose own workflow does not name it is never built.
 - **`curseforge_id` empty disables CurseForge** rather than failing. Handy while a
   project does not exist yet, easy to overlook when wondering where the upload went.
-
----
-
-## Version History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-08-20 | 1.0 | Initial version. Automated publishing via `mod-publish-plugin` 2.2.0 (#22). |
-| 2026-08-21 | 1.1 | The jar check no longer names a file count (#47). "~347" had drifted to 395 while sitting in three documents; the empty-jar bug shipped 2 files, so the order of magnitude is the whole signal. The command is also fixed to exclude the sources jar. |
-
-*Last updated: 2026-08-21*
