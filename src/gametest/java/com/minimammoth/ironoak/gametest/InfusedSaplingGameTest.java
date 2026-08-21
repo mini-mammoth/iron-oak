@@ -43,33 +43,26 @@ public class InfusedSaplingGameTest {
      * Plants the sapling and forces it to grow rather than waiting for a random tick — a
      * gametest that waits on randomness is a gametest that gets disabled and then deleted.
      *
-     * <p>Two details are load-bearing. {@code advanceTree} bumps {@code STAGE} from 0 to 1
-     * on its first call and only grows on a later one, and growth is a dice roll that can
-     * simply fail, so it is retried a bounded number of times. And the platform is 3x3: this
-     * mod registers its dark oak feature in the single-sapling slot, but the shape it places
-     * is still {@code DarkOakTrunkPlacer}, which needs a 2x2 dirt base underneath it.
+     * <p>Growing is not one call. {@code advanceTree} bumps {@code STAGE} from 0 to 1 the
+     * first time and only tries to grow after that, and the attempt itself is a dice roll
+     * that can simply fail. So it is driven once per tick until a log appears, which asserts
+     * on state rather than on elapsed time and cannot be made flaky by an unlucky seed.
      */
     private static void assertGrowsInto(GameTestHelper helper, Block sapling, Block expectedLog) {
         BlockPos pos = new BlockPos(3, 2, 3);
-
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                helper.setBlock(pos.below().offset(x, 0, z), Blocks.DIRT);
-            }
-        }
+        helper.setBlock(pos.below(), Blocks.DIRT);
         helper.setBlock(pos, sapling);
 
         ServerLevel level = helper.getLevel();
         BlockPos absolute = helper.absolutePos(pos);
 
-        for (int attempt = 0; attempt < 64; attempt++) {
+        helper.succeedWhen(() -> {
             BlockState state = level.getBlockState(absolute);
-            if (!(state.getBlock() instanceof OreInfusedSaplingBlock grower)) {
-                break;
+            if (state.getBlock() instanceof OreInfusedSaplingBlock grower) {
+                grower.advanceTree(level, absolute, state, level.random);
             }
-            grower.advanceTree(level, absolute, state, level.random);
-        }
 
-        helper.succeedWhen(() -> helper.assertBlockPresent(expectedLog, pos));
+            helper.assertBlockPresent(expectedLog, pos);
+        });
     }
 }
