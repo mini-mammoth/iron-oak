@@ -2,7 +2,7 @@
 domain: Operations
 domain_code: OPS
 status: active
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - orchestration.md
@@ -27,7 +27,8 @@ reconciliation round per invocation:
 > **On provenance:** most rules below were learned on the board this runbook was adapted
 > from, not in this repo. They are kept because they describe how Orca, `gh` and LLM
 > workers behave, which does not change with the project. Rules that are specific to
-> **this** repo — JDK, Loom, datagen, no test suite — are marked **[iron-oak]** and were
+> **this** repo — JDK, Loom, datagen, what "green" does and does not prove — are marked
+> **[iron-oak]** and were
 > derived from this codebase, not observed in a run yet.
 
 ---
@@ -244,13 +245,14 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
    to `status:needs-human`. Set `JAVA_HOME` before every build, and if a build fails,
    check `java -version` before you read a single stack frame.
 
-   [iron-oak] "GREEN" IS A WEAKER CLAIM HERE THAN ELSEWHERE. There is no test suite:
-   `./gradlew build` compiles and remaps, and proves nothing about behaviour. So a green
-   build on a ticket that changes in-world behaviour (fire bowl ticking, sapling growth,
-   washing, recipe matching) is NOT an acceptance. Require the worker's `runClient`
-   observation in the PR body, and if it is missing, ask for the observation — not for the
-   build status again. Accepting "build green" on a behaviour fix means shipping untested
-   behaviour under a passing check.
+   [iron-oak] "GREEN" IS A WEAKER CLAIM HERE THAN ELSEWHERE. There are two test layers now
+   — `./gradlew build` runs the unit tests, `./gradlew runGametest` the server ones — but
+   between them they cover ids, committed resources, the matrix and part of the fire bowl,
+   and nothing a player looks at. So a green build on a ticket that changes in-world
+   behaviour the gametests do not reach (rendering, particles, sound, feel) is NOT an
+   acceptance. Require the worker's `runClient` observation in the PR body, and if it is
+   missing, ask for the observation — not for the build status again. Accepting "checks
+   green" on that kind of fix means shipping unobserved behaviour under a passing check.
 
    [iron-oak] A JAVA CHANGE WITHOUT ITS REGENERATED OUTPUT IS A BROKEN COMMIT. If the diff
    touches `init/ModDataGenerator.java` or anything it emits, `src/main/generated/` must be
@@ -366,9 +368,9 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
    problem. Instead: harvest existing work (`git status --short`, recipe below), re-cut the
    remainder SMALLER and dispatch it as its own ticket.
 
-   [iron-oak] WHAT BLOWS THE WINDOW HERE IS NOT THE SOURCE. The Java is small — 19 files,
-   largest ~180 lines — so the usual "three big files fill half the window" driver does not
-   apply. The context sinks in this repo are:
+   [iron-oak] WHAT BLOWS THE WINDOW HERE IS NOT THE SOURCE. The Java is small — twenty-odd
+   files, none longer than a few hundred lines — so the usual "three big files fill half the
+   window" driver does not apply. The context sinks in this repo are:
    - `src/main/generated/` — bulky generated worldgen JSON, and a worker will read it to
      "get oriented" unless told not to.
    - decompiled Minecraft sources — Loom makes them navigable, and they are enormous. A
@@ -707,5 +709,6 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
 6. **[iron-oak] One Minecraft version at a time** — no version bump in parallel with
    anything, because the mapping migration rewrites every file and every unmerged branch
    becomes a manual re-port.
-7. **[iron-oak] "Compiles" is never reported as "works"** — there is no test suite, so a
-   green build is not an acceptance for behaviour changes.
+7. **[iron-oak] "Compiles" is never reported as "works"** — the two test layers do not
+   reach rendering, sound or feel, so green checks are not an acceptance for a change to
+   any of them.

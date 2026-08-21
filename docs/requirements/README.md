@@ -102,10 +102,11 @@ specification, and `runClient` stays the gate for anything in-world.
 | `planned` | Intended, nothing built |
 | `wontfix` | Deliberately not done; the requirement records the decision |
 
-**Status is stated against `main`** (currently Minecraft 1.20.4, `mod_version`
-`1.2.1+1.20.4`). Version branches do not get their own column — a requirement that only
-fails on a port keeps its `main` status and names the port issue in a **port note**
-(see [BRN-10](burning.md#brn-10-show-what-is-inside) and #27).
+**Status is stated against `main`**, which tracks the newest supported Minecraft version —
+read which one from `gradle.properties`, never from here. Version branches do not get their
+own column: a requirement that only fails on a port keeps its `main` status and names the
+port issue in a **port note**, as [BRN-10](burning.md#brn-10-show-what-is-inside) did for
+#27 while 1.21.11 was still a branch.
 
 Rules for keeping this honest:
 
@@ -118,7 +119,10 @@ Rules for keeping this honest:
 
 **Provenance of this baseline.** The statuses below were derived by reading the
 `1.2.1+1.20.4` source, its shipped data and the open issues — **not** from a fresh in-game
-pass. That is why every acceptance criterion is still unticked: `done` here means "implemented
+pass. That baseline is older than the tree: `main` moved to 1.21.11 the day before this
+catalogue merged, and #47 corrected the passages that still described 1.20.4 code. Statuses
+did not move with it, because a status only moves at the gate it names. That is also why
+every acceptance criterion is still unticked: `done` here means "implemented
 and believed to work", and the boxes get ticked by whoever actually checks them at the gate
 they name. Treat an unticked criterion on a `done` requirement as unverified, not as proven.
 
@@ -217,5 +221,6 @@ sit in their own file. Neither is a work item until someone answers it.
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial baseline: 36 requirements across six domains, read out of `1.2.1+1.20.4`. Wires #15, #27, #28 and the newly filed #30 to the requirements they break. |
 | 2026-08-21 | 2 | `verify:` gains `test` and `gametest` (#43), now that #40 has built both layers. Thirteen requirements name one of them, and the claim is checked in both directions by `RequirementTracingTest` — a test cites its requirement with `@Requirement`. MAT-Q1 answered: the matrix counts are enforced mechanically. |
+| 2026-08-21 | 3 | Re-baselined onto the tree it describes (#47). The version anchor pointed at 1.20.4 and `1.2.1+1.20.4`; `main` had moved to 1.21.11 the day before this catalogue merged, and four entries still described code the fixes for #27, #28 and #30 had already deleted. Statuses and the tally are untouched — a status moves at the gate it names — and #48 asks whether TRE-04 and the MAT domain belong here at all. |
 
 *Last updated: 2026-08-21*

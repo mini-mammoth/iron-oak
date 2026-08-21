@@ -2,7 +2,7 @@
 domain: Operations
 domain_code: OPS
 status: active
-last_updated: 2026-08-20
+last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - orchestration.md
@@ -128,9 +128,10 @@ line at all.
 
 ## The blocking gate: nothing has been verified in-game
 
-`./gradlew build` and `./gradlew runDatagen` are green. That is the whole of the evidence.
-This repo has **no test suite**, so a green build says the mod compiles and remaps — it
-says nothing about whether the mod works.
+`./gradlew build`, `./gradlew runGametest` and `./gradlew runDatagen` are green. That is the
+whole of the evidence, and it is narrower than it sounds: the two test layers cover ids,
+committed resources, the 6×3 matrix and the fire bowl's ticking, and **nothing in the list
+below**. For everything here, a green build says the mod compiles and remaps.
 
 Several changes in the 1.21.11 migration are behavioural and can only be checked by
 playing:
@@ -186,8 +187,9 @@ and every one of them will bite a second time:
 - **A missed resource-directory rename does not fail the build.** 1.21 renamed
   `loot_tables` → `loot_table`, `tags/blocks` → `tags/block`, `tags/items` → `tags/item`,
   `recipes` → `recipe`. Everything compiles, the jar builds, CI is green — and in-game the
-  recipes, loot tables or tags are simply absent. There is no test suite to catch it, which
-  is why the acceptance below is in-game and not a green build.
+  recipes, loot tables or tags are simply absent. `RegistryAssetsTest` catches an item whose
+  asset files are missing, but nothing catches a whole directory that vanilla stopped reading,
+  which is why the acceptance below is in-game and not a green build.
 - **A missing *asset* layer is quieter still.** 1.21.4 put `assets/<ns>/items/<id>.json`
   between an item and its model, and this mod shipped none of them until #26 — every stack
   rendered as the missing-texture cube. Nothing was logged, and nothing could have been:
@@ -252,6 +254,7 @@ free release, and it is out of scope here.
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-21 | 1.1 | The blocking gate accounts for the test harness (#47). Both layers are named in the evidence, and the point is sharpened rather than dropped: what they cover is listed, and none of it is on the in-game list below. The resource-rename warning credits `RegistryAssetsTest` for the half it now catches. |
 | 2026-08-20 | 1.0 | Initial plan. Target versions and the yarn-discontinuation constraint verified against `maven.fabricmc.net` and the Fabric porting docs; reach figures measured via the Modrinth API. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

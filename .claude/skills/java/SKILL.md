@@ -10,8 +10,8 @@ description: The rules for writing Java in this mod — modern-Java style (var b
 typing rather than before you start. Where the two disagree, `java.md` wins — and fix this
 file in the same PR.
 
-Read `java.md` in full before your first non-trivial change to `src/`. It is 20 files and
-~1,850 lines of code; the document is shorter than the codebase.
+Read `java.md` in full before your first non-trivial change to `src/`. The mod is twenty-odd
+files and a couple of thousand lines; the document is shorter than the codebase.
 
 ---
 
@@ -22,7 +22,7 @@ Do not do any of these as part of another change, however small it looks:
 | Do not | Instead |
 |---|---|
 | Add a mixin | `iron-oak.mixins.json` is empty and there is no `mixin` package. The first one is a design decision. Report it. |
-| Add an access-widener entry | `iron_oak.accesswidener` is declared but inert — its only line is a comment. Same reasoning. |
+| Add an access-widener entry | `iron_oak.accesswidener` is declared but inert — its only entry is commented out, so it widens nothing. Same reasoning. |
 | Touch `gradle.properties`, `build.gradle`, the Gradle wrapper or `.github/` | A version bump is never a side effect. It belongs to an `area:build` ticket. Do not re-pin the wrapper to 8.11.1 — Loom 1.17 needs Gradle 9.x. |
 | Hand-edit `src/main/generated/` | Output. Change `ModDataGenerator` (or a provider), run `./gradlew runDatagen`, commit both together. |
 | "Unify" `iron_oak` and `iron-oak` | Mod id and artifact id. Both load-bearing. |
@@ -40,21 +40,22 @@ Language level is **Java 21** (`options.release = 21`, `"java": ">=21"` in
 export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 ```
 
-Measured against the tree, not aspirational:
+Read off the tree, not aspirational. The **Status** column says what the code does today; if
+you want a count, grep for it rather than trusting a number written down here:
 
 | Feature | Status here | Rule |
 |---|---|---|
-| `var` for locals | pervasive — 19 sites in `src/main`, 30 across the tests | **Default to `var`** wherever the right-hand side makes the type obvious. Reach for an explicit type only when it genuinely is not — a bare `Map.of()`, a builder chain that returns something surprising. |
+| `var` for locals | pervasive, in `src/main` and the tests alike | **Default to `var`** wherever the right-hand side makes the type obvious. Reach for an explicit type only when it genuinely is not — a bare `Map.of()`, a builder chain that returns something surprising. |
 | Explicit types on fields and signatures | always | `var` is for locals only. Fields, parameters and return types are spelled out. |
-| Arrow switch | 3 sites, and **zero** `case X:` | Always `case A ->`. Prefer a switch *expression* that returns, as `FireBowlEntity.getSlotsForFace` does. Never write a colon switch. |
-| Pattern-matching `instanceof` | 9 sites | `if (x instanceof ServerLevel server)`. Never cast after a bare `instanceof`. |
-| `final` on locals | **0 sites** | Do not add it. It is not this codebase's style and adding it to one method makes every other method look deliberate. |
-| Records | used in tests (`Matrix.Arm`, the requirement catalogue), none in `src/main` | Fine for a value type — a tuple with a name. There is nothing in `src/main` that wants one yet; do not convert an existing class to make a point. |
-| `Optional` | 13 sites | The house style for "might not be there" in your **own** API. See the null section. |
-| `List.of` / `Map.of` | 6 sites | Immutable factories for fixed data. `ModItems` builds the three infusion maps this way. |
-| Streams | 2 sites in `src/main` | Used where they read better, not on principle. A `for` loop over 18 arms is not a defect. |
-| Text blocks | 0 | No multi-line string in `src/main` needs one. Fine in a test message if it earns its place. |
-| Sealed types | 0 | No hierarchy here is closed enough to want one. Do not introduce one without a reason in the ticket. |
+| Arrow switch | the only form present — **no** `case X:` anywhere | Always `case A ->`. Prefer a switch *expression* that returns, as `FireBowlEntity.getSlotsForFace` does. Never write a colon switch. |
+| Pattern-matching `instanceof` | standard throughout | `if (x instanceof ServerLevel server)`. Never cast after a bare `instanceof`. |
+| `final` on locals | **never used** | Do not add it. It is not this codebase's style and adding it to one method makes every other method look deliberate. |
+| Records | in the tests (`Matrix.Arm`, the requirement catalogue), not in `src/main` | Fine for a value type — a tuple with a name. There is nothing in `src/main` that wants one yet; do not convert an existing class to make a point. |
+| `Optional` | the house style for absence | For "might not be there" in your **own** API. See the null section. |
+| `List.of` / `Map.of` | used for fixed data | Immutable factories. `ModItems` builds the three infusion maps this way. |
+| Streams | sparingly, in `src/main` | Used where they read better, not on principle. A `for` loop over 18 arms is not a defect. |
+| Text blocks | unused | No multi-line string in `src/main` needs one. Fine in a test message if it earns its place. |
+| Sealed types | unused | No hierarchy here is closed enough to want one. Do not introduce one without a reason in the ticket. |
 
 The distinction that matters: `final` locals and colon switches are **not wanted**. Records,
 text blocks and sealed types are merely **unused** — reach for them if the code genuinely
@@ -251,8 +252,12 @@ export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 ```bash
 # Not iron-oak-*.jar — that glob also matches the sources jar, and unzip -l over two
 # archives prints "0 files", which reads like the empty-jar bug you are checking for.
-unzip -l "$(ls build/libs/*.jar | grep -v sources)" | tail -1   # hundreds of files, not 2
+# find, not `ls | grep`: ls is aliased on some machines here and the alias breaks the glob.
+unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
 ```
+
+Hundreds of files, not 2. It is the order of magnitude that carries the signal — the count
+grows with every arm of the matrix.
 
 `runClient` is still the only gate for rendering, particles, sound and feel. **If you did not
 launch the game, say so in the PR** instead of implying you did.

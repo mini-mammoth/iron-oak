@@ -27,9 +27,10 @@ criteria that name the gate proving them. Start at
 [requirements/README.md](requirements/README.md) — it holds the **status matrix**, which is
 the single source of truth for what is implemented, partial, broken, planned or wontfix.
 
-This matters more here than in a repo with tests: there is no test suite, so `./gradlew
-build` proves compilation and nothing else. The acceptance criteria are the written
-regression net, and `runClient` is the gate for anything that happens in the world.
+The status matrix carries weight a test report cannot. `./gradlew build` and `./gradlew
+runGametest` prove the invariants they cover and nothing past them, and most acceptance
+criteria here name `runClient` — rendering, sound and feel have no automated gate. Those
+criteria are the written regression net, and a human at the gate is what ticks them.
 
 ## Strategy (`docs/strategy/`)
 
