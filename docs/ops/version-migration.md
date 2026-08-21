@@ -72,8 +72,8 @@ the next planning round rather than trusting these.
 |---|---|
 | Yarn → Mojang official mappings, still on 1.20.4 | **done**, build green |
 | 1.20.4 → 1.21.11 | **done**, build green, `runDatagen` green |
-| 1.21.11 in-game verification | **not done** — blocking gate, see below |
-| 1.21.11 release tag | not done |
+| 1.21.11 in-game verification | **done** — walked 2026-08-21, passed (#19) |
+| 1.21.11 release tag | **done** — `v1.3.0+1.21.11`, published to Modrinth and CurseForge |
 | `v1.21.x` branch cut and wired into CI | not done — after the tag |
 | 1.21.11 → 26.2 | **not started** in source. Toolchain proven only; see below |
 | 1.20.4 line | **dropped** — decided 2026-08-21 |
@@ -132,14 +132,23 @@ line at all.
 
 ---
 
-## The blocking gate: nothing has been verified in-game
+## The 1.21.11 gate — cleared 2026-08-21
 
-`./gradlew build`, `./gradlew runGametest` and `./gradlew runDatagen` are green. That is the
-whole of the evidence, and it is narrower than it sounds: the two test layers cover ids,
+**Passed.** The in-game loop was walked on 2026-08-21 and reported working, `v1.3.0+1.21.11`
+is tagged at `5df3263`, and both platforms have the jar (#19). The list below is kept because
+it is the reason the gate existed, and because **26.2 inherits every item on it** — see
+Stage 3.
+
+The mechanical evidence at the tag, for the record: `./gradlew build` green with 326 unit
+tests, `./gradlew runGametest` green with seven gametests, and the jar checked as an artefact
+at 396 files rather than trusted from its exit code.
+
+Keep the shape of this in mind when 26.2 comes up: `./gradlew build`, `runGametest` and
+`runDatagen` being green is narrower evidence than it sounds. The two test layers cover ids,
 committed resources, the 6×3 matrix and the fire bowl's ticking, and **nothing in the list
-below**. For everything here, a green build says the mod compiles and remaps.
+below**. For everything here, a green build says only that the mod compiles and remaps.
 
-Several changes in the 1.21.11 migration are behavioural and can only be checked by
+Several changes in the 1.21.11 migration were behavioural and could only be checked by
 playing:
 
 - **`ofLegacyCopy` vs `ofFullCopy`** on block settings. `ofFullCopy` also copies the source
@@ -332,10 +341,10 @@ free release, and it is out of scope here.
 |---|---|---|
 | Plan approved | before the first `area:build` ticket | human — **done** |
 | Mapping migration build green | before starting the version bump | orchestrator — a mapping-only change must not alter behaviour — **done** |
-| 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on the worker's `runClient` evidence |
-| 1.21.11 release tagged | after stage 2 | human |
-| `v1.21.x` cut from the tag and added to CI | before `main` moves to 26.2 | orchestrator |
-| Stage 3 started | after 1.21.11 is released | human |
+| 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on `runClient` evidence — **done** 2026-08-21 |
+| 1.21.11 release tagged | after stage 2 | human — **done**, `v1.3.0+1.21.11` |
+| `v1.21.x` cut from the tag and added to CI | before `main` moves to 26.2 | orchestrator — **next**, #52 |
+| Stage 3 started | after 1.21.11 is released | human — **unblocked** |
 | Old-version branch policy | before `main` moves | human — **done**: 1.20.4 dropped, 1.21.11 kept on `v1.21.x` |
 
 ---
@@ -344,6 +353,7 @@ free release, and it is out of scope here.
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-08-21 | 1.3 | 1.21.11 is verified in-game and released as `v1.3.0+1.21.11` (#19). The blocking-gate section becomes the record of a cleared gate, kept because 26.2 inherits every item on its list. Stage 3 is unblocked; cutting `v1.21.x` (#52) is next. |
 | 2026-08-21 | 1.2 | Two supported lines, not one endpoint (#50): 1.21.11 is kept on `v1.21.x` and `main` goes to 26.2, with the cost of the second line and the rejected preprocessor alternative recorded. 1.20.4 is dropped, closing that gate. Corrects the 26.2 status — `migration/26.2` carries no Java changes and is 57 commits behind, so the source port has not started and now includes porting both test layers. |
 | 2026-08-21 | 1.1 | The blocking gate accounts for the test harness (#47). Both layers are named in the evidence, and the point is sharpened rather than dropped: what they cover is listed, and none of it is on the in-game list below. The resource-rename warning credits `RegistryAssetsTest` for the half it now catches. |
 | 2026-08-20 | 1.0 | Initial plan. Target versions and the yarn-discontinuation constraint verified against `maven.fabricmc.net` and the Fabric porting docs; reach figures measured via the Modrinth API. |
