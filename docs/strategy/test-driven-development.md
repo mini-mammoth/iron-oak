@@ -26,9 +26,10 @@ document is the **when**.
 
 **Test-first is mandatory where it works, and not required where it does not.**
 
-That is a deliberate choice, not a compromise. This repo has 19 Java files, about 1,500
-lines, and **zero** existing tests. A rule that said *every change ships a test written
-first* would be ignored within a week — because there are changes here where it is
+That is a deliberate choice, not a compromise. This is a small repo whose existing surface
+is still mostly untested: #40 wrote tests for the four bugs of 2026-08-20 and the invariants
+behind them, and deliberately stopped there. A rule that said *every change ships a test
+written first* would be ignored within a week — because there are changes here where it is
 impossible, and once a rule is ignored once it stops being a rule. A rule nobody follows
 devalues the ones that matter. So the scope is narrow and the scope is real.
 
@@ -50,7 +51,7 @@ that PR.
 
 ---
 
-## Red-green-refactor when the starting point is zero tests
+## Red-green-refactor when most of the tree is untested
 
 The classic cycle assumes a suite. Here it needs one adjustment and one honest admission.
 
@@ -92,13 +93,15 @@ in scope and report the rest.
 
 ### 3. Refactor — and here is the admission
 
-Refactoring is normally safe because the suite has your back. **It does not, here.** With
-no tests around the ~1,850 lines you did not touch, a refactor in this repo is as unverified
-as it was before you added your one test. Two consequences:
+Refactoring is normally safe because the suite has your back. **Here it has your back only
+as far as a test already reaches** — ids, committed resources, the matrix, and part of the
+fire bowl. A refactor anywhere else is as unverified as it was before you added your one
+test. Two consequences:
 
 - Keep the refactor step inside the blast radius your new test actually covers.
 - For anything wider, `runClient` is still the gate, and `AGENTS.md` requires you to say in
-  the PR whether you launched the game. That does not change until the gametests exist.
+  the PR whether you launched the game. Each gametest that lands retires one line of that
+  checklist; none of them has retired the checklist.
 
 ---
 
@@ -216,5 +219,6 @@ what a test would have asserted, in prose.
 | 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). The four bugs restated as fixed and merged, none of them with a test. The #28 walkthrough now records what actually landed — the cached field was deleted rather than persisted — and draws the lesson that an assertion on a mechanism dies with the mechanism. The recipe-numbers and rendering rows updated for `ModRecipes.DEFAULT_COOKING_TIME` and the `extractRenderState`/`submit` split. |
 | 2026-08-21 | 2.1 | The requirement-ID deferral is gone (#43): `docs/requirements/` landed with #32, so a test that proves a requirement cites it with `@Requirement` and the citation is checked both ways. What survives of the old bullet is the word *every* — a test with no requirement behind it does not get a plausible-looking one. |
 | 2026-08-21 | 2.0 | In force (#40). Status changed from proposed to adopted. The four bugs now have their tests, each checked against a deliberately re-broken tree. The red step gains #40's finding that the two layers caught two different halves of #30 and neither subsumed the other. The untested-surface row gains the case that made the rule real: behaviour that changed under the mod got a reported finding, not a test. |
+| 2026-08-21 | 2.2 | Staleness sweep (#47). "Zero existing tests" and the zero-tests heading are gone — #40 landed them, and the argument for a narrow rule never depended on the count. The refactor section now says how far the suite reaches instead of quoting a line total, and the `runClient` checklist shrinks per gametest rather than waiting for gametests to exist. |
 
 *Last updated: 2026-08-21*

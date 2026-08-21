@@ -36,7 +36,7 @@ it up.
 | Document | Answers |
 |----------|---------|
 | [testing.md](testing.md) | Where does a test for *this* go, which of the three layers runs it, which requirement does it cite, and what does `./gradlew build` actually prove? |
-| [test-driven-development.md](test-driven-development.md) | Does the test come first — and where does it honestly not, in a repo whose entire existing surface is untested? |
+| [test-driven-development.md](test-driven-development.md) | Does the test come first — and where does it honestly not, in a repo where most of the existing surface still has no test? |
 | [java.md](java.md) | Registration, the client/server split, where `null` is tolerated, and how the 6×3 matrix constrains `ModBlocks`/`ModItems`. |
 
 `java.md` answers *why*. When what you need is the rule rather than the reason, the `java`
@@ -65,9 +65,9 @@ The split is by **question**, not by topic. Consulting the wrong one wastes your
 | `docs/ops/` | How is the work itself run? | Dispatch, gates, labels, releases |
 | `docs/design/` | How will this one change be built? | Does not exist yet — created per ticket |
 
-`docs/concept/` and `docs/requirements/` land with #32; until it merges, the mod's
-player-facing behaviour is described in [`README.md`](../../README.md) and the gameplay
-loop summary in [`AGENTS.md`](../../AGENTS.md).
+`docs/concept/` and `docs/requirements/` landed with #32. [`README.md`](../../README.md)
+and the gameplay loop summary in [`AGENTS.md`](../../AGENTS.md) still describe the mod's
+player-facing behaviour, but the requirement is the authority on what it must do.
 
 The line between concept and strategy: **concept decides what the fire bowl does, strategy
 decides why its block entity syncs the way it does.** If a decision would still hold after
@@ -107,6 +107,7 @@ being a comment.
 |------|---------|---------|
 | 2026-08-20 | 1.0 | Initial version (#39). Taxonomy adapted from the openkegelbillard `docs/strategy/` split; contents written for a Fabric mod from scratch. Records the concept/strategy and strategy/ops boundaries, and the `proposed` status convention for the not-yet-wired test harness. |
 | 2026-08-21 | 1.2 | Tests cite requirements (#43). `testing.md` gains the `@Requirement` section and `test-driven-development.md` loses its requirement-ID deferral, since `docs/requirements/` landed with #32. Notes that the `java` skill is the checklist form of `java.md` and defers to it. |
+| 2026-08-21 | 1.3 | Staleness sweep (#47). The #32 deferral is gone — concept and requirements have landed — and the TDD row no longer calls the whole existing surface untested, since part of it now has tests. |
 | 2026-08-21 | 1.1 | `testing.md` and `test-driven-development.md` moved from `proposed` to `active` (#40). The status-honesty section now names the one part still ahead of the tree — layer 3 — rather than the whole harness. |
 
 *Last updated: 2026-08-21*

@@ -251,8 +251,9 @@ specification, and `runClient` stays the gate for anything in-world.
 
 This is what a test in this repo actually looks like, and it is not hypothetical. The
 worker who fixed #30 **wrote it as a throwaway script**, ran it, and deleted it. The fix
-landed in #37, so what follows is history — but the invariant it checked is permanent, and
-nothing checks it today.
+landed in #37 and #40 rebuilt the script as `TreeMatrixTest`, which walks all 18 arms on
+every build. So what follows is not a proposal: it is why that test is shaped the way it
+is, and the three consequences at the end are the rules it was written to.
 
 The chain it walks, for each of the 18 sapling arms:
 
@@ -297,9 +298,11 @@ consistency test in this repo:
 3. **The test must fail against the broken tree.** Those 54 findings *are* the red step.
    Because the generated JSON was already right, a test written against the JSON alone
    would have passed against the bug. A test you have never seen fail for the real reason
-   is not evidence — and now that #37 has landed, a test written today can only be checked
-   against the fixed tree, which is exactly the weaker position this document is trying to
-   avoid being in next time.
+   is not evidence — and with #37 landed, the only way left to see it was to re-break the
+   tree deliberately, which is what #40 did. Rotating the generator *names* failed
+   `TreeMatrixTest` and left every gametest green; rotating the feature *keys* as well
+   failed the gametests instead. Two halves of one bug, each invisible to the other layer,
+   and neither test subsumes the other.
 
 And the process lesson, which is why this document exists at all:
 
@@ -432,5 +435,6 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
 | 2026-08-20 | 1.1 | Rebased onto 1.21.11 (#39). Every named class and method re-checked against the merged tree: Mojang mappings throughout, `getSlotsForFace`/`canTakeItemThroughFace`/`saveAdditional`, `cookingTotalTime` now a derived function and a better layer-1 target, the renderer's `extractRenderState`/`submit` split giving layer 3 an explicit `hasInput` to assert. All four bugs restated as fixed. Gradle wrapper fact corrected to 9.5.1 / Loom 1.17. |
 | 2026-08-21 | 2.1 | Tests cite requirements (#43). New section on `@Requirement`: why the annotation lives in a third `testsupport` source set, why it is `RetentionPolicy.SOURCE`, and why the citations are read out of source text rather than reflectively — the reflective version needs a classpath cycle between the two test source sets. Records that `test` and `gametest` are traced `verify:` gates and that a gate token is a checked claim in both directions. |
 | 2026-08-21 | 2.0 | Layers 1 and 2 exist (#40). Status changed from proposed to adopted. Records what #40 had to resolve against the jar rather than guess: loader-junit is a `LauncherSessionListener` and needs no code, static initialisers must not touch Minecraft, tags have to be bound by hand, the gametest run configuration is a plain `server()`, `@GameTest` defaults to an 8×8×8 empty structure. `playerWillDestroy` rewritten — `BlockEntity.preRemoveSideEffects` now drops any container's contents, so both halves of the old entry were wrong. Layer 3 marked as still not wired up, and the flint-and-steel interaction question left open rather than answered. |
+| 2026-08-21 | 2.2 | The worked example describes a test that exists (#47). It said "nothing checks it today" while `TreeMatrixTest` had been checking all 18 arms since #40. The red-step consequence now records how #40 saw red after the fix had landed — by re-breaking the tree in two ways, one per layer. |
 
 *Last updated: 2026-08-21*
