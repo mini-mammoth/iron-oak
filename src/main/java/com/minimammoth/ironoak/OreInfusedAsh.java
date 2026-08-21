@@ -8,7 +8,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -31,16 +31,16 @@ public class OreInfusedAsh extends Item {
     }
 
     @Override
-    public InteractionResult use(Level world, Player player, InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
         var stackInHand = player.getItemInHand(hand);
         var blockHitResult = getPlayerPOVHitResult(world, player, ClipContext.Fluid.SOURCE_ONLY);
 
         if (blockHitResult.getType() == HitResult.Type.MISS || blockHitResult.getType() != HitResult.Type.BLOCK) {
-            return InteractionResult.PASS;
+            return InteractionResultHolder.pass(stackInHand);
         }
 
         if (hand != InteractionHand.MAIN_HAND) {
-            return InteractionResult.PASS;
+            return InteractionResultHolder.pass(stackInHand);
         }
 
         var pos = blockHitResult.getBlockPos();
@@ -48,11 +48,11 @@ public class OreInfusedAsh extends Item {
 
         // Recipe resolution is server-only, so bail out early on the client.
         if (!(world instanceof ServerLevel serverLevel)) {
-            return InteractionResult.SUCCESS;
+            return InteractionResultHolder.success(stackInHand);
         }
 
         var input = new SingleRecipeInput(stackInHand);
-        var recipe = serverLevel.recipeAccess().getRecipeFor(ModRecipes.WASHING_RECIPE_TYPE, input, serverLevel);
+        var recipe = serverLevel.getRecipeManager().getRecipeFor(ModRecipes.WASHING_RECIPE_TYPE, input, serverLevel);
 
         if (blockState.getBlock() == Blocks.WATER && recipe.isPresent()) {
             player.awardStat(Stats.ITEM_USED.get(this));
@@ -67,9 +67,9 @@ public class OreInfusedAsh extends Item {
             world.addFreshEntity(ironShard);
             world.playSound(player, pos, SoundEvents.GENERIC_SPLASH, SoundSource.BLOCKS, 0.5f, 1.0f);
 
-            return InteractionResult.SUCCESS;
+            return InteractionResultHolder.success(stackInHand);
         }
 
-        return InteractionResult.FAIL;
+        return InteractionResultHolder.fail(stackInHand);
     }
 }
