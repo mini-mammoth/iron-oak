@@ -214,7 +214,7 @@ deps(build): upgrade to Minecraft 1.21.11 (#31)
 ### Version branches
 
 `main` tracks the newest supported Minecraft version. Older lines live on their own
-branches (`v1.18.x`, `1.19` exist today) and CI builds `main` and `v1.18.x`. A fix that
+branches (`v1.18.x`, `1.19`, `v1.21.x` exist today) and CI builds `main`, `v1.18.x` and `v1.21.x`. A fix that
 applies to several lines is committed on `main` first, then cherry-picked — never
 developed twice in parallel.
 

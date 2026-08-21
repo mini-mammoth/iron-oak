@@ -69,7 +69,7 @@ the next planning round rather than trusting these.
 | Yarn → Mojang official mappings, still on 1.20.4 | **done**, build green |
 | 1.20.4 → 1.21.11 | **done**, build green, `runDatagen` green |
 | 1.21.11 in-game verification | **not done** — blocking gate, see below |
-| 1.21.11 release tag | not done |
+| 1.21.11 release tag | **done** |
 | 1.21.11 → 26.2 | toolchain proven, ~52 source errors remain (branch `migration/26.2`) |
 
 ---
@@ -225,7 +225,7 @@ the obvious place for one.
 
 `main` moves to the newest supported version. The 1.20.4 line becomes a branch if it is
 worth keeping — that is a **human decision** and is not made here. Existing branches:
-`v1.18.x`, `1.19`, plus unmerged `restone_leaves`.
+`v1.18.x`, `1.19`, `v1.21.x`, plus unmerged `restone_leaves`.
 
 The open issues against old versions (#11 Quilt on 1.18.2, #15 washing on an unstated
 version) need a version decision before they are workable. Both are
@@ -246,7 +246,7 @@ free release, and it is out of scope here.
 | 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on the worker's `runClient` evidence |
 | 1.21.11 release tagged | after stage 2 | human |
 | Stage 3 started | after 1.21.11 is released | human |
-| Old-version branch policy | before `main` moves | human |
+| Old-version branch policy | before `main` moves | human — **done** |
 
 ---
 
