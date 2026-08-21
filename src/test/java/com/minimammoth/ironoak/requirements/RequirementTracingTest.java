@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -56,12 +57,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RequirementTracingTest {
 
     private static final Map<String, Entry> REQUIREMENTS = RequirementCatalogue.requirements();
+    private static final List<Citation> CITATIONS = RequirementCatalogue.citations();
+
+    /** The layers each requirement is cited from — {@code test}, {@code gametest}, or neither. */
+    private static final Map<String, Set<String>> LAYERS_BY_ID = CITATIONS.stream()
+            .collect(Collectors.groupingBy(Citation::id,
+                    Collectors.mapping(Citation::layer, Collectors.toUnmodifiableSet())));
 
     static List<Citation> citations() {
-        var citations = RequirementCatalogue.citations();
-        assertFalse(citations.isEmpty(),
+        assertFalse(CITATIONS.isEmpty(),
                 "no @Requirement citation anywhere — the scanner is looking in the wrong place");
-        return citations;
+        return CITATIONS;
     }
 
     static List<Entry> requirementsClaimingATestLayer() {
@@ -95,12 +101,10 @@ class RequirementTracingTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("requirementsClaimingATestLayer")
     void everyRequirementClaimingATestLayerIsCitedFromIt(Entry requirement) {
-        var byLayer = RequirementCatalogue.citations().stream()
-                .filter(citation -> citation.id().equals(requirement.id()))
-                .collect(Collectors.groupingBy(Citation::layer));
+        var layers = LAYERS_BY_ID.getOrDefault(requirement.id(), Set.of());
 
         for (String gate : requirement.tracedGates()) {
-            assertTrue(byLayer.containsKey(gate),
+            assertTrue(layers.contains(gate),
                     () -> requirement.id() + " (" + requirement.file() + ") names `" + gate
                             + "` as a verification gate, but no test in src/" + gate
                             + " cites it. Either add @Requirement(\"" + requirement.id()
