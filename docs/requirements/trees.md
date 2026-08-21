@@ -2,8 +2,8 @@
 domain: Trees
 domain_code: TRE
 status: active
-last_updated: 2026-08-20
-version: 1
+last_updated: 2026-08-21
+version: 2
 related:
   - README.md
   - infusion.md
@@ -76,7 +76,7 @@ type and the vanilla trunk/foliage shape.
 Jungle trees keep their vanilla decorators (cocoa beans 0.2, trunk and leaf vines 0.25).
 There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 
-**Acceptance criteria** (verify: `runClient`, `inspect`)
+**Acceptance criteria** (verify: `runClient`, `inspect`, `test`, `gametest`)
 - [ ] All 18 combinations grow, and each yields logs of its own metal and wood type
 - [ ] `src/main/generated/data/iron_oak/worldgen/configured_feature/<metal>_<wood>_tree.json`
       names `iron_oak:<metal>_<wood>_log` and `minecraft:<wood>_leaves`
@@ -111,7 +111,7 @@ committed JSON.
 **Out of scope for the documentation baseline** — fixing it is a code change in
 `area:worldgen`, tracked as #30.
 
-**Acceptance criteria** (verify: `runDatagen`)
+**Acceptance criteria** (verify: `runDatagen`, `test`)
 - [ ] `./gradlew runDatagen` leaves `git status` clean
 - [ ] Each `bootstrap()` line pairs `<metal>_<wood>_TREE` with `ore<Wood>(<METAL>_<WOOD>_LOG)`
 - [ ] Each `ModSaplingGenerators` entry's id string matches its own wood type
@@ -149,7 +149,7 @@ only to `survives_explosion`.
 There is no ore loss on breaking, no fortune interaction and no shred drop — the metal only
 leaves the wood in the fire bowl.
 
-**Acceptance criteria** (verify: `runClient`, `inspect`)
+**Acceptance criteria** (verify: `runClient`, `inspect`, `test`)
 - [ ] All 36 loot tables exist (18 logs, 18 saplings) and each drops its own block
 - [ ] Fortune does not change the drop
 - [ ] Blowing up a log may destroy it (vanilla explosion behaviour)
@@ -186,5 +186,6 @@ modifications (`ModWorldGenerator` writes `configured_feature/` only).
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial. Records the datagen/source divergence for jungle, spruce and dark oak as TRE-04 (`broken`, #30), verified against the committed generated JSON. |
+| 2026-08-21 | 2 | TRE-03 names `test` and `gametest`, TRE-04 and TRE-06 name `test` (#43). `TreeMatrixTest` walks all eighteen arms and `InfusedSaplingGameTest` grows three of them in a real world — the two halves of #30, one per layer. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

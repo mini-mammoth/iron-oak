@@ -2,8 +2,8 @@
 domain: Burning
 domain_code: BRN
 status: active
-last_updated: 2026-08-20
-version: 1
+last_updated: 2026-08-21
+version: 2
 related:
   - README.md
   - trees.md
@@ -86,7 +86,7 @@ The recipe JSON declares no `cookingtime`, so the serializer default of 200 is t
 number for all paths. Whether 150 was ever meant to exist is
 [CON-Q3](../concept/README.md#open-questions).
 
-**Acceptance criteria** (verify: `runClient`)
+**Acceptance criteria** (verify: `runClient`, `test`, `gametest`)
 - [ ] A log takes the same time to burn whether inserted by hand or by hopper
 - [ ] The duration survives a save/reload mid-burn
 - [ ] Each metal's logs produce that metal's ash; wood type does not matter (tag-matched)
@@ -107,7 +107,7 @@ starved one goes out and has to be re-lit by hand (concept: *Progression*).
 **Partial:** `unlitTime` is not persisted, so the countdown restarts on every chunk load
 (#28). An idle bowl in a loaded-and-unloaded chunk can stay lit indefinitely.
 
-**Acceptance criteria** (verify: `runClient`)
+**Acceptance criteria** (verify: `runClient`, `test`)
 - [ ] An idle lit bowl goes out after ~5 s
 - [ ] A log arriving inside the window is cooked without re-lighting
 - [ ] The countdown continues rather than restarting across a save/reload
@@ -149,7 +149,7 @@ WHEN a hopper is attached THEN the fire bowl SHALL expose: top → input slot, b
 slot, sides → both. Insertion SHALL be accepted only into an empty input slot and only for
 items with a burning recipe; extraction SHALL be allowed only from the output slot.
 
-**Acceptance criteria** (verify: `runClient`)
+**Acceptance criteria** (verify: `runClient`, `test`, `gametest`)
 - [ ] A hopper above feeds logs one at a time; a chest below collects the ash
 - [ ] A hopper cannot pull the unburnt log back out of the input slot
 - [ ] A hopper cannot push a non-burnable item in
@@ -174,7 +174,7 @@ so vanilla recognises it as lightable.
 `LIT` to already be `true` before setting `LIT` to `true` — the branch is unreachable in any
 state where it would change something (#28). Flint and steel works.
 
-**Acceptance criteria** (verify: `runClient`)
+**Acceptance criteria** (verify: `runClient`, `gametest`)
 - [ ] Flint and steel lights an unlit bowl, loaded or empty
 - [ ] A flaming arrow lights an unlit bowl
 - [ ] Lighting an already lit bowl is a no-op
@@ -247,5 +247,6 @@ is correct; do not close #27 against this requirement.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial. BRN-03/04/07 land as `broken`/`partial` against #28, verified in the 1.20.4 source; BRN-10 records #27 as a port-only failure. |
+| 2026-08-21 | 2 | BRN-03 and BRN-06 name `test` and `gametest`, BRN-04 names `test`, BRN-07 names `gametest` (#43). The three #28 defects each have a test now, and `FireBowlGameTest` records why the BRN-05 break rules have none — `BlockEntity.preRemoveSideEffects` changed them under the mod, and BRN-Q2 has to be answered before a test can freeze either behaviour. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

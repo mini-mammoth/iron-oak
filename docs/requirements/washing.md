@@ -2,8 +2,8 @@
 domain: Washing
 domain_code: WSH
 status: active
-last_updated: 2026-08-20
-version: 1
+last_updated: 2026-08-21
+version: 2
 related:
   - README.md
   - burning.md
@@ -35,7 +35,7 @@ matching metal.
 The recipe is a `iron_oak:washing` recipe, matched by item (not by tag) — one recipe per
 metal.
 
-**Acceptance criteria** (verify: `runClient`, `inspect`)
+**Acceptance criteria** (verify: `runClient`, `inspect`, `test`)
 - [ ] All three ash items wash into their own metal's shred
 - [ ] Exactly one ash is consumed per use
 - [ ] Three `washing_<metal>_shred.json` recipes exist and match on the ash item
@@ -135,5 +135,6 @@ unexplained, and rather than `broken` because nobody has reproduced it.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial. WSH-04 records the README's long-standing "coming soon" as `planned`; WSH-05 keeps #15 visible as unreproduced rather than silently `done`. |
+| 2026-08-21 | 2 | WSH-01 names `test` as a gate (#43): `ModRecipesTest` decodes all three washing recipes through the serializer that will read them in game. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*

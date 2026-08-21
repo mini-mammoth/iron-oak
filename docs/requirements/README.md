@@ -2,8 +2,8 @@
 domain: Requirements Index
 domain_code: REQ
 status: active
-last_updated: 2026-08-20
-version: 1
+last_updated: 2026-08-21
+version: 2
 related:
   - ../concept/README.md
   - ../concept/balance.md
@@ -43,16 +43,54 @@ WHEN … THEN the system SHALL …                          <- the behaviour
 - [ ] …
 ```
 
-`verify:` names the gate that actually proves the criterion. It matters here more than in
-most repos: **there is no test suite**, so `./gradlew build` proves compilation and nothing
-else. A criterion marked `runClient` has to be looked at in game.
+`verify:` names the gates that actually prove the requirement. **Two of them are automated
+and traced back to this file; the rest are still walked by a human.**
 
-| `verify:` | Means |
-|---|---|
-| `build` | `./gradlew build` covers it (registration, compilation, the jar) |
-| `runDatagen` | Proven by regenerating and diffing `src/main/generated/` |
-| `runClient` | Must be checked in game — CI cannot see it |
-| `inspect` | Read the data or asset file and compare |
+| `verify:` | Means | Traced |
+|---|---|---|
+| `test` | A layer-1 test in `src/test` proves part of it — `./gradlew build` runs it | yes |
+| `gametest` | A layer-2 server gametest in `src/gametest` proves part of it — `./gradlew runGametest` | yes |
+| `build` | `./gradlew build` covers it (registration, compilation, the jar) | no |
+| `runDatagen` | Proven by regenerating and diffing `src/main/generated/` | no |
+| `runClient` | Must be checked in game — CI cannot see it | no |
+| `inspect` | Read the data or asset file and compare | no |
+
+Which layer a test belongs at, and what a test here looks like, is
+[`../strategy/testing.md`](../strategy/testing.md). Whether the test comes first is
+[`../strategy/test-driven-development.md`](../strategy/test-driven-development.md).
+
+### `test` and `gametest` are a two-way contract
+
+A test names the requirement it proves with `@Requirement`:
+
+```java
+@Requirement("MAT-02")
+@Test
+void everyFeatureKeyHasCommittedJson() { … }
+```
+
+`RequirementTracingTest` reads those citations back out of the source of both test source
+sets and fails the build on either half of a broken link:
+
+- a citation naming an id that does not exist here — a typo, or a requirement that was
+  renumbered in defiance of the rule below;
+- a requirement whose gate list says `test` or `gametest` while nothing at that layer cites
+  it — the requirement claims automated coverage it does not have.
+
+So a gate token in this file is a **claim**, and the claim is checked. Adding `test` to a
+requirement without writing one fails `./gradlew build`, and so does deleting the last test
+for a requirement that still claims it.
+
+Two things it deliberately does not do. It does not require every test to cite a requirement
+— `ImplementedInventoryTest` pins the defaults of an internal helper that no requirement
+describes, and a false citation there would be worse than none. And it enforces **no
+coverage percentage**: a requirement with no gate token is simply not claiming automated
+coverage, which is the honest state for most of the 36 and is not a build failure. See
+[`../strategy/testing.md`](../strategy/testing.md) on why there is no coverage number here.
+
+A gate token says a test proves *part* of the requirement, not all of it. Most of these
+requirements have criteria no automated gate can reach — the acceptance criteria stay the
+specification, and `runClient` stays the gate for anything in-world.
 
 ## Status vocabulary
 
@@ -161,7 +199,7 @@ sit in their own file. Neither is a work item until someone answers it.
 | BRN-Q2 | Should a lit bowl really destroy its contents when broken? | [burning.md](burning.md#open-questions) |
 | WSH-Q1 | Should a water cauldron be a valid washing target? | [washing.md](washing.md#open-questions) |
 | REF-Q1 | Should shreds have a blasting recipe? | [refining.md](refining.md#open-questions) |
-| MAT-Q1 | Should the matrix counts be enforced mechanically? | [matrix.md](matrix.md#open-questions) |
+| ~~MAT-Q1~~ | ~~Should the matrix counts be enforced mechanically?~~ **Answered: yes (#40)** | [matrix.md](matrix.md#open-questions) |
 
 ## Working on a requirement
 
@@ -178,5 +216,6 @@ sit in their own file. Neither is a work item until someone answers it.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial baseline: 36 requirements across six domains, read out of `1.2.1+1.20.4`. Wires #15, #27, #28 and the newly filed #30 to the requirements they break. |
+| 2026-08-21 | 2 | `verify:` gains `test` and `gametest` (#43), now that #40 has built both layers. Thirteen requirements name one of them, and the claim is checked in both directions by `RequirementTracingTest` — a test cites its requirement with `@Requirement`. MAT-Q1 answered: the matrix counts are enforced mechanically. |
 
-*Last updated: 2026-08-20*
+*Last updated: 2026-08-21*
