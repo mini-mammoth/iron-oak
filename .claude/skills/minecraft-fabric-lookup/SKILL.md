@@ -145,8 +145,11 @@ Java version changes must land in **three** places or the build lies to you:
 
 **This is the dangerous class of change, because it does not fail the build.** Data pack
 directory names and JSON shapes change between versions. Get one wrong and everything
-compiles, the jar builds, CI is green, and in-game the recipe simply does not exist. With
-no test suite in this repo, nothing catches it but playing.
+compiles, the jar builds, CI is green, and in-game the recipe simply does not exist. The
+tests help only where they name the path: `ModRecipesTest` reads
+`data/iron_oak/recipe/*.json` off the classpath and `RegistryAssetsTest` walks every
+registered id's asset files, so a rename away from either fails the build. A directory
+neither test names goes silent, and nothing catches that but playing.
 
 Vanilla ships its own data pack inside the jar, so it is the authority on both:
 
@@ -175,9 +178,11 @@ worldgen output are all worth checking after any version bump.
   method — it will compile and misbehave.
 - **Never edit `src/main/generated/`.** It is datagen output. Change the provider and run
   `./gradlew runDatagen`.
-- **Compiling is not working.** There is no test suite here. Anything touching in-world
-  behaviour needs `./gradlew runClient` and an actual observation before you claim it
-  works. See `AGENTS.md`.
+- **Compiling is not working.** Two test layers exist — `./gradlew build` and `./gradlew
+  runGametest` — and between them they cover ids, committed resources, the 6×3 matrix and
+  the fire bowl's ticking. They see nothing a player looks at. Rendering, particles, sound
+  and feel still need `./gradlew runClient` and an actual observation before you claim
+  they work. See `AGENTS.md` and `docs/strategy/testing.md`.
 
 ## Where else to look
 
