@@ -132,8 +132,12 @@ those live in the workflow, because they need the tokens.
 - **CurseForge needs `client` or `server` set.** A release declaring neither is rejected
   by their API.
 - **Version branches.** This workflow runs on published releases regardless of branch. A
-  release cut from `v1.18.x` publishes with that branch's `gradle.properties`, which is
-  what you want — but check `publish_game_versions` there too.
+  release cut from `v1.21.11` publishes with that branch's `gradle.properties`, which is
+  what you want — but check `publish_game_versions` there too. Only **supported** lines get
+  releases; `v1.18.x` and `1.19` are archived and must not be published from.
+- **A frozen line is not byte-identical to its release tag.** It carries at least the commit
+  that adds itself to the CI branch lists, because a `push` trigger evaluates the workflow
+  file *on the pushed ref* — a line whose own workflow does not name it is never built.
 - **`curseforge_id` empty disables CurseForge** rather than failing. Handy while a
   project does not exist yet, easy to overlook when wondering where the upload went.
 
