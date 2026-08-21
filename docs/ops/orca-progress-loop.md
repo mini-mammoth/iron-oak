@@ -108,6 +108,14 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
    workers send `worker_done` to the handle that dispatched them. Observed: 4 finished
    workers, `check` = 0. Tickets then look "in progress" and stay locked forever.
 
+   THE INBOX IS SHARED ACROSS PROJECTS. One Orca runtime serves every repo on the machine, so
+   `inbox` returns other boards' traffic too — measured: 4 of 20 entries belonged to this repo,
+   16 to another, including unanswered `question` and `escalation` messages about files that do
+   not exist here. FILTER BY YOUR OWN RUN ID AND YOUR OWN WORKER HANDLES, never by ticket
+   number alone: issue numbers collide across repos, so a number filter will hand you a foreign
+   ticket that looks plausible. Never answer a question or resolve an escalation whose handle
+   you did not dispatch — that is another supervisor's work, and its board is not yours.
+
    PER OPEN PR OF AN IN-SCOPE TICKET, read the review state:
      gh pr view <pr> --json reviewDecision,reviews
      gh api repos/mini-mammoth/iron-oak/pulls/<pr>/comments    # line-level
@@ -227,13 +235,21 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
      compaction is normal. Two rounds of output with no new commit is the loop: do NOT follow
      up (that grows the context that IS the problem) — harvest, then re-cut the remainder
      SMALLER as its own ticket.
-   JUDGE FROM THE WORKTREE, NOT THE PANE. Every in-pane signal so far has turned out to be
-   agent-specific:
+   HEARTBEATS ARE THE LIVENESS SIGNAL. Workers emit `heartbeat` messages carrying a `phase`
+   (`investigating`, `implementing`, `reviewing`, `waiting`) — a first-class Orca signal, not a
+   pane artefact, and emitted by every agent this board has used. Read them from `inbox`,
+   filtered to your own handles:
+     orca orchestration inbox --json     # type == heartbeat, from_handle == your worker
+   A recent heartbeat means alive; its `phase` says what it thinks it is doing. Absence over
+   several rounds is the stall signal.
+
+   THE WORKTREE IS THE PROGRESS SIGNAL, and it is what proves anything:
      - status line: `vibe` printed `0/200k`, `claude` prints `↓ 24.7k tokens` with no
        denominator, so a pattern for one never fires for the other
      - `latestCursor`: advanced with `vibe`, sits fixed at `5` for `claude`, so cursor movement
        reports every Claude worker as idle
-   Both measured on real dispatches. What is left is the worktree, and it is enough:
+   Both measured on real dispatches. So heartbeats answer "alive" and the worktree answers
+   "progressing" — neither needs the pane:
      git -C <worktree> log --oneline <base>..HEAD    # a commit is proof
      git -C <worktree> status --porcelain            # uncommitted progress
      find <worktree> -type f -not -path '*/.git/*' -not -path '*/build/*' \

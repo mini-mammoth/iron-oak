@@ -177,7 +177,12 @@ after delivery always shows zero and is not evidence.
   `vibe` printed `0/200k`; `claude` prints `↓ 24.7k tokens` with no denominator at all, so a
   pattern written for one silently never fires for the other — a poll loop then hangs, or worse,
   reports a working worker as dead. Measured the day workers moved to Claude Sonnet.
-  **The worktree is the primary signal, not the pane:**
+  **Liveness comes from `heartbeat` messages** in `orca orchestration inbox --json` — a
+  first-class Orca signal with a `phase`, emitted by every agent this board has used, and
+  independent of any pane rendering. Filter the inbox to your own run and handles: it is shared
+  across every repo on the machine, and issue numbers collide.
+
+  **Progress comes from the worktree, not the pane:**
   ```bash
   git -C <wt> log --oneline <base>..HEAD          # a commit is proof
   git -C <wt> status --porcelain                  # uncommitted progress
