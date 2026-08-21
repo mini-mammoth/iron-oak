@@ -1,13 +1,14 @@
 package com.minimammoth.ironoak.init;
 
-import com.google.gson.JsonObject;
 import com.minimammoth.ironoak.BootstrappedGame;
 import com.minimammoth.ironoak.Resources;
 import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,7 +20,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.minimammoth.ironoak.IronOak.MOD_ID;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -27,43 +27,31 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * cheapest test in the repo.
  *
  * <p>In #26 every item and block rendered as the missing-texture cube and the creative tab
- * was gone. 1.21.4 had put an indirection layer between an item and its model — the game
- * reads {@code assets/iron_oak/items/&lt;id&gt;.json} and follows the reference in there — and
- * the mod shipped only the models. A missing item definition is not an error, it is an
- * absent file: nothing failed, nothing logged, CI stayed green, and 15 magenta cubes in a
- * creative search were precisely the mod's 15 {@code iron_*} entries.
+ * was gone, because the mod shipped only the models. On 1.21.4+ that bug route runs through
+ * an indirection layer between an item and its model ({@code assets/iron_oak/items/&lt;id&gt;.json})
+ * that does not exist on this version — 1.21.1 reads
+ * {@code assets/iron_oak/models/item/&lt;id&gt;.json} directly, so that is the file this test
+ * checks for instead.
  *
  * <p>The list of ids is taken from the registries, never hand-written: the 6x3 matrix grows,
  * and a hand-written list silently stops covering the newest arm. {@code ModItems.onInitialize}
- * and {@code ModModelGenerator.generateItemModels} both walk the registry the same way.
+ * walks the registry the same way.
  */
 @ExtendWith(BootstrappedGame.class)
 class RegistryAssetsTest {
 
-    static List<Identifier> items() {
+    static List<ResourceLocation> items() {
         return modIds(BuiltInRegistries.ITEM.keySet());
     }
 
-    static List<Identifier> blocks() {
+    static List<ResourceLocation> blocks() {
         return modIds(BuiltInRegistries.BLOCK.keySet());
     }
 
     @Requirement("MAT-02")
     @ParameterizedTest(name = "{0}")
     @MethodSource("items")
-    void itemHasAClientItemDefinition(Identifier id) {
-        // The layer #26 was missing entirely. ModModelGenerator emits it by walking the
-        // registry, so this also guards the invariant that walk assumes.
-        JsonObject definition = Resources.jsonOrFail("assets/" + MOD_ID + "/items/" + id.getPath() + ".json");
-        assertEquals(MOD_ID + ":item/" + id.getPath(),
-                definition.getAsJsonObject("model").get("model").getAsString(),
-                () -> id + " points its client item definition at another item's model");
-    }
-
-    @Requirement("MAT-02")
-    @ParameterizedTest(name = "{0}")
-    @MethodSource("items")
-    void itemHasTheModelItsDefinitionPointsAt(Identifier id) {
+    void itemHasAModel(ResourceLocation id) {
         assertTrue(Resources.exists("assets/" + MOD_ID + "/models/item/" + id.getPath() + ".json"),
                 () -> "no model for " + id);
     }
@@ -71,7 +59,7 @@ class RegistryAssetsTest {
     @Requirement("MAT-02")
     @ParameterizedTest(name = "{0}")
     @MethodSource("blocks")
-    void blockHasABlockstate(Identifier id) {
+    void blockHasABlockstate(ResourceLocation id) {
         assertTrue(Resources.exists("assets/" + MOD_ID + "/blockstates/" + id.getPath() + ".json"),
                 () -> "no blockstate for " + id);
     }
@@ -80,21 +68,23 @@ class RegistryAssetsTest {
     @Requirement("TRE-06")
     @ParameterizedTest(name = "{0}")
     @MethodSource("blocks")
-    void blockHasTheLootTableItDeclares(Identifier id) {
-        Block block = BuiltInRegistries.BLOCK.getValue(id);
+    void blockHasTheLootTableItDeclares(ResourceLocation id) {
+        Block block = BuiltInRegistries.BLOCK.get(id);
         // Every one of these blocks is expected to drop something; ofLegacyCopy does not
-        // copy the source block's loot table, which is why the mod has its own.
-        var lootTable = block.getLootTable().orElseThrow(() -> new AssertionError(id + " declares no loot table"));
-        String path = "data/" + lootTable.identifier().getNamespace()
-                + "/loot_table/" + lootTable.identifier().getPath() + ".json";
+        // copy the source block's loot table, which is why the mod has its own. On this
+        // version getLootTable() always returns a key — falling back to a computed default
+        // rather than signalling "none" — so there is nothing to unwrap.
+        ResourceKey<LootTable> lootTable = block.getLootTable();
+        String path = "data/" + lootTable.location().getNamespace()
+                + "/loot_table/" + lootTable.location().getPath() + ".json";
         assertTrue(Resources.exists(path), () -> id + " declares a loot table with no file: " + path);
     }
 
     /**
      * The translation <em>key</em>, not the English text — {@code de_de} is a legitimate
-     * thing to add and this test must not stand in its way. A block item keeps its block's
-     * key via {@code useBlockDescriptionPrefix}, so asking the item for its own description
-     * id is what catches a block item that lost that call and now shows a raw key.
+     * thing to add and this test must not stand in its way. On this version a block item's
+     * description id always defers to its block, so asking the item for its own description
+     * id is what catches a block whose lang entry went missing.
      */
     @Requirement("MAT-05")
     @Test
@@ -103,14 +93,14 @@ class RegistryAssetsTest {
                 .entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getAsString()));
 
-        for (Identifier id : items()) {
-            Item item = BuiltInRegistries.ITEM.getValue(id);
+        for (ResourceLocation id : items()) {
+            Item item = BuiltInRegistries.ITEM.get(id);
             assertTrue(lang.containsKey(item.getDescriptionId()),
                     () -> "en_us.json has no entry for " + item.getDescriptionId() + " (" + id + ")");
         }
 
-        for (Identifier id : blocks()) {
-            Block block = BuiltInRegistries.BLOCK.getValue(id);
+        for (ResourceLocation id : blocks()) {
+            Block block = BuiltInRegistries.BLOCK.get(id);
             assertTrue(lang.containsKey(block.getDescriptionId()),
                     () -> "en_us.json has no entry for " + block.getDescriptionId() + " (" + id + ")");
         }
@@ -127,10 +117,10 @@ class RegistryAssetsTest {
                 "the mod's creative tab is not registered");
     }
 
-    private static List<Identifier> modIds(Set<Identifier> keys) {
+    private static List<ResourceLocation> modIds(Set<ResourceLocation> keys) {
         return keys.stream()
                 .filter(id -> id.getNamespace().equals(MOD_ID))
-                .sorted(java.util.Comparator.comparing(Identifier::getPath))
+                .sorted(java.util.Comparator.comparing(ResourceLocation::getPath))
                 .toList();
     }
 }

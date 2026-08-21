@@ -8,13 +8,14 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -62,10 +63,10 @@ public final class TagBinding {
             @SuppressWarnings("unchecked")
             @Override
             public <T> Optional<RegistryOps.RegistryInfo<T>> lookup(ResourceKey<? extends Registry<? extends T>> key) {
-                return BuiltInRegistries.REGISTRY.getOptional(key.identifier())
+                return BuiltInRegistries.REGISTRY.getOptional(key.location())
                         .map(registry -> (WritableRegistry<T>) registry)
                         .map(registry -> new RegistryOps.RegistryInfo<>(
-                                registry, registry.createRegistrationLookup(), Lifecycle.stable()));
+                                registry.holderOwner(), registry.createRegistrationLookup(), Lifecycle.stable()));
             }
         });
     }
@@ -77,13 +78,13 @@ public final class TagBinding {
 
             List<Holder<T>> entries = new ArrayList<>();
             for (JsonElement value : json.getAsJsonArray("values")) {
-                Identifier id = Identifier.parse(value.getAsString());
-                entries.add(registry.get(id).orElseGet(() ->
+                ResourceLocation id = ResourceLocation.parse(value.getAsString());
+                entries.add(registry.getHolder(id).orElseGet(() ->
                         fail("tag iron_oak:" + name + " (" + directory + ") lists " + id + ", which is not registered")));
             }
 
-            TagKey<T> tag = TagKey.create(registryKey, Identifier.fromNamespaceAndPath("iron_oak", name));
-            ((WritableRegistry<T>) registry).bindTag(tag, entries);
+            TagKey<T> tag = TagKey.create(registryKey, ResourceLocation.fromNamespaceAndPath("iron_oak", name));
+            ((WritableRegistry<T>) registry).bindTags(Map.of(tag, entries));
         }
     }
 }

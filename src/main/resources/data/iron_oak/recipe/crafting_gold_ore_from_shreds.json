@@ -6,7 +6,7 @@
     "###"
   ],
   "key": {
-    "#": "iron_oak:gold_shred"
+    "#": { "item": "iron_oak:gold_shred" }
   },
   "result": {
     "count": 1,

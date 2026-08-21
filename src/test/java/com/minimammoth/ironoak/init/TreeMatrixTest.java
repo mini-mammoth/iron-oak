@@ -8,8 +8,8 @@ import com.minimammoth.ironoak.Resources;
 import com.minimammoth.ironoak.requirements.Requirement;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -61,7 +61,7 @@ class TreeMatrixTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("arms")
     void saplingGrowsItsOwnMetalAndWood(Matrix.Arm arm) {
-        Block sapling = BuiltInRegistries.BLOCK.getValue(Identifier.parse(arm.saplingId()));
+        Block sapling = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(arm.saplingId()));
         assertNotNull(sapling, () -> arm.saplingId() + " is not registered");
 
         OreInfusedSaplingBlock infused =
@@ -75,7 +75,7 @@ class TreeMatrixTest {
         // Hop 2 — the generator must hold the feature named after it.
         ResourceKey<ConfiguredFeature<?, ?>> feature = ModSaplingGenerators.featureByName().get(arm.prefix());
         assertNotNull(feature, () -> "no generator named " + arm.prefix());
-        assertEquals(arm.treeFeatureId(), feature.identifier().toString(),
+        assertEquals(arm.treeFeatureId(), feature.location().toString(),
                 () -> "generator " + arm.prefix() + " grows the wrong feature");
 
         // Hop 3 — the feature that actually ships must place this arm's log, under this
@@ -95,7 +95,7 @@ class TreeMatrixTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("arms")
     void logIsRegistered(Matrix.Arm arm) {
-        assertNotNull(BuiltInRegistries.BLOCK.getValue(Identifier.parse(arm.logId())),
+        assertNotNull(BuiltInRegistries.BLOCK.get(ResourceLocation.parse(arm.logId())),
                 () -> arm.logId() + " is not registered");
     }
 
@@ -119,8 +119,8 @@ class TreeMatrixTest {
     @Test
     void everyFeatureKeyHasCommittedJson() {
         ModSaplingGenerators.featureByName().forEach((name, key) -> {
-            String path = "data/" + key.identifier().getNamespace()
-                    + "/worldgen/configured_feature/" + key.identifier().getPath() + ".json";
+            String path = "data/" + key.location().getNamespace()
+                    + "/worldgen/configured_feature/" + key.location().getPath() + ".json";
             assertTrue(Resources.exists(path), () -> "generator " + name + " points at a feature with no JSON: " + path);
         });
     }

@@ -1,7 +1,9 @@
 {
   "type": "minecraft:smelting",
   "group": "iron_nugget",
-  "ingredient": "iron_oak:iron_shred",
+  "ingredient": {
+    "item": "iron_oak:iron_shred"
+  },
   "result": {
     "id": "minecraft:iron_nugget"
   },

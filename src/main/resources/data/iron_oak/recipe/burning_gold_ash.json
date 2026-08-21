@@ -1,6 +1,8 @@
 {
   "type": "iron_oak:burning",
-  "ingredient": "#iron_oak:gold_infused_logs",
+  "ingredient": {
+    "tag": "iron_oak:gold_infused_logs"
+  },
   "result": {
     "id": "iron_oak:gold_ash"
   },

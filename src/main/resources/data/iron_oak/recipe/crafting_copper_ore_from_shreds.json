@@ -6,7 +6,7 @@
     "###"
   ],
   "key": {
-    "#": "iron_oak:copper_shred"
+    "#": { "item": "iron_oak:copper_shred" }
   },
   "result": {
     "count": 1,

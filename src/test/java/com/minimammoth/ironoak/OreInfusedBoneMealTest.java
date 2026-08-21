@@ -2,7 +2,7 @@ package com.minimammoth.ironoak;
 
 import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +35,7 @@ class OreInfusedBoneMealTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("metals")
     void boneMealInfusesEveryWoodWithItsOwnMetal(String metal) {
-        Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse("iron_oak:" + metal + "_bone_meal"));
+        Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse("iron_oak:" + metal + "_bone_meal"));
         assertNotNull(item, () -> metal + " bone meal is not registered");
 
         Map<Block, Block> infusions =
@@ -54,7 +54,7 @@ class OreInfusedBoneMealTest {
     }
 
     private static Block block(String id) {
-        Block block = BuiltInRegistries.BLOCK.getValue(Identifier.parse(id));
+        Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(id));
         assertNotNull(block, () -> id + " is not registered");
         return block;
     }

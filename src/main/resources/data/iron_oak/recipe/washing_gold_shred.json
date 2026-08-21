@@ -1,6 +1,8 @@
 {
   "type": "iron_oak:washing",
-  "ingredient": "iron_oak:gold_ash",
+  "ingredient": {
+    "item": "iron_oak:gold_ash"
+  },
   "result": {
     "id": "iron_oak:gold_shred"
   },

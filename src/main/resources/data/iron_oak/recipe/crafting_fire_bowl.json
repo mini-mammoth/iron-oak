@@ -6,9 +6,9 @@
     "IBI"
   ],
   "key": {
-    "I": "minecraft:iron_ingot",
-    "#": "minecraft:iron_bars",
-    "B": "minecraft:bucket"
+    "I": { "item": "minecraft:iron_ingot" },
+    "#": { "item": "minecraft:iron_bars" },
+    "B": { "item": "minecraft:bucket" }
   },
   "result": {
     "count": 1,

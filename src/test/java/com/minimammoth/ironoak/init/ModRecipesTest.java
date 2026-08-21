@@ -11,8 +11,8 @@ import com.minimammoth.ironoak.WashingRecipe;
 import com.minimammoth.ironoak.requirements.Requirement;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -75,7 +76,7 @@ class ModRecipesTest {
     @Test
     void bothRecipeTypesAreRegistered() {
         for (String key : List.of("burning", "washing")) {
-            Identifier id = Identifier.parse("iron_oak:" + key);
+            ResourceLocation id = ResourceLocation.parse("iron_oak:" + key);
             assertTrue(BuiltInRegistries.RECIPE_TYPE.containsKey(id), () -> "no recipe type " + id);
             assertTrue(BuiltInRegistries.RECIPE_SERIALIZER.containsKey(id), () -> "no recipe serializer " + id);
         }
@@ -88,7 +89,7 @@ class ModRecipesTest {
         BurningRecipe recipe = decode(ModRecipes.BURNING_RECIPE_SERIALIZER,
                 "data/iron_oak/recipe/burning_" + metal + "_ash.json");
 
-        assertEquals(ModRecipes.DEFAULT_COOKING_TIME, recipe.cookingTime(),
+        assertEquals(ModRecipes.DEFAULT_COOKING_TIME, recipe.getCookingTime(),
                 () -> "burning_" + metal + "_ash no longer takes the default cook time");
         assertEquals("iron_oak:" + metal + "_ash", resultId(recipe));
     }
@@ -110,8 +111,8 @@ class ModRecipesTest {
                 .map(wood -> "iron_oak:" + metal + "_" + wood + "_log")
                 .sorted()
                 .toList();
-        List<String> accepted = recipe.input().items()
-                .map(holder -> BuiltInRegistries.ITEM.getKey(holder.value()).toString())
+        List<String> accepted = Arrays.stream(recipe.getIngredients().get(0).getItems())
+                .map(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem()).toString())
                 .sorted()
                 .toList();
 
@@ -125,9 +126,9 @@ class ModRecipesTest {
         WashingRecipe recipe = decode(ModRecipes.WASHING_RECIPE_SERIALIZER,
                 "data/iron_oak/recipe/washing_" + metal + "_shred.json");
 
-        assertEquals(ModRecipes.DEFAULT_COOKING_TIME, recipe.cookingTime());
+        assertEquals(ModRecipes.DEFAULT_COOKING_TIME, recipe.getCookingTime());
         assertEquals("iron_oak:" + metal + "_shred", resultId(recipe));
-        assertTrue(recipe.input().test(new ItemStack(item("iron_oak:" + metal + "_ash"))),
+        assertTrue(recipe.getIngredients().get(0).test(new ItemStack(item("iron_oak:" + metal + "_ash"))),
                 () -> "washing_" + metal + "_shred does not accept " + metal + " ash");
     }
 
@@ -145,7 +146,7 @@ class ModRecipesTest {
     }
 
     private static Item item(String id) {
-        Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
+        Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
         assertNotNull(item, () -> id + " is not registered");
         return item;
     }

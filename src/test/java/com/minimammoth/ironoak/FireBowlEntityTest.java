@@ -8,18 +8,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.ProblemReporter;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.TagValueOutput;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -126,8 +120,8 @@ class FireBowlEntityTest {
     void theIdleCountdownSurvivesASave() {
         CompoundTag saved = saveOf(loadedFrom(state(17, 37)));
 
-        assertEquals(37, saved.getIntOr("unlit_time", -1), "unlit_time was not written");
-        assertEquals(17, saved.getIntOr("cooking_time", -1), "cooking_time was not written");
+        assertEquals(37, saved.getInt("unlit_time"), "unlit_time was not written");
+        assertEquals(17, saved.getInt("cooking_time"), "cooking_time was not written");
     }
 
     /**
@@ -140,7 +134,7 @@ class FireBowlEntityTest {
         CompoundTag old = state(17, 37);
         old.remove("unlit_time");
 
-        assertEquals(0, saveOf(loadedFrom(old)).getIntOr("unlit_time", -1),
+        assertEquals(0, saveOf(loadedFrom(old)).getInt("unlit_time"),
                 "a bowl with no unlit_time key must load — and then save — with the countdown at zero");
     }
 
@@ -170,7 +164,7 @@ class FireBowlEntityTest {
         FireBowlEntity bowl = loadedFrom(state(150, 0));
         bowl.setInput(new ItemStack(ModItems.IRON_OAK_LOG));
 
-        assertEquals(0, saveOf(bowl).getIntOr("cooking_time", -1),
+        assertEquals(0, saveOf(bowl).getInt("cooking_time"),
                 "the incoming log inherited the previous log's progress");
     }
 
@@ -193,25 +187,20 @@ class FireBowlEntityTest {
     }
 
     private static FireBowlEntity loadedFrom(CompoundTag tag) {
-        ProblemReporter.Collector problems = new ProblemReporter.Collector();
         FireBowlEntity bowl = fireBowl();
-        bowl.loadAdditional(TagValueInput.create(problems, registries(), tag));
-        assertTrue(problems.isEmpty(), problems::getTreeReport);
+        bowl.loadAdditional(tag, registries());
         return bowl;
     }
 
     private static CompoundTag saveOf(FireBowlEntity bowl) {
-        ProblemReporter.Collector problems = new ProblemReporter.Collector();
-        TagValueOutput out = TagValueOutput.createWithContext(problems, registries());
-        bowl.saveAdditional(out);
-        assertTrue(problems.isEmpty(), problems::getTreeReport);
-        return out.buildResult();
+        CompoundTag tag = new CompoundTag();
+        bowl.saveAdditional(tag, registries());
+        return tag;
     }
 
     private static RecipeHolder<BurningRecipe> burningRecipeTaking(int cookTime) {
         BurningRecipe recipe = new BurningRecipe("", CookingBookCategory.MISC,
                 Ingredient.of(ModItems.IRON_OAK_LOG), new ItemStack(ModItems.IRON_ASH), 0.2f, cookTime);
-        ResourceKey<Recipe<?>> key = ResourceKey.create(Registries.RECIPE, Identifier.parse("iron_oak:test_burning"));
-        return new RecipeHolder<>(key, recipe);
+        return new RecipeHolder<>(ResourceLocation.parse("iron_oak:test_burning"), recipe);
     }
 }

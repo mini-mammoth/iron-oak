@@ -6,8 +6,8 @@
     "###"
   ],
   "key": {
-    "#": "minecraft:bone_meal",
-    "R": "minecraft:raw_gold"
+    "#": { "item": "minecraft:bone_meal" },
+    "R": { "item": "minecraft:raw_gold" }
   },
   "result": {
     "count": 4,
