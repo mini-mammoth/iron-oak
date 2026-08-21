@@ -8,8 +8,8 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -23,16 +23,12 @@ import java.util.function.Function;
 
 import static com.minimammoth.ironoak.IronOak.MOD_ID;
 
-/**
- * Since 1.21.2 an item's settings must carry its own registry key, so construction and
- * registration happen together in {@link #register}.
- */
 public class ModItems {
     private ModItems() {
     }
 
     public static final ResourceKey<CreativeModeTab> DEFAULT_ITEM_GROUP =
-            ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, "iron_oak"));
+            ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(MOD_ID, "iron_oak"));
 
     public static final Item COPPER_ASH = register("copper_ash", OreInfusedAsh::new);
     public static final Item COPPER_SHRED = register("copper_shred", Item::new);
@@ -121,17 +117,17 @@ public class ModItems {
     }
 
     /**
-     * {@code useBlockDescriptionPrefix} keeps block items on their {@code block.iron_oak.*}
-     * translation keys. Without it they look for {@code item.iron_oak.*}, which the lang
-     * file does not define for blocks — every block item would show a raw key.
+     * {@code BlockItem.getDescriptionId()} always defers to the block's own description id
+     * on this version, so a block item is on its {@code block.iron_oak.*} translation key
+     * with no settings toggle needed.
      */
     private static Item registerBlockItem(String name, Block block, Item.Properties settings) {
-        return register(name, s -> new BlockItem(block, s), settings.useBlockDescriptionPrefix());
+        return register(name, s -> new BlockItem(block, s), settings);
     }
 
     private static Item register(String name, Function<Item.Properties, Item> factory, Item.Properties settings) {
-        ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(MOD_ID, name));
-        return Registry.register(BuiltInRegistries.ITEM, key, factory.apply(settings.setId(key)));
+        ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, name));
+        return Registry.register(BuiltInRegistries.ITEM, key, factory.apply(settings));
     }
 
     public static void onInitialize() {
@@ -142,7 +138,7 @@ public class ModItems {
 
         // Everything this mod registers goes into the mod's own tab.
         ItemGroupEvents.modifyEntriesEvent(DEFAULT_ITEM_GROUP).register(content -> BuiltInRegistries.ITEM.entrySet().stream()
-                .filter(entry -> entry.getKey().identifier().getNamespace().equals(MOD_ID))
+                .filter(entry -> entry.getKey().location().getNamespace().equals(MOD_ID))
                 .forEach(entry -> content.accept(entry.getValue())));
     }
 }

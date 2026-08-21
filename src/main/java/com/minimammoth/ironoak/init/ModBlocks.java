@@ -5,8 +5,8 @@ import com.minimammoth.ironoak.OreInfusedSaplingBlock;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RotatedPillarBlock;
@@ -17,11 +17,6 @@ import java.util.function.Function;
 
 import static com.minimammoth.ironoak.IronOak.MOD_ID;
 
-/**
- * Since 1.21.2 a block's settings must carry its own registry key, so construction and
- * registration happen together in {@link #register} — a block can no longer be built as a
- * static constant and registered later.
- */
 public class ModBlocks {
     private ModBlocks() {
     }
@@ -85,8 +80,8 @@ public class ModBlocks {
      * using the mod's own loot table.
      */
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> factory, Block copyFrom) {
-        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(MOD_ID, name));
-        BlockBehaviour.Properties settings = BlockBehaviour.Properties.ofLegacyCopy(copyFrom).setId(key);
+        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(MOD_ID, name));
+        BlockBehaviour.Properties settings = BlockBehaviour.Properties.ofLegacyCopy(copyFrom);
         return Registry.register(BuiltInRegistries.BLOCK, key, factory.apply(settings));
     }
 
