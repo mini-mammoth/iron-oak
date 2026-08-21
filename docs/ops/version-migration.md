@@ -2,7 +2,6 @@
 domain: Operations
 domain_code: OPS
 status: active
-last_updated: 2026-08-21
 related:
   - ../../AGENTS.md
   - orchestration.md
@@ -11,11 +10,11 @@ related:
 
 # Version Migration — 1.20.4 → 1.21.11 + 26.2
 
-`main` now targets **Minecraft 1.21.11** (`mod_version=1.3.0+1.21.11`), migrated up from
-1.20.4.
+`main` now targets **Minecraft 26.2** (`mod_version=1.4.0+26.2`), migrated up from
+1.20.4 via 1.21.11.
 
-**The endpoint is two supported lines, not one.** 1.21.11 is released and then kept on its
-own branch; `main` moves on to 26.2. Both are maintained. See
+**The endpoint is two supported lines, not one.** 1.21.11 is released and kept on its
+own branch; `main` is on 26.2. Both are maintained. See
 [Two supported lines](#two-supported-lines) for what that costs and how a fix reaches both.
 
 This document is the plan and the gate list. It is process policy, not a task briefing —
@@ -75,7 +74,9 @@ the next planning round rather than trusting these.
 | 1.21.11 in-game verification | **done** — walked 2026-08-21, passed (#19) |
 | 1.21.11 release tag | **done** — `v1.3.0+1.21.11`, published to Modrinth and CurseForge |
 | `v1.21.11` branch cut and wired into CI | **done** — #52; CI green on Linux and Windows, both layers |
-| 1.21.11 → 26.2 | **in progress** — #20. Toolchain proven, ~52 source errors remain |
+| 1.21.11 → 26.2 | **done**, build green, `runDatagen` green, `runGametest` green — #20 |
+| 26.2 in-game verification | **done** — walked 2026-08-21, passed (#20) |
+| 26.1 announced alongside 26.2 | **done** — shipped jar verified in-game on 26.1.2 (#20) |
 | 1.20.4 line | **dropped** — decided 2026-08-21 |
 | 1.18.2 and 1.19 lines | **dropped** — decided 2026-08-21; archived, not built |
 
@@ -358,5 +359,5 @@ free release, and it is out of scope here.
 | 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on `runClient` evidence — **done** 2026-08-21 |
 | 1.21.11 release tagged | after stage 2 | human — **done**, `v1.3.0+1.21.11` |
 | `v1.21.11` cut from the tag and added to CI | before `main` moves to 26.2 | orchestrator — **done**, #52 |
-| Stage 3 started | after 1.21.11 is released | human — **in progress**, #20 |
+| Stage 3 started | after 1.21.11 is released | human — **done**, #20 |
 | Old-version branch policy | before `main` moves | human — **done**: 1.20.4, 1.19 and 1.18.2 dropped; 1.21.11 kept on `v1.21.11` |

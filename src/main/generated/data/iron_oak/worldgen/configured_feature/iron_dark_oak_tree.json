@@ -1,13 +1,13 @@
 {
   "type": "minecraft:tree",
   "config": {
-    "decorators": [],
-    "dirt_provider": {
+    "below_trunk_provider": {
       "type": "minecraft:simple_state_provider",
       "state": {
         "Name": "minecraft:dirt"
       }
     },
+    "decorators": [],
     "foliage_placer": {
       "type": "minecraft:dark_oak_foliage_placer",
       "offset": 0,
@@ -24,14 +24,9 @@
         }
       }
     },
-    "force_dirt": false,
     "ignore_vines": true,
     "minimum_size": {
       "type": "minecraft:three_layers_feature_size",
-      "limit": 1,
-      "lower_size": 0,
-      "middle_size": 1,
-      "upper_limit": 1,
       "upper_size": 2
     },
     "trunk_placer": {

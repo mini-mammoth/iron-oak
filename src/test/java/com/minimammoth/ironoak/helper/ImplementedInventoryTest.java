@@ -1,6 +1,9 @@
 package com.minimammoth.ironoak.helper;
 
 import com.minimammoth.ironoak.BootstrappedGame;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(BootstrappedGame.class)
 class ImplementedInventoryTest {
 
+    /**
+     * In 26.2, ItemStack constructors require components to be bound to holders.
+     * This method binds empty components to the holder if not already bound.
+     */
+    private static ItemStack itemStack(Item item) {
+        return itemStack(item, 1);
+    }
+
+    /**
+     * In 26.2, ItemStack constructors require components to be bound to holders.
+     * This method binds empty components to the holder if not already bound.
+     */
+    @SuppressWarnings("unchecked")
+    private static ItemStack itemStack(Item item, int count) {
+        Holder<Item> holder = item.builtInRegistryHolder();
+        if (holder instanceof net.minecraft.core.Holder.Reference<Item> refHolder && !refHolder.areComponentsBound()) {
+            refHolder.bindComponents(DataComponentMap.EMPTY);
+        }
+        return new ItemStack(holder, count);
+    }
+
     @Test
     void aFreshInventoryIsEmpty() {
         ImplementedInventory inventory = ImplementedInventory.ofSize(2);
@@ -34,7 +58,7 @@ class ImplementedInventoryTest {
     @Test
     void oneOccupiedSlotIsEnoughToNotBeEmpty() {
         ImplementedInventory inventory = ImplementedInventory.ofSize(2);
-        inventory.setItem(1, new ItemStack(Items.STICK));
+        inventory.setItem(1, itemStack(Items.STICK));
 
         assertFalse(inventory.isEmpty());
     }
@@ -42,7 +66,7 @@ class ImplementedInventoryTest {
     @Test
     void removingPartOfAStackLeavesTheRest() {
         ImplementedInventory inventory = ImplementedInventory.ofSize(2);
-        inventory.setItem(0, new ItemStack(Items.STICK, 5));
+        inventory.setItem(0, itemStack(Items.STICK, 5));
 
         ItemStack removed = inventory.removeItem(0, 2);
 
@@ -58,8 +82,8 @@ class ImplementedInventoryTest {
     @Test
     void clearingEmptiesEverySlot() {
         ImplementedInventory inventory = ImplementedInventory.ofSize(2);
-        inventory.setItem(0, new ItemStack(Items.STICK));
-        inventory.setItem(1, new ItemStack(Items.COAL));
+        inventory.setItem(0, itemStack(Items.STICK));
+        inventory.setItem(1, itemStack(Items.COAL));
 
         inventory.clearContent();
 
@@ -75,7 +99,7 @@ class ImplementedInventoryTest {
     @Test
     void oversizedStacksAreClampedInPlace() {
         ImplementedInventory inventory = ImplementedInventory.ofSize(2);
-        ItemStack oversized = new ItemStack(Items.STICK, 200);
+        ItemStack oversized = itemStack(Items.STICK, 200);
 
         inventory.setItem(0, oversized);
 

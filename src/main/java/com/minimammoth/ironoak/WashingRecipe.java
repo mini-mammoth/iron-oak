@@ -4,6 +4,7 @@ import com.minimammoth.ironoak.init.ModItems;
 import com.minimammoth.ironoak.init.ModRecipes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -11,6 +12,7 @@ import net.minecraft.world.item.crafting.RecipeBookCategories;
 import net.minecraft.world.item.crafting.RecipeBookCategory;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.Recipe;
 
 /**
  * Washing ore infused ash in water produces ore shreds.
@@ -18,8 +20,8 @@ import net.minecraft.world.item.crafting.RecipeType;
 public class WashingRecipe extends AbstractCookingRecipe {
     public static final String KEY = "washing";
 
-    public WashingRecipe(String group, CookingBookCategory category, Ingredient input, ItemStack output, float experience, int cookTime) {
-        super(group, category, input, output, experience, cookTime);
+    public WashingRecipe(Recipe.CommonInfo commonInfo, AbstractCookingRecipe.CookingBookInfo bookInfo, Ingredient input, ItemStackTemplate output, float experience, int cookTime) {
+        super(commonInfo, bookInfo, input, output, experience, cookTime);
     }
 
     @Override
@@ -40,5 +42,12 @@ public class WashingRecipe extends AbstractCookingRecipe {
     @Override
     public RecipeBookCategory recipeBookCategory() {
         return RecipeBookCategories.FURNACE_MISC;
+    }
+
+    /**
+     * Public accessor for the result template, used by tests.
+     */
+    public ItemStackTemplate getResultTemplate() {
+        return result();
     }
 }

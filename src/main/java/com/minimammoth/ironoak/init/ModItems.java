@@ -2,8 +2,8 @@ package com.minimammoth.ironoak.init;
 
 import com.minimammoth.ironoak.OreInfusedAsh;
 import com.minimammoth.ironoak.OreInfusedBoneMeal;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -135,13 +135,13 @@ public class ModItems {
     }
 
     public static void onInitialize() {
-        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, DEFAULT_ITEM_GROUP, FabricItemGroup.builder()
+        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, DEFAULT_ITEM_GROUP, FabricCreativeModeTab.builder()
                 .icon(() -> new ItemStack(Items.DIAMOND_PICKAXE))
                 .title(Component.translatable("itemGroup.iron_oak.iron_oak"))
                 .build());
 
         // Everything this mod registers goes into the mod's own tab.
-        ItemGroupEvents.modifyEntriesEvent(DEFAULT_ITEM_GROUP).register(content -> BuiltInRegistries.ITEM.entrySet().stream()
+        CreativeModeTabEvents.modifyOutputEvent(DEFAULT_ITEM_GROUP).register(content -> BuiltInRegistries.ITEM.entrySet().stream()
                 .filter(entry -> entry.getKey().identifier().getNamespace().equals(MOD_ID))
                 .forEach(entry -> content.accept(entry.getValue())));
     }

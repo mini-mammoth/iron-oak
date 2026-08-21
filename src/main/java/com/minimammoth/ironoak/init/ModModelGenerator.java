@@ -1,7 +1,7 @@
 package com.minimammoth.ironoak.init;
 
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.model.ItemModelUtils;
@@ -51,7 +51,7 @@ import static com.minimammoth.ironoak.IronOak.MOD_ID;
  * items are {@code item/generated} with their texture.
  */
 public class ModModelGenerator extends FabricModelProvider {
-    public ModModelGenerator(FabricDataOutput output) {
+    public ModModelGenerator(FabricPackOutput output) {
         super(output);
     }
 

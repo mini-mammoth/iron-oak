@@ -58,7 +58,7 @@ public class OreInfusedAsh extends Item {
             player.awardStat(Stats.ITEM_USED.get(this));
             stackInHand.shrink(1);
 
-            var output = recipe.get().value().assemble(input, serverLevel.registryAccess());
+            var output = recipe.get().value().assemble(input);
 
             var ironShard = new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), output);
             ironShard.setPickUpDelay(40);

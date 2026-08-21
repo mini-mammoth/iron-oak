@@ -9,7 +9,9 @@ import com.minimammoth.ironoak.requirements.Requirement;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
@@ -61,7 +63,8 @@ public class FireBowlGameTest {
         helper.setBlock(BOWL.below(), Blocks.STONE);
         helper.setBlock(BOWL, ModBlocks.FIRE_BOWL);
 
-        var arrow = helper.spawn(EntityType.ARROW, BOWL.above(2));
+        EntityType<?> arrowType = BuiltInRegistries.ENTITY_TYPE.getValue(Identifier.parse("minecraft:arrow"));
+        var arrow = helper.spawn(arrowType, BOWL.above(2));
         arrow.igniteForSeconds(10);
         // Straight down onto the bowl. Deliberately not a shot from an angle: what is being
         // tested is the block's reaction to a burning projectile, not the arrow's flight.

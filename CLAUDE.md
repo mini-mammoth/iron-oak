@@ -7,12 +7,15 @@ repository, and it applies to you unchanged.
 
 ## Before your first Gradle command
 
-Fabric Loom does not run on JDK 22+, and this machine defaults to JDK 25. Every Gradle
-invocation needs JDK 21:
+**On the 26.x line:** Fabric Loom requires JDK 25, which is this machine's default.
+No setup needed.
+
+**On the 1.21.x line:** Fabric Loom does not run on JDK 22+, so every Gradle invocation
+needs JDK 21:
 
 ```bash
 export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 ```
 
 A build that fails without this looks like a broken project, not a wrong JDK. See the
-JDK section of `AGENTS.md`.
+JDK section of `AGENTS.md` for line-specific requirements.

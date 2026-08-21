@@ -1,6 +1,7 @@
 package com.minimammoth.ironoak.init;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
@@ -60,23 +61,23 @@ public class ModConfiguredFeatures {
     public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_DARK_OAK_TREE = registerKey("iron_dark_oak_tree");
 
     private static TreeConfiguration.TreeConfigurationBuilder oreOak(Block oreLog) {
-        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(4, 2, 0), BlockStateProvider.simple(Blocks.OAK_LEAVES), new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3), new TwoLayersFeatureSize(1, 0, 1)).ignoreVines();
+        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(4, 2, 0), BlockStateProvider.simple(Blocks.OAK_LEAVES), new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3), Optional.empty(), new TwoLayersFeatureSize(1, 0, 1), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
     }
 
     private static TreeConfiguration.TreeConfigurationBuilder oreBirch(Block oreLog) {
-        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(5, 2, 0), BlockStateProvider.simple(Blocks.BIRCH_LEAVES), new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3), new TwoLayersFeatureSize(1, 0, 1)).ignoreVines();
+        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(5, 2, 0), BlockStateProvider.simple(Blocks.BIRCH_LEAVES), new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3), Optional.empty(), new TwoLayersFeatureSize(1, 0, 1), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
     }
 
     private static TreeConfiguration.TreeConfigurationBuilder oreAcacia(Block oreLog) {
-        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new ForkingTrunkPlacer(5, 2, 2), BlockStateProvider.simple(Blocks.ACACIA_LEAVES), new AcaciaFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0)), new TwoLayersFeatureSize(1, 0, 2)).ignoreVines();
+        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new ForkingTrunkPlacer(5, 2, 2), BlockStateProvider.simple(Blocks.ACACIA_LEAVES), new AcaciaFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0)), Optional.empty(), new TwoLayersFeatureSize(1, 0, 2), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
     }
 
     private static TreeConfiguration.TreeConfigurationBuilder oreSpruce(Block oreLog) {
-        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(5, 2, 1), BlockStateProvider.simple(Blocks.SPRUCE_LEAVES), new SpruceFoliagePlacer(UniformInt.of(2, 3), UniformInt.of(0, 2), UniformInt.of(1, 2)), new TwoLayersFeatureSize(2, 0, 2)).ignoreVines();
+        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(5, 2, 1), BlockStateProvider.simple(Blocks.SPRUCE_LEAVES), new SpruceFoliagePlacer(UniformInt.of(2, 3), UniformInt.of(0, 2), UniformInt.of(1, 2)), Optional.empty(), new TwoLayersFeatureSize(2, 0, 2), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
     }
 
     private static TreeConfiguration.TreeConfigurationBuilder oreDarkOak(Block oreLog) {
-        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new DarkOakTrunkPlacer(6, 2, 1), BlockStateProvider.simple(Blocks.DARK_OAK_LEAVES), new DarkOakFoliagePlacer(ConstantInt.of(0), ConstantInt.of(0)), new ThreeLayersFeatureSize(1, 1, 0, 1, 2, OptionalInt.empty())).ignoreVines();
+        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new DarkOakTrunkPlacer(6, 2, 1), BlockStateProvider.simple(Blocks.DARK_OAK_LEAVES), new DarkOakFoliagePlacer(ConstantInt.of(0), ConstantInt.of(0)), Optional.empty(), new ThreeLayersFeatureSize(1, 1, 0, 1, 2, OptionalInt.empty()), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
     }
 
     private static TreeConfiguration.TreeConfigurationBuilder oreJungle(Block oreLog) {
@@ -84,7 +85,9 @@ public class ModConfiguredFeatures {
                 new StraightTrunkPlacer(4, 8, 0), // places a straight trunk
                 BlockStateProvider.simple(Blocks.JUNGLE_LEAVES), // Foliage block provider
                 new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3), // places leaves as a blob (radius, offset from trunk, height)
-                new TwoLayersFeatureSize(1, 0, 1) // The width of the tree at different layers; used to see how tall the tree can be without clipping into blocks
+                Optional.empty(), // Root placer
+                new TwoLayersFeatureSize(1, 0, 1), // The width of the tree at different layers; used to see how tall the tree can be without clipping into blocks
+                BlockStateProvider.simple(Blocks.DIRT)
         ).decorators(List.of(new CocoaDecorator(0.2F), TrunkVineDecorator.INSTANCE, new LeaveVineDecorator(0.25F))).ignoreVines();
     }
 
