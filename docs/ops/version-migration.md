@@ -74,9 +74,10 @@ the next planning round rather than trusting these.
 | 1.20.4 → 1.21.11 | **done**, build green, `runDatagen` green |
 | 1.21.11 in-game verification | **done** — walked 2026-08-21, passed (#19) |
 | 1.21.11 release tag | **done** — `v1.3.0+1.21.11`, published to Modrinth and CurseForge |
-| `v1.21.x` branch cut and wired into CI | not done — after the tag |
-| 1.21.11 → 26.2 | **not started** in source. Toolchain proven only; see below |
+| `v1.21.11` branch cut and wired into CI | **done** — #52; CI green on Linux and Windows, both layers |
+| 1.21.11 → 26.2 | **in progress** — #20. Toolchain proven, ~52 source errors remain |
 | 1.20.4 line | **dropped** — decided 2026-08-21 |
+| 1.18.2 and 1.19 lines | **dropped** — decided 2026-08-21; archived, not built |
 
 ---
 
@@ -322,8 +323,13 @@ the obvious place for one.
 line would cost a third in-game pass per fix (see "What a second line actually costs"). It is
 not branched and not published against; the last release on it, `1.2.1+1.20.4`, stays up.
 
-Existing branches: `v1.18.x`, `1.19`, plus unmerged `restone_leaves`. Neither old branch is
-maintained; they are history, and only `v1.18.x` is still built by CI.
+**The 1.18.2 and 1.19 lines are dropped too — decided 2026-08-21.** `v1.18.x` and `1.19`
+stay on the remote as **archives**: no CI, no releases, no cherry-picks. Their published jars
+stay up. An archive is not a supported line, and the CI branch lists must not imply it is —
+that was the state before this decision and it read as support.
+
+Existing branches: `v1.21.11` (supported), `v1.18.x` and `1.19` (archived), plus unmerged
+`restone_leaves`.
 
 The open issues against old versions (#11 Quilt on 1.18.2, #15 washing on an unstated
 version) need a version decision before they are workable. Both are
@@ -343,9 +349,9 @@ free release, and it is out of scope here.
 | Mapping migration build green | before starting the version bump | orchestrator — a mapping-only change must not alter behaviour — **done** |
 | 1.21.11 in-game loop verified | before merging the 1.21.11 work | human, on `runClient` evidence — **done** 2026-08-21 |
 | 1.21.11 release tagged | after stage 2 | human — **done**, `v1.3.0+1.21.11` |
-| `v1.21.x` cut from the tag and added to CI | before `main` moves to 26.2 | orchestrator — **next**, #52 |
-| Stage 3 started | after 1.21.11 is released | human — **unblocked** |
-| Old-version branch policy | before `main` moves | human — **done**: 1.20.4 dropped, 1.21.11 kept on `v1.21.x` |
+| `v1.21.11` cut from the tag and added to CI | before `main` moves to 26.2 | orchestrator — **done**, #52 |
+| Stage 3 started | after 1.21.11 is released | human — **in progress**, #20 |
+| Old-version branch policy | before `main` moves | human — **done**: 1.20.4, 1.19 and 1.18.2 dropped; 1.21.11 kept on `v1.21.11` |
 
 ---
 
