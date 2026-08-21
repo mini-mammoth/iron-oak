@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, v1.18.x ]
+    branches: [ main, v1.18.x, v1.21.x ]
     # A docs-only change cannot break the build, so don't spend a runner on it.
     # `.github/**` is deliberately NOT ignored — a workflow change must run the workflow.
     # The list is duplicated below on purpose: GitHub Actions does not reliably support
@@ -15,7 +15,7 @@ on:
       - '.gitignore'
       - 'LICENSE'
   pull_request:
-    branches: [ main, v1.18.x ]
+    branches: [ main, v1.18.x, v1.21.x ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
