@@ -158,7 +158,7 @@ public class FireBowlEntity extends BlockEntity implements ImplementedInventory,
      * without a world; it is not called from anywhere else in {@code src/main}.
      */
     static int cookingTotalTime(Optional<RecipeHolder<BurningRecipe>> recipe) {
-        return recipe.map(holder -> holder.value().cookingTime()).orElse(ModRecipes.DEFAULT_COOKING_TIME);
+        return recipe.map(holder -> holder.value().getCookingTime()).orElse(ModRecipes.DEFAULT_COOKING_TIME);
     }
 
     public ItemStack getOutput() {
