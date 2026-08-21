@@ -177,12 +177,17 @@ after delivery always shows zero and is not evidence.
   `vibe` printed `0/200k`; `claude` prints `↓ 24.7k tokens` with no denominator at all, so a
   pattern written for one silently never fires for the other — a poll loop then hangs, or worse,
   reports a working worker as dead. Measured the day workers moved to Claude Sonnet.
-  **Use signals that survive an agent change:**
-  - `latestCursor` from `orca terminal read --json` — differs between two reads = there is
-    output. This is the primary liveness signal.
-  - the worktree: `git -C <wt> log --oneline`, `git -C <wt> status --porcelain`, newest file
-    mtime. A commit is proof; the rest is progress.
-  Read the tail for a human eye when diagnosing, but do not build a check on its shape.
+  **The worktree is the primary signal, not the pane:**
+  ```bash
+  git -C <wt> log --oneline <base>..HEAD          # a commit is proof
+  git -C <wt> status --porcelain                  # uncommitted progress
+  find <wt> -type f -not -path '*/.git/*' -not -path '*/build/*' -newermt '-3 minutes'
+  ```
+  `latestCursor` from `orca terminal read --json` is **not** portable either: it advanced with
+  `vibe` and sits fixed at `5` for `claude`, so cursor movement reports every Claude worker as
+  idle. Measured on the #54 dispatch. Read the tail with a human eye when diagnosing — a
+  spinner line with an elapsed time means working, the bare prompt means the turn ended — but
+  do not build an automated check on either the cursor or the tail's shape.
 - **`tui-idle` does not mean the TUI accepts input, and does not explain the failures.**
   `wait --for tui-idle` has reported `ok` while the tail still showed `Initializing…`. But the
   race theory was disproved in the same run: another dispatch was provably past init and

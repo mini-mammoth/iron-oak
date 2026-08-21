@@ -227,14 +227,19 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
      compaction is normal. Two rounds of output with no new commit is the loop: do NOT follow
      up (that grows the context that IS the problem) — harvest, then re-cut the remainder
      SMALLER as its own ticket.
-   NEVER BUILD A CHECK ON THE STATUS-LINE FORMAT. It is agent-specific and changes under you:
-   `vibe` printed `0/200k`, `claude` prints `↓ 24.7k tokens` with no denominator, so a pattern
-   written for one silently never fires for the other — the poll hangs, or a working worker is
-   reported dead. The signals that survive an agent change:
-     orca terminal read --terminal <h> --json   # latestCursor differs between reads = output
-     git -C <worktree> log --oneline            # a commit is proof
-     git -C <worktree> status --porcelain       # uncommitted progress
-   Read the tail with a human eye when diagnosing; do not grep it for a shape.
+   JUDGE FROM THE WORKTREE, NOT THE PANE. Every in-pane signal so far has turned out to be
+   agent-specific:
+     - status line: `vibe` printed `0/200k`, `claude` prints `↓ 24.7k tokens` with no
+       denominator, so a pattern for one never fires for the other
+     - `latestCursor`: advanced with `vibe`, sits fixed at `5` for `claude`, so cursor movement
+       reports every Claude worker as idle
+   Both measured on real dispatches. What is left is the worktree, and it is enough:
+     git -C <worktree> log --oneline <base>..HEAD    # a commit is proof
+     git -C <worktree> status --porcelain            # uncommitted progress
+     find <worktree> -type f -not -path '*/.git/*' -not -path '*/build/*' \
+       -newermt '-3 minutes'                         # is anything still being written?
+   Read the tail with a human eye when diagnosing — a spinner line with an elapsed time means
+   working, a bare prompt means the turn ended — but never automate a check on its shape.
 
    [iron-oak] A LONG FIRST BUILD IS NOT A STALL. Loom downloads and decompiles Minecraft
    before anything compiles — minutes, more after a version bump — and the counter can sit
@@ -275,9 +280,9 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
         `claude --model sonnet --permission-mode bypassPermissions` — never `vibe`, never the
         runtime default.
      c2) check the fresh worktree's base (below)
-     d) VERIFY DELIVERY: `orca terminal read` twice — `latestCursor` must move, or the tail
-        must visibly show the briefing being read. Do NOT grep for a token counter; see the
-        status-line rule below. No proof = no worker: re-deliver via the recipe in
+     d) VERIFY DELIVERY: `orca terminal read` and look at the tail — it must visibly show the
+        briefing being read or work starting. Do NOT grep for a token counter and do NOT use
+        `latestCursor`; see "judge from the worktree" below. No proof = no worker: re-deliver via the recipe in
         orchestration.md.
         CHECK FIRST, THEN RE-DELIVER — NEVER BOTH. A `terminal send` into a terminal that
         already has the briefing runs it a SECOND time; the worker redoes finished work and
