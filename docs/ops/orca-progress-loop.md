@@ -446,7 +446,7 @@ Step 5 changes the loop's own rules. Without verification that becomes one-way a
 every incident adds a rule, no rule is ever removed, and the runbook grows until nobody reads
 it. The ledger closes that loop.
 
-**It is one GitHub issue**, titled `docs(ops): correction ledger`, labelled `documentation`.
+**It is issue #61**, `docs(ops): correction ledger`, which stays open permanently.
 Entries are comments — cheap, visible, and they do not add commits to an unpushed `main`,
 which step 5 warns about.
 
