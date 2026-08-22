@@ -222,7 +222,7 @@ soon as one Minecraft family holds two supported lines, which is exactly the cas
 |---|---|---|
 | 26.x | `main` | frontier |
 | 1.21.11 | `v1.21.11` | supported |
-| 1.21.1 | `v1.21.1` | planned — #54 |
+| 1.21.1 | `v1.21.1` | supported |
 | 1.20.4, 1.19, 1.18.2 | none, `1.19`, `v1.18.x` | **archived** — no CI, no releases, no backports |
 
 Which lines are supported and why is [`docs/ops/multiloader.md`](docs/ops/multiloader.md).
