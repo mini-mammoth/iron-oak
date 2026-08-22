@@ -4,6 +4,25 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        maven {
+            name = 'Architectury'
+            url = 'https://maven.architectury.dev/'
+        }
+        maven {
+            // Architectury Loom's own toolchain (mcinjector, DiffPatch) depends on
+            // Forge/MCP tooling artifacts even on a Fabric-only, no-Forge project — this
+            // is not opting into Forge as a target.
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
         gradlePluginPortal()
     }
 }
+
+rootProject.name = 'iron-oak'
+
+// Toolchain only (#70, phase 1 of #21): common stays empty, fabric carries the existing
+// source tree wholesale. No neoforge (phase 3) and no testmod-* — this repo has no
+// throwaway example mod to carry along.
+include('common')
+include('fabric')
