@@ -275,6 +275,12 @@ Drain the queue, land the bump, resume. Plan: [`version-migration.md`](version-m
   rewrites `src/main/generated/`, and every ticket adding a block or item regenerates it too —
   two correct PRs, not mergeable together. Second: `area:assets` against
   `area:blocks`/`area:items`, which write the same model, blockstate and lang JSON.
+- **A version line is delivered by its branch existing, never by a PR into `main`.** A ticket
+  that cuts or ports a line has **two halves, delivered differently**: the branch is pushed
+  directly, and only the *documentation* recording the line goes to `main` through a PR. Say
+  both halves separately in the briefing. Collapsing them into "push the branch and open a PR
+  against `main`" produced #68 — a PR that would have taken the frontier backwards from 26.2 to
+  1.21.1 across 90 files, stopped only by GitHub's conflict marker.
 - **Cross-cutting rebuilds do not belong in a feature ticket.** A worker whose goal needs a
   repo-wide structural change (all registrations, the mapping set, the toolchain) reports back;
   the orchestrator opens a separate ticket and orders the merges.
