@@ -16,8 +16,8 @@ related:
 > **Layers 1 and 2 exist and run. Layer 3 does not.**
 >
 > #40 landed the harness this document was written to specify:
-> `fabric-loader-junit` in `src/test`, run by `./gradlew build`; a gametest run
-> configuration in `src/gametest`, run by `./gradlew runGametest`; both reporting JUnit
+> `fabric-loader-junit` in `fabric/src/test`, run by `./gradlew build`; a gametest run
+> configuration in `fabric/src/gametest`, run by `./gradlew runGametest`; both reporting JUnit
 > XML on Linux and Windows in CI.
 >
 > **Layer 3 — client gametests — is still not wired up.** `fabric-client-gametest-api-v1`
@@ -178,7 +178,7 @@ empty-bowl half) both proves the fix and fails without it.
 
 ### Not a layer: the `runClient` checklist
 
-**A human launching `./gradlew runClient` is still the only gate that covers rendering,
+**A human launching `./gradlew :fabric:runClient` is still the only gate that covers rendering,
 sound and feel**, and `AGENTS.md` is explicit that you must say so in the PR rather than
 imply you did it. The harness did not remove that gate; it shrank it. Seven gametests have
 retired seven of its lines. The rest of the list is still walked by hand.
@@ -204,13 +204,13 @@ void everyFeatureKeyHasCommittedJson() { … }
 picking the closer one — and it works identically at both layers. Three facts about how it is
 built, because none of them is guessable:
 
-- It lives in a third source set, **`src/testsupport`**, which depends on nothing. Layer 1 is
-  `src/test` and layer 2 is `src/gametest`; those two share no classpath, so an annotation
-  both of them use can live in neither.
+- It lives in a third source set, **`fabric/src/testsupport`**, which depends on nothing.
+  Layer 1 is `fabric/src/test` and layer 2 is `fabric/src/gametest`; those two share no
+  classpath, so an annotation both of them use can live in neither.
 - It is **`RetentionPolicy.SOURCE`**. Nothing reads it reflectively, so it is erased at
   compile time and reaches no runtime classpath and no artefact. Check it the way
   `AGENTS.md` says to check the jar — by looking:
-  `unzip -l build/libs/iron-oak-*.jar | grep -ic requirement` must be 0.
+  `unzip -l "$(find fabric/build/libs -name 'iron-oak-*.jar' ! -name '*-sources.jar' ! -name '*-dev-shadow.jar')" | grep -ic requirement` must be 0.
 - The citations are therefore read out of the **source text**, by
   `RequirementTracingTest`. A reflective reader would need the layer-2 classes on the
   layer-1 classpath while layer 2 already needs the annotation, and no arrangement of source
@@ -264,7 +264,7 @@ The chain it walks, for each of the 18 sapling arms:
 ModBlocks.<METAL>_<WOOD>_SAPLING            registered as "<metal>_<wood>_sapling"
   → ModSaplingGenerators.<METAL>_<WOOD>     built from a feature ResourceKey
     → ModConfiguredFeatures.<METAL>_<WOOD>_TREE   whose key string is registerKey("…")
-      → src/main/generated/…/<that key>.json      the feature that actually ships
+      → fabric/src/main/generated/…/<that key>.json  the feature that actually ships
 ```
 
 The assertion at every hop: **the wood and the metal agree**. Against the broken tree the
@@ -352,16 +352,16 @@ Two constraints inherited from `AGENTS.md` that apply to the harness as much as 
 ## Where tests live
 
 ```
-src/test/java/com/minimammoth/ironoak/…               layer 1, loader-junit
-src/gametest/java/com/minimammoth/ironoak/gametest/…  layer 2
-src/gametest/resources/fabric.mod.json                its fabric-gametest entrypoints
-src/testsupport/java/…/requirements/Requirement.java  the @Requirement annotation, and only that
+fabric/src/test/java/com/minimammoth/ironoak/…               layer 1, loader-junit
+fabric/src/gametest/java/com/minimammoth/ironoak/gametest/…  layer 2
+fabric/src/gametest/resources/fabric.mod.json                its fabric-gametest entrypoints
+fabric/src/testsupport/java/…/requirements/Requirement.java  the @Requirement annotation, and only that
 ```
 
 Two directories rather than one, because the two kinds have nothing in common: one is
 milliseconds and runs on every build, the other needs a game and a run configuration. Not
-co-located with `src/main` — Loom's source sets and the remapper make co-location a fight
-with no prize.
+co-located with `fabric/src/main` — Loom's source sets and the remapper make co-location a
+fight with no prize.
 
 `testsupport` is a third, and it holds one annotation. It exists because the other two share
 no classpath and both need it — see *Citing the requirement a test proves* above. It depends
@@ -374,10 +374,10 @@ means the `jar` task — which only ever packages `main` — cannot ship any of 
 worth checking rather than assuming:
 
 ```bash
-unzip -l build/libs/iron-oak-*.jar | grep -ic gametest   # must be 0
+unzip -l "$(find fabric/build/libs -name 'iron-oak-*.jar' ! -name '*-sources.jar' ! -name '*-dev-shadow.jar')" | grep -ic gametest   # must be 0
 ```
 
-`src/test` needs no such care: Gradle never packages a test source set.
+`fabric/src/test` needs no such care: Gradle never packages a test source set.
 
 Naming: mirror the class under test (`FireBowlEntityTest`, `ModRecipesTest`), or the
 invariant when a test spans several (`TreeMatrixTest`, `RegistryAssetsTest`).
@@ -394,7 +394,7 @@ These are the mistakes **this** codebase is set up to make. They are not a textb
 | Anti-pattern | Why it fails here | Instead |
 |---|---|---|
 | Building a matrix test's expectations by iterating `ModConfiguredFeatures.*` or `ModBlocks.*` | The field names were the bug (#30). The test restates it and passes. | Cross-product the metal and wood **strings**, then look each arm up. |
-| Asserting that `src/main/generated/*.json` is correct | It is output, not authority. `AGENTS.md`: regenerate, never hand-edit. | Assert (a) the source Java agrees with the id it registers, and (b) `runDatagen` produces no diff. |
+| Asserting that `fabric/src/main/generated/*.json` is correct | It is output, not authority. `AGENTS.md`: regenerate, never hand-edit. | Assert (a) the source Java agrees with the id it registers, and (b) `runDatagen` produces no diff. |
 | Mocking `Level` or `ServerLevel` to unit-test ticking | Half of `FireBowlEntity`'s behaviour is the interaction with a real level, and `litServerTick` casts to `ServerLevel` on the first line. A mock asserts your idea of the level. | A layer-2 gametest. |
 | Reaching into `FireBowlEntity`'s private state by reflection | The field is not the behaviour, and #28 deleted the most tempting one — `cookingTotalTime` is a function now, not stored state. | Assert the observable: how long the burn takes, and that progress survives a reload. |
 | Copying a test from the Fabric wiki or a tutorial | Same failure mode `AGENTS.md` already warns about for API calls, and #26/#27 both hit it. The gametest API's shape changed across this version range. | Resolve it against the jar — the `minecraft-fabric-lookup` skill. |
