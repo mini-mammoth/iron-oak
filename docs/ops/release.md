@@ -121,7 +121,9 @@ those live in the workflow, because they need the tokens.
   ./gradlew clean build
   # Not iron-oak-*.jar: that glob also matches the sources jar, and unzip -l over two
   # archives prints "0 files" — which reads like the empty-jar bug you are checking for.
-  unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
+  # Since #70, common/ has its own (empty) build/libs/ and fabric/'s build/libs/ also
+  # holds a pre-shadow "-dev-shadow" intermediate jar, so both need excluding too.
+  unzip -l "$(find fabric/build/libs -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev-shadow.jar')" | tail -1
   ```
 
   Expect **hundreds** of files. The number grows with every arm of the matrix, so it is the

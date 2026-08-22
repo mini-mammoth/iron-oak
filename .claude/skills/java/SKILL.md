@@ -24,7 +24,7 @@ Do not do any of these as part of another change, however small it looks:
 | Add a mixin | `iron-oak.mixins.json` is empty and there is no `mixin` package. The first one is a design decision. Report it. |
 | Add an access-widener entry | `iron_oak.accesswidener` is declared but inert — its only entry is commented out, so it widens nothing. Same reasoning. |
 | Touch `gradle.properties`, `build.gradle`, the Gradle wrapper or `.github/` | A version bump is never a side effect. It belongs to an `area:build` ticket. Do not re-pin the wrapper to 8.11.1 — Loom 1.17 needs Gradle 9.x. |
-| Hand-edit `src/main/generated/` | Output. Change `ModDataGenerator` (or a provider), run `./gradlew runDatagen`, commit both together. |
+| Hand-edit `fabric/src/main/generated/` | Output. Change `ModDataGenerator` (or a provider), run `./gradlew runDatagen`, commit both together. |
 | "Unify" `iron_oak` and `iron-oak` | Mod id and artifact id. Both load-bearing. |
 | Answer a Minecraft API question from memory or from a tutorial | Use the `minecraft-fabric-lookup` skill. Mappings are **Mojang official, not Yarn** — a Yarn-era snippet (`World`, `AbstractBlock.Settings`, `world.isClient`, `new Identifier(...)`) needs translating first. |
 | Ship half an arm of the 6×3 matrix | All-or-nothing. Complete it or report that you cannot. |
@@ -227,8 +227,8 @@ boundary; be defensive inside.
 
 ## Tests come with the change
 
-- Which layer: **name, id, map, file or number → layer 1** (`src/test`); **tick, entity or
-  block changing → layer 2** (`src/gametest`). See
+- Which layer: **name, id, map, file or number → layer 1** (`fabric/src/test`); **tick,
+  entity or block changing → layer 2** (`fabric/src/gametest`). See
   [`docs/strategy/testing.md`](../../../docs/strategy/testing.md).
 - **A bug fix ships with the test that catches it, and the test comes first.** Observe the
   red locally, report it in the PR, never commit red.
@@ -250,14 +250,18 @@ export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 **Verify the artefact, not the exit code**, whenever you touch the wrapper, Loom or Gradle:
 
 ```bash
-# Not iron-oak-*.jar — that glob also matches the sources jar, and unzip -l over two
-# archives prints "0 files", which reads like the empty-jar bug you are checking for.
+# Not iron-oak-*.jar — that glob also matches the sources jar and the pre-shadow
+# "-dev-shadow" jar, and unzip -l over multiple archives prints "0 files", which reads
+# like the empty-jar bug you are checking for. common/ has its own (empty) build/libs/
+# too, so this is scoped to fabric/ specifically.
 # find, not `ls | grep`: ls is aliased on some machines here and the alias breaks the glob.
-unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
+unzip -l "$(find fabric/build/libs -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev-shadow.jar')" | tail -1
 ```
 
 Hundreds of files, not 2. It is the order of magnitude that carries the signal — the count
 grows with every arm of the matrix.
 
-`runClient` is still the only gate for rendering, particles, sound and feel. **If you did not
-launch the game, say so in the PR** instead of implying you did.
+`:fabric:runClient` is still the only gate for rendering, particles, sound and feel — not
+unqualified `runClient`, which Gradle will happily satisfy with `common`'s own empty,
+mod-free client instead. **If you did not launch the game, say so in the PR** instead of
+implying you did.

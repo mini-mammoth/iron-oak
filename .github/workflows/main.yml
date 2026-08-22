@@ -82,15 +82,16 @@ jobs:
         with:
           name: test-reports-${{ runner.os }}-java${{ matrix.java }}
           path: |
-            build/test-results/test/**/*.xml
-            build/reports/tests/test/**
-            build/gametest/report.xml
+            fabric/build/test-results/test/**/*.xml
+            fabric/build/reports/tests/test/**
+            fabric/build/gametest/report.xml
           if-no-files-found: warn
 
       - name: capture build artifacts
-        # Only from one OS, so the artifact name stays unique.
+        # Only from one OS, so the artifact name stays unique. common/build/libs/ is not
+        # worth uploading — common carries no mod code and its jar is empty (#70).
         if: ${{ runner.os == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
           name: artifacts-java${{ matrix.java }}
-          path: build/libs/
+          path: fabric/build/libs/

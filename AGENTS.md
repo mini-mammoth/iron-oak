@@ -40,7 +40,7 @@ the mod works this way, and every tunable number with its source location, live 
 
 - Mod id is `iron_oak` (underscore). The Gradle artifact is `iron-oak` (hyphen). Both are
   load-bearing; do not "unify" them.
-- User-facing strings live in `src/main/resources/assets/iron_oak/lang/`. Code,
+- User-facing strings live in `fabric/src/main/resources/assets/iron_oak/lang/`. Code,
   identifiers, comments and commit messages are **English**.
 
 ---
@@ -49,17 +49,21 @@ the mod works this way, and every tunable number with its source location, live 
 
 | Layer | What | Where |
 |---|---|---|
-| Loader | Fabric | `src/main/resources/fabric.mod.json` |
-| Build | Gradle + **Fabric Loom** | `build.gradle`, `gradle.properties` |
-| Language | Java | `src/main/java/com/minimammoth/ironoak/` |
+| Loader | Fabric | `fabric/src/main/resources/fabric.mod.json` |
+| Build | Gradle + **Architectury Loom** (`common` + `fabric` subprojects; #70) | `build.gradle`, `fabric/build.gradle`, `gradle.properties` |
+| Language | Java | `fabric/src/main/java/com/minimammoth/ironoak/` |
 | Registration | plain `Registry.register` in `init/Mod*.java` — no DeferredRegister (that is Forge/NeoForge) | `init/` |
-| Data generation | Fabric datagen API, custom `runDatagen` Gradle task — the task **inherits `client`**, because Fabric routes model providers through a client-only mixin | `init/ModDataGenerator.java` → `src/main/generated/` |
-| Hand-written resources | recipes, loot tables, tags, models, blockstates, textures, lang | `src/main/resources/{data,assets}/` |
-| Generated resources | worldgen, and the `assets/iron_oak/items/` client item definitions | `src/main/generated/` |
-| Access widener | present but **inert** — its only line is a comment, so it widens nothing | `src/main/resources/iron_oak.accesswidener` |
-| Mixins | **config exists but is empty** — no mixin classes, no `mixin` package | `src/main/resources/iron-oak.mixins.json` |
+| Data generation | Fabric datagen API, custom `runDatagen` Gradle task — the task **inherits `client`**, because Fabric routes model providers through a client-only mixin | `init/ModDataGenerator.java` → `fabric/src/main/generated/` |
+| Hand-written resources | recipes, loot tables, tags, models, blockstates, textures, lang | `fabric/src/main/resources/{data,assets}/` |
+| Generated resources | worldgen, and the `assets/iron_oak/items/` client item definitions | `fabric/src/main/generated/` |
+| Access widener | present but **inert** — its only line is a comment, so it widens nothing | `fabric/src/main/resources/iron_oak.accesswidener` |
+| Mixins | **config exists but is empty** — no mixin classes, no `mixin` package | `fabric/src/main/resources/iron-oak.mixins.json` |
 | Resource generator | a Go helper that emits repetitive resource JSON | `scripts/generate.go` |
 | CI | GitHub Actions, `./gradlew build` on Linux + Windows | `.github/workflows/main.yml` |
+
+`common/` exists as an Architectury subproject but carries no mod code yet — see the
+phase-plan comment on issue #21 for the plan that changes that. (`docs/ops/multiloader.md`
+has the full loaders-and-version-lines decision, but only on `main` so far.)
 
 Version facts live in **`gradle.properties`** and nowhere else — `minecraft_version`,
 `loader_version`, `loom_version`, `fabric_version`, `mod_version`. Read them before you
@@ -75,10 +79,11 @@ first: https://mappings.dev
 
 ## The JDK is the single most common way to waste an hour here
 
-**Fabric Loom does not run on JDK 22+.** This machine's default is JDK 25 (sdkman), so a
-bare `./gradlew build` fails before it compiles anything, and the error does not say
-"wrong JDK" — it surfaces as a Gradle/Loom internal failure that reads like a broken
-build. The build itself is fine.
+**Loom does not run on JDK 22+ — Architectury Loom included, since #70 it shares Fabric
+Loom's codebase and version line.** This machine's default is JDK 25 (sdkman), so a bare
+`./gradlew build` fails before it compiles anything, and the error does not say "wrong JDK"
+— it surfaces as a Gradle/Loom internal failure that reads like a broken build. The build
+itself is fine.
 
 Run every Gradle command with JDK 21:
 
@@ -108,7 +113,7 @@ Add these when your change touches what they cover:
 
 ```bash
 ./gradlew runDatagen            # if you changed ModDataGenerator or anything it emits
-./gradlew runClient             # if you changed rendering, or anything the tests do not reach
+./gradlew :fabric:runClient     # if you changed rendering, or anything the tests do not reach
 ```
 
 There **is** a test suite, in two layers, and
@@ -116,13 +121,14 @@ There **is** a test suite, in two layers, and
 Read it before you write one — it is short, and it names the mistakes this codebase is set
 up to make.
 
-- **`src/test/`** — plain JUnit with the loader booted and no world, via
+- **`fabric/src/test/`** — plain JUnit with the loader booted and no world, via
   `fabric-loader-junit`. Milliseconds, and `./gradlew build` runs it, so a failing unit
   test fails the build. This is where names, ids, maps, committed resource files and
   numbers belong, and where the 6×3 matrix guard lives.
-- **`src/gametest/`** — a headless server, a real world and actual ticking, via
+- **`fabric/src/gametest/`** — a headless server, a real world and actual ticking, via
   `fabric-gametest-api-v1`. Seconds, run by `./gradlew runGametest`, which writes JUnit XML
-  to `build/gametest/report.xml`. Its own source set, so none of it ships in the mod jar.
+  to `fabric/build/gametest/report.xml`. Its own source set, so none of it ships in the mod
+  jar.
 
 "Green" is a stronger signal than it was, but it is not everything. **Rendering, particles,
 sound and feel are still checked only by a human**, and so is anything the gametests do not
@@ -152,29 +158,32 @@ locally and report it in the PR; never commit red.**
   shipped **2**, so the check is an order of magnitude, not an exact count:
 
   ```bash
-  unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
+  unzip -l "$(find fabric/build/libs -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev-shadow.jar')" | tail -1
   ```
 
-  Not `build/libs/iron-oak-*.jar` — that glob also matches the sources jar, and `unzip -l`
-  over two archives prints `0 files`, which reads like the very bug you are checking for.
+  Not `fabric/build/libs/iron-oak-*.jar` — that glob also matches the sources jar, and
+  `unzip -l` over two archives prints `0 files`, which reads like the very bug you are
+  checking for. Since #70, `common/` has its own (empty) `build/libs/`, and `fabric/`'s own
+  `build/libs/` also holds a `-dev-shadow` intermediate jar ahead of the shadowed, remapped
+  one — `find .` or a bare glob now matches more than the one jar that matters.
   Details in [`docs/ops/release.md`](docs/ops/release.md).
 
 ---
 
 ## Generated resources: regenerate, never hand-edit
 
-`src/main/generated/` is **output**, and it is committed. Editing it by hand works until
-the next `runDatagen` silently reverts your change.
+`fabric/src/main/generated/` is **output**, and it is committed. Editing it by hand works
+until the next `runDatagen` silently reverts your change.
 
 1. Change `init/ModDataGenerator.java` (or the providers it registers).
 2. `./gradlew runDatagen`.
-3. Commit `src/main/generated/` **together with** the Java change.
+3. Commit `fabric/src/main/generated/` **together with** the Java change.
 
-`src/main/resources/data/` is the opposite: hand-written and authoritative. Recipes, loot
-tables and tags live there. `scripts/generate.go` emits repetitive resource JSON — if you
-are about to write the twelfth near-identical file by hand, read that script first.
+`fabric/src/main/resources/data/` is the opposite: hand-written and authoritative. Recipes,
+loot tables and tags live there. `scripts/generate.go` emits repetitive resource JSON — if
+you are about to write the twelfth near-identical file by hand, read that script first.
 
-Do not commit `src/main/generated/.cache` (gitignored).
+Do not commit `fabric/src/main/generated/.cache` (gitignored).
 
 ---
 
@@ -250,13 +259,13 @@ Minecraft half in the same commit as the version bump, never separately.
 The Java here is small — twenty-odd files, none longer than a few hundred lines — so reading
 is cheap and you should not be shy about it. The expensive mistakes in this repo are elsewhere:
 
-- **Never open `src/main/generated/`, `build/`, or `.gradle/`.** Generated worldgen JSON is
-  bulky and tells you nothing a provider class won't. Grep it at most.
+- **Never open `fabric/src/main/generated/`, `build/`, or `.gradle/`.** Generated worldgen
+  JSON is bulky and tells you nothing a provider class won't. Grep it at most.
 - **`ModBlocks.java` and `ModItems.java` are long but shallow** — the same three lines
   repeated across the matrix. Read one arm, not all eighteen.
 - **The `java` skill is the checklist; `docs/strategy/java.md` is the reasoning.** Invoke the
   skill before you write Java here — it is short and it names the traps. Read `java.md` when
-  you need to know why a rule exists, or before your first non-trivial change to `src/`.
+  you need to know why a rule exists, or before your first non-trivial change to `fabric/src/`.
 - **Do not read the decompiled Minecraft sources to answer an API question.** Use the
   `minecraft-fabric-lookup` skill — it resolves the question against the jar in seconds.
   Extract one class if you must read vanilla source; opening the sources jar to browse
@@ -295,9 +304,9 @@ All Gradle commands assume `JAVA_HOME` points at JDK 21 (see above).
 
 | Purpose | Command |
 |---|---|
-| Build the jar | `./gradlew build` → `build/libs/iron-oak-<version>.jar` |
-| Launch the client | `./gradlew runClient` |
-| Launch a server | `./gradlew runServer` |
+| Build the jar | `./gradlew build` → `fabric/build/libs/iron-oak-<version>.jar` |
+| Launch the client | `./gradlew :fabric:runClient` — **not** unqualified `runClient`; `common` has its own empty, mod-free client run and Gradle will happily launch that one instead |
+| Launch a server | `./gradlew :fabric:runServer` (same reason) |
 | Regenerate data | `./gradlew runDatagen` |
 | Clean | `./gradlew clean` |
 | Refresh after a version bump | `./gradlew --refresh-dependencies build` |
@@ -327,5 +336,6 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
 | 2026-08-21 | 1.4 | Staleness sweep (#47). The file and line counts and the jar's "~347 files" are gone — all three had drifted, and the empty-jar bug shipped 2 files, so the check is an order of magnitude. The jar command no longer uses a glob that matches the sources jar too. |
 | 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
+| 2026-08-22 | 1.5 | Architectury Loom replaces Fabric Loom; the source tree moved to `fabric/`, alongside a new empty `common/` subproject (#70, phase 1 of #21). Every `src/` path in this file gained a `fabric/` prefix. `runClient` and `runServer` now need the `:fabric:` qualifier — `common` has its own empty, mod-free versions of both and Gradle will run those instead if you leave it off. |
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-08-22*
