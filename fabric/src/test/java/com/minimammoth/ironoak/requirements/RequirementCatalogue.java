@@ -194,7 +194,7 @@ final class RequirementCatalogue {
     static List<Citation> citations() {
         var citations = new ArrayList<Citation>();
         for (var layer : List.of("test", "gametest")) {
-            var root = repoRoot().resolve("src/" + layer + "/java");
+            var root = repoRoot().resolve("fabric/src/" + layer + "/java");
             try (var java = Files.walk(root).filter(p -> p.toString().endsWith(".java"))) {
                 for (var source : java.toList()) {
                     for (var line : lines(source)) {
