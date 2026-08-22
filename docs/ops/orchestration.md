@@ -232,6 +232,11 @@ Drain the queue, land the bump, resume. Plan: [`version-migration.md`](version-m
 
 - **Commit and PR format** is defined once, in [`AGENTS.md`](../../AGENTS.md#git). Point
   there; do not restate it.
+- **A PR closing several issues needs one keyword each** — `Closes #a, closes #b`. A
+  comma-separated list after a single keyword closes only the first, and the others stay open
+  with their work merged, which no later round detects: they are not stuck, not dispatchable
+  (work exists) and carry no signal. Verify after every multi-issue merge that each issue
+  actually closed.
 - **Green means the CI command list**, which lives in `AGENTS.md` and is a copy of
   `.github/workflows/main.yml`. Whoever changes the workflow updates it in the same commit,
   or the gap migrates silently into every future briefing. `worker_done` requires

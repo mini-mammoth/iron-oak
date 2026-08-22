@@ -204,6 +204,9 @@ deps(build): upgrade to Minecraft 1.21.11 (#31)
 - Push that branch and open a PR against `main`. The PR body contains `Closes #<n>` so the
   merge closes the issue — unless your briefing explicitly asks for `Refs #<n>`
   (multi-phase issues must survive until the last phase lands).
+- **One closing keyword per issue.** GitHub honours the keyword only for the number directly
+  after it, so `Closes #57, #50, #52` closes **#57 alone** and leaves the rest open with their
+  work already merged. Write `Closes #57, closes #50, closes #52`.
 - Do **not** force-push and do **not** rewrite history.
 - Do not close issues by hand while a PR is open.
 - Commit **per work item**, not once at the end: incremental commits survive a context
