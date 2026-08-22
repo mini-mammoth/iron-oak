@@ -27,7 +27,7 @@ Migration mechanics for a single line: [`version-migration.md`](version-migratio
 |---|---|---|---|
 | 1.21.11 | 1.21.11 | `v1.21.11` | Fabric |
 | 26.x | 26.1, 26.1.1, 26.1.2, **26.2** | `main` | Fabric, then NeoForge |
-| 1.21.1 | 1.21, 1.21.1 | `v1.21.1` (#54) | Fabric **and** NeoForge |
+| 1.21.1 | 1.21.1 | `v1.21.1` | Fabric; NeoForge via #21 |
 
 Three trees for four lines, because **26.1 and 26.2 share one**. Reach: **~60 %
 (conservative) to ~72 % (recent-window)** of Fabric demand, plus a NeoForge audience that
@@ -47,7 +47,7 @@ version's release tag when `main` moves past it.
 |---|---|---|---|
 | 26.x | `main` | yes | yes |
 | 1.21.11 | `v1.21.11` | yes | yes |
-| 1.21.1 | `v1.21.1` (#54) | wired, waiting for the branch | once cut |
+| 1.21.1 | `v1.21.1` | yes | yes |
 | 1.20.4 | — | — | archived |
 | 1.19.x | `1.19` | — | archived |
 | 1.18.2 | `v1.18.x` | — | archived |
@@ -55,9 +55,10 @@ version's release tag when `main` moves past it.
 - **Not `v1.21.x`.** The wildcard stopped working when this decision put two supported lines
   inside the 1.21 family; 1.21.1 and 1.21.11 have different vanilla API surfaces.
 - **CI builds `main` plus every supported line and nothing else.** Both branch lists in
-  `.github/workflows/main.yml` are that set. `v1.21.1` is declared before its branch exists —
-  a `push` filter for a missing branch never fires, so the line is wired the moment #54 cuts
-  it, and nobody has to remember two hand-synced lists.
+  `.github/workflows/main.yml` are that set. `v1.21.1` was declared there *before* its branch
+  existed, deliberately — a `push` filter for a missing branch never fires, so the line was
+  already wired the moment #54 cut it, and nobody had to remember two hand-synced lists. Do the
+  same for the next line.
 - **A frozen line is never byte-identical to its release tag.** It carries at least the commit
   adding itself to its own CI lists, because a `push` trigger evaluates the workflow on the
   pushed ref.
@@ -306,10 +307,15 @@ versions thrash the shared Loom cache. So this is a queue, not a fan-out.
 1. **#52 — cut `v1.21.11` and build it in CI.** ✅ done. Had to land before `main` moved to
    26.2, or the 1.21.11 tree would exist only as a tag and every backport would start with
    archaeology.
-2. **#20 — port `main` to 26.2.** The largest single line; all 52 compile errors are
-   enumerated in the issue.
-3. **26.1 announced alongside 26.2** — done and verified in-game (#20).
-4. **#54 — the 1.21.1 line**, cut from the 1.21.11 release tag and ported *down*.
+2. **#20 — port `main` to 26.2.** ✅ done, verified in-game.
+3. **26.1 announced alongside 26.2** — ✅ done and verified in-game (#20).
+4. **#54 — the 1.21.1 line** — ✅ done. Cut from the 1.21.11 release tag and ported *down*; CI
+   green on both OSes and both layers, verified in-game.
+
+   > A version line is delivered by its **branch existing**, never by a merge into `main`.
+   > #68 opened a PR from `v1.21.1` into `main` and would have taken the frontier backwards from
+   > 26.2 to 1.21.1 across 90 files; GitHub's conflict marker was the only thing that stopped
+   > it. Only the docs recording the line belong on `main`.
 5. **#21 — the Architectury/NeoForge conversion**, piloted on 1.21.1, then applied to 26.x.
 
 4 and 5 are separate tickets on purpose: doing the `DeferredRegister` rewrite while also
