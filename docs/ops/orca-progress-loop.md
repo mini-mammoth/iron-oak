@@ -108,6 +108,14 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
    workers send `worker_done` to the handle that dispatched them. Observed: 4 finished
    workers, `check` = 0. Tickets then look "in progress" and stay locked forever.
 
+   THE INBOX IS SHARED ACROSS PROJECTS. One Orca runtime serves every repo on the machine, so
+   `inbox` returns other boards' traffic too — measured: 4 of 20 entries belonged to this repo,
+   16 to another, including unanswered `question` and `escalation` messages about files that do
+   not exist here. FILTER BY YOUR OWN RUN ID AND YOUR OWN WORKER HANDLES, never by ticket
+   number alone: issue numbers collide across repos, so a number filter will hand you a foreign
+   ticket that looks plausible. Never answer a question or resolve an escalation whose handle
+   you did not dispatch — that is another supervisor's work, and its board is not yours.
+
    PER OPEN PR OF AN IN-SCOPE TICKET, read the review state:
      gh pr view <pr> --json reviewDecision,reviews
      gh api repos/mini-mammoth/iron-oak/pulls/<pr>/comments    # line-level
@@ -220,15 +228,34 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
    - TURN ENDED EARLY: no error, tail ends at the prompt. The model finished its turn without
      delivering — observed with every acceptance criterion implemented but no commit, no PR,
      no worker_done, then 49 minutes idle.
-   - COMPACTION LOOP: the counter FELL. It can only fall if the context was compacted; the
-     worker then re-reads what it already read, fills the window, compacts again. From
-     outside this looks like work — running, tail moving, no error — and never delivers.
-     Compare the counter against LAST ROUND'S VALUE, not against zero. Fallen once is normal.
-     Fallen twice with no commit is the loop: do NOT follow up (that grows the context that IS
-     the problem) — harvest, then re-cut the remainder SMALLER as its own ticket.
-   The counter is coarse: it rounds to whole `k`, so a worker at 90k looks flat for minutes
-   while working. Better signals: `latestCursor` from `orca terminal read --json` between two
-   reads (unchanged = no output), and the newest file mtime in the worktree.
+   - COMPACTION LOOP: the context was compacted and the worker re-reads what it already read,
+     fills the window, compacts again. From outside this looks like work — running, tail
+     moving, no error — and never delivers. Detect it from the WORKTREE: output keeps coming
+     (latestCursor moves) while `git log --oneline` gains NO commit across rounds. One
+     compaction is normal. Two rounds of output with no new commit is the loop: do NOT follow
+     up (that grows the context that IS the problem) — harvest, then re-cut the remainder
+     SMALLER as its own ticket.
+   HEARTBEATS ARE THE LIVENESS SIGNAL. Workers emit `heartbeat` messages carrying a `phase`
+   (`investigating`, `implementing`, `reviewing`, `waiting`) — a first-class Orca signal, not a
+   pane artefact, and emitted by every agent this board has used. Read them from `inbox`,
+   filtered to your own handles:
+     orca orchestration inbox --json     # type == heartbeat, from_handle == your worker
+   A recent heartbeat means alive; its `phase` says what it thinks it is doing. Absence over
+   several rounds is the stall signal.
+
+   THE WORKTREE IS THE PROGRESS SIGNAL, and it is what proves anything:
+     - status line: `vibe` printed `0/200k`, `claude` prints `↓ 24.7k tokens` with no
+       denominator, so a pattern for one never fires for the other
+     - `latestCursor`: advanced with `vibe`, sits fixed at `5` for `claude`, so cursor movement
+       reports every Claude worker as idle
+   Both measured on real dispatches. So heartbeats answer "alive" and the worktree answers
+   "progressing" — neither needs the pane:
+     git -C <worktree> log --oneline <base>..HEAD    # a commit is proof
+     git -C <worktree> status --porcelain            # uncommitted progress
+     find <worktree> -type f -not -path '*/.git/*' -not -path '*/build/*' \
+       -newermt '-3 minutes'                         # is anything still being written?
+   Read the tail with a human eye when diagnosing — a spinner line with an elapsed time means
+   working, a bare prompt means the turn ended — but never automate a check on its shape.
 
    [iron-oak] A LONG FIRST BUILD IS NOT A STALL. Loom downloads and decompiles Minecraft
    before anything compiles — minutes, more after a version bump — and the counter can sit
@@ -269,9 +296,10 @@ COLLISION-FREEDOM HAS TOP PRIORITY: at most one active worker per ticket.
         `claude --model sonnet --permission-mode bypassPermissions` — never `vibe`, never the
         runtime default.
      c2) check the fresh worktree's base (below)
-     d) VERIFY DELIVERY: `orca terminal read` — counter > 0. `--inject` can report ok and move
-        the task to `dispatched` with nothing in the TUI. No proof = no worker: re-deliver via
-        the recipe in orchestration.md.
+     d) VERIFY DELIVERY: `orca terminal read` and look at the tail — it must visibly show the
+        briefing being read or work starting. Do NOT grep for a token counter and do NOT use
+        `latestCursor`; see "judge from the worktree" below. No proof = no worker: re-deliver via the recipe in
+        orchestration.md.
         CHECK FIRST, THEN RE-DELIVER — NEVER BOTH. A `terminal send` into a terminal that
         already has the briefing runs it a SECOND time; the worker redoes finished work and
         may force-push over its own accepted commit, invalidating your acceptance.

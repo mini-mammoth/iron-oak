@@ -152,7 +152,8 @@ Hence step 4, every time.
 ### Dispatch delivery is not proven by `status: dispatched`
 
 `dispatch --inject` has returned `ok`, moving the task to `dispatched`, while the worker's TUI
-stayed at `0/200k`. A supervisor that trusts the status reports running workers that are idle
+stayed idle (observed under `vibe`, whose status line read `0/200k`). A supervisor that trusts
+the task status reports running workers that are idle
 and loses a whole interval.
 
 **Deliver with `terminal send`, not `--inject`.** `--inject` has failed on every dispatch
@@ -172,9 +173,26 @@ after delivery always shows zero and is not evidence.
   set. Delivering that preamble gives the worker no `worker_done` authority — register a fresh
   dispatch instead of reusing the dead one.
 
-- **The counter reads `0/200k` — no `k` before the slash.** A pattern like `[0-9]+k/200k`
-  does not match zero, returns empty, and a branch that reads empty as "not zero" reports a
-  worker that never started. Match `[0-9]+k?/200k` and treat an empty read as zero.
+- **Never match the agent's status-line format.** It is agent-specific and changes under you.
+  `vibe` printed `0/200k`; `claude` prints `↓ 24.7k tokens` with no denominator at all, so a
+  pattern written for one silently never fires for the other — a poll loop then hangs, or worse,
+  reports a working worker as dead. Measured the day workers moved to Claude Sonnet.
+  **Liveness comes from `heartbeat` messages** in `orca orchestration inbox --json` — a
+  first-class Orca signal with a `phase`, emitted by every agent this board has used, and
+  independent of any pane rendering. Filter the inbox to your own run and handles: it is shared
+  across every repo on the machine, and issue numbers collide.
+
+  **Progress comes from the worktree, not the pane:**
+  ```bash
+  git -C <wt> log --oneline <base>..HEAD          # a commit is proof
+  git -C <wt> status --porcelain                  # uncommitted progress
+  find <wt> -type f -not -path '*/.git/*' -not -path '*/build/*' -newermt '-3 minutes'
+  ```
+  `latestCursor` from `orca terminal read --json` is **not** portable either: it advanced with
+  `vibe` and sits fixed at `5` for `claude`, so cursor movement reports every Claude worker as
+  idle. Measured on the #54 dispatch. Read the tail with a human eye when diagnosing — a
+  spinner line with an elapsed time means working, the bare prompt means the turn ended — but
+  do not build an automated check on either the cursor or the tail's shape.
 - **`tui-idle` does not mean the TUI accepts input, and does not explain the failures.**
   `wait --for tui-idle` has reported `ok` while the tail still showed `Initializing…`. But the
   race theory was disproved in the same run: another dispatch was provably past init and
@@ -254,9 +272,10 @@ Drain the queue, land the bump, resume. Plan: [`version-migration.md`](version-m
 - **Brief positively, never through a negation.** "Do NOT open a PR with `Closes #n`, use
   `Refs #n`" was read as "do not open a PR at all": `worker_done` with no PR. State the
   required action as the only imperative, then put prohibitions in a separate sentence.
-- **One briefing per work item — 200k is a hard limit.** Past it the model compacts, re-reads,
-  compacts again: a loop that looks like work and never delivers. Detection signal is a
-  **falling** token counter.
+- **One briefing per work item — the context window is a hard limit.** Past it the model
+  compacts, re-reads, compacts again: a loop that looks like work and never delivers. Detect it
+  from the worktree, not from a counter — **no new commit across rounds while the pane keeps
+  producing output** is the shape, whatever the agent's status line looks like.
   - Split a multi-item ticket into several tickets dispatched in sequence, rather than one
     briefing with a numbered list. Rule of thumb: at most two files to read.
   - Require incremental commits per work item, so progress survives compaction and can be
