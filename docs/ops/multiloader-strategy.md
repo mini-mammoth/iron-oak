@@ -117,6 +117,30 @@ Its other findings survive the change intact and are worth carrying forward:
 
 ---
 
+## Quilt is free, and we are probably already leaving it on the table
+
+**Quilt reads `fabric.mod.json`.** It needs no manifest of its own, no subproject and no code.
+Verified on a shipped jar: Seaworthy Boats is listed for Quilt on Modrinth and contains **no
+`quilt.mod.json` and zero Quilt classes** — the Fabric jar simply loads.
+
+It is also current: Quilt's meta knows game versions up to `26.3-pre-2` and loader
+`0.31.0-beta.4`, so it is ahead of everything we ship. And it is standard practice — **81 of
+100** sampled Fabric+NeoForge mods tag Quilt.
+
+We do not. `modLoaders.add("fabric")` is the whole declaration in `build.gradle`.
+
+**The failure mode is metadata, not the loader.** #11 — our only Quilt report — is a player on
+Quilt 0.17.4 whose log said the mod wanted 1.19 while the Modrinth file was marked
+1.18-compatible. That is a version-declaration mismatch, the same class of bug as the unbounded
+`"minecraft": ">=26.1"` corrected before the 26.2 release. Quilt surfaces it earlier than Fabric
+because it validates harder.
+
+So: adding Quilt is one line, and it is worth **verifying rather than asserting** — the
+ride-along recipe in [`multiloader.md`](multiloader.md#how-to-verify-a-ride-along-line) applies
+unchanged. Run the shipped jar on a Quilt instance once; if it loads, tick the box.
+
+---
+
 ## Open, deliberately
 
 **Packaging** — separate jars per loader, or one jar carrying `fabric.mod.json`,
