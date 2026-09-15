@@ -249,6 +249,18 @@ it plainly when you did not port to one.
 `mod_version` in `gradle.properties` is `<mod>+<mc>` (e.g. `1.2.1+1.20.4`). Bump the
 Minecraft half in the same commit as the version bump, never separately.
 
+**The two halves move for different reasons, and a port moves only one of them.**
+
+- The **`+mc` half** tracks the Minecraft version. A port changes this and nothing else.
+- The **mod half** tracks what the *player* gets: a new mechanic, a new matrix arm, a
+  behaviour fix. A pure port — API renames, a reshaped recipe serializer, a render layer
+  moving from code into model JSON — ships the same features and keeps the same mod version.
+
+So the same mod version legitimately appears on several lines: `1.2.1` shipped as both
+`v1.2.1` and `v1.2.1+1.18.2`, and `1.3.0` ships as `1.3.0+1.21.11`, `1.3.0+1.21.1` and
+`1.3.0+26.2`. That is the format working as intended — and it tells a player at a glance that
+the three jars are the same mod, not that the newest line got features the others lack.
+
 ---
 
 ## Scope discipline
