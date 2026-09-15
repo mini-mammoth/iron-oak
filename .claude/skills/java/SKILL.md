@@ -1,6 +1,6 @@
 ---
 name: java
-description: The rules for writing Java in this mod — modern-Java style (var by default, arrow switches, pattern-matching instanceof), plain Registry.register in init/, the class-load order that registration depends on, the block-entity sync rule, where null is tolerated, and what needs a ticket instead of a decision. Use before writing or changing anything under src/, when adding a block, item, recipe or block entity, when touching an interaction hook or anything the renderer reads, when deciding between var and an explicit type, or when a registration produces a null or a texture goes missing. Triggers on "add a block", "add an item", "register", "DeferredRegister", "block entity", "sync", "markUpdated", "ActionResult"/"InteractionResult", "@Nullable", "should I use var", "is this idiomatic here", and any new arm of the 6x3 matrix.
+description: The rules for writing Java in this mod — modern-Java style (var by default, arrow switches, pattern-matching instanceof), registration declared in common/ and performed per loader, the class-load order that registration depends on, the block-entity sync rule, where null is tolerated, and what needs a ticket instead of a decision. Use before writing or changing anything under src/, when adding a block, item, recipe or block entity, when touching an interaction hook or anything the renderer reads, when deciding between var and an explicit type, or when a registration produces a null or a texture goes missing. Triggers on "add a block", "add an item", "register", "DeferredRegister", "block entity", "sync", "markUpdated", "ActionResult"/"InteractionResult", "@Nullable", "should I use var", "is this idiomatic here", and any new arm of the 6x3 matrix.
 ---
 
 # Writing Java in Iron Oak
@@ -69,9 +69,10 @@ Everything the game must know about lives in `com.minimammoth.ironoak.init` as a
 class: a private constructor, `public static final` fields, a private `register(...)` helper
 ending in `Registry.register(BuiltInRegistries.X, key, value)`.
 
-- **No `DeferredRegister`.** That is a Forge/NeoForge construct for loaders whose registries
-  open only during an event. Fabric's registries are open during mod initialization, so
-  `Registry.register` at init time *is* the idiom.
+- **Registration is declared in `common/` and performed per loader**, and an entry is a
+  supplier — read it with `.get()`. Forge and NeoForge open their registries only during an
+  event; Fabric's are open at init. Declaring once is what keeps the 6×3 matrix in one place
+  across platforms. Changed by #21/#74; `docs/strategy/java.md` has the reasoning.
 - **Settings carry their own registry key** since 1.21.2, so construction and registration
   are one step and cannot be split. Build the `ResourceKey` first, `setId(key)` on the
   settings, register the result.
