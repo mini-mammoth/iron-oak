@@ -1,249 +1,65 @@
 plugins {
-    // Minecraft is still obfuscated up to 1.21.11, so the -remap variant is the right
-    // plugin. From 26.1 onwards Minecraft ships unobfuscated and the plain
-    // 'net.fabricmc.fabric-loom' plugin is used instead.
-    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
-    id 'maven-publish'
-    id 'me.modmuss50.mod-publish-plugin' version '2.2.0'
+    // Applied per-subproject below, not here: `common` and `fabric` each need their own
+    // Loom instance. 1.21.1 is still obfuscated, so this is the plain "dev.architectury.loom"
+    // id — see the comment on `mappings loom.officialMojangMappings()` in fabric/build.gradle
+    // for why that matters, and why this is not "dev.architectury.loom-no-remap".
+    id 'dev.architectury.loom' version "${loom_version}" apply false
+    id 'architectury-plugin' version "${architectury_plugin_version}"
 }
 
-version = project.mod_version
-group = project.maven_group
-
-base {
-    archivesName = project.archives_base_name
+architectury {
+    minecraft = project.minecraft_version
 }
 
-repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-}
-
-dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-    // Layer 1 of docs/strategy/testing.md: plain JUnit with the loader booted and no
-    // world. The version is pinned to loader_version on purpose — loader-junit boots the
-    // very loader it ships against, and a mismatch fails at class-load time with a stack
-    // trace that blames Knot rather than the version.
-    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
-
-    // fabric-loader-junit pulls in the Jupiter engine but not the parameterised runner,
-    // and the 6x3 matrix tests want one named case per arm rather than one case that
-    // stops at the first bad arm. The BOM keeps both halves on the version loader-junit
-    // was built against.
-    testImplementation platform("org.junit:junit-bom:5.10.0")
-    testImplementation "org.junit.jupiter:junit-jupiter"
-}
-
-processResources {
-    def version = project.version
-    inputs.property "version", version
-    filteringCharset "UTF-8"
-
-    filesMatching("fabric.mod.json") {
-        expand "version": version
-    }
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDirs += [
-                    'src/main/generated'
-            ]
-        }
-    }
-
-    // The @Requirement annotation and nothing else. It belongs to neither test layer and
-    // has to compile in both, so it cannot live in either of their source sets: layer 1 is
-    // src/test and layer 2 is src/gametest, and the two share no classpath.
-    //
-    // Deliberately dependency-free — no Minecraft, no JUnit, no Loom involvement. The
-    // annotation is RetentionPolicy.SOURCE, so it is erased at compile time and appears on
-    // no runtime classpath and in no artefact; both source sets below take it as a
-    // compile-only dependency for that reason.
-    testsupport {
-    }
-
-    test {
-        compileClasspath += sourceSets.testsupport.output
-    }
-
-    // Layers 2 and 3 of docs/strategy/testing.md. A source set of its own rather than
-    // src/test, because the two kinds of test have nothing in common: one is milliseconds
-    // and runs on every build, the other needs a game and a run configuration. It also
-    // means the `jar` task — which only ever packages `main` — cannot ship any of it.
-    gametest {
-        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output + sourceSets.testsupport.output
-        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
-    }
-}
-
-loom {
-    accessWidenerPath = file("src/main/resources/iron_oak.accesswidener")
-
-    // Loom needs to know the gametests are a mod of their own, or their classes are not
-    // remapped against the mod they test.
-    mods {
-        register("iron_oak") {
-            sourceSet sourceSets.main
-        }
-        register("iron_oak_gametest") {
-            sourceSet sourceSets.gametest
-        }
-    }
-
-    runs {
-        // This adds a new gradle task that runs the datagen API: "gradlew runDatagen"
-        //
-        // `inherit client`, not `server`. Fabric has two datagen entry points, and the
-        // model providers only exist on one of them: ModelProviderMixin — the mixin that
-        // routes FabricModelProvider's generateBlockStateModels/generateItemModels — is
-        // declared under "client" in fabric-data-generation-api-v1.client.mixins.json.
-        // On a server-side run that mixin is not applied, so a FabricModelProvider is
-        // silently bypassed and vanilla's own generators run in its place. Nothing fails;
-        // the output is simply wrong. Client-side, Fabric's MinecraftMixin runs datagen
-        // and exits before the game window opens.
-        datagen {
-            inherit client
-            name "Data Generation"
-            vmArg "-Dfabric-api.datagen"
-            vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
-            vmArg "-Dfabric-api.datagen.modid=iron_oak"
-
-            runDir "build/datagen"
-        }
-
-        // Layer 2: a headless server that places a structure per test, ticks the world and
-        // asserts on real block and entity state — "gradlew runGametest".
-        //
-        // Plain `server`, with no gametest main class of its own: fabric-gametest-api-v1
-        // mixes into net.minecraft.server.Main and, when fabric-api.gametest is set,
-        // diverts into its own headless runner and exits with the result. The report is
-        // JUnit XML, which is what makes these CI-reportable.
-        gametest {
-            server()
-            name "Game Test"
-            source "gametest"
-
-            vmArg "-Dfabric-api.gametest"
-            vmArg "-Dfabric-api.gametest.report-file=${file("build/gametest/report.xml")}"
-
-            runDir "build/gametest/run"
-        }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
-}
-
-// `./gradlew build` runs this, so a failing test fails the build — which is the whole
-// point of #40. See docs/strategy/testing.md for what belongs here and what does not.
-test {
-    useJUnitPlatform()
-
-    // fabric-loader-junit boots Knot from a JUnit LauncherSessionListener and defaults to
-    // the client side. Nothing under src/test touches rendering, and a server-side boot
-    // keeps client-only mixins out of the picture, so CI needs no display.
-    systemProperty "fabric.side", "server"
-
-    testLogging {
-        events "failed"
-        exceptionFormat "full"
-    }
-}
-
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    withSourcesJar()
-
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-jar {
-    def projectName = project.name
-    inputs.property "projectName", projectName
-
-    from("LICENSE") {
-        rename { "${it}_$projectName" }
-    }
-}
-
-// Uploads the remapped jar to Modrinth and CurseForge. Run with `./gradlew publishMods`;
-// the release workflow does that for you on a published GitHub Release.
-//
-// Tokens come from the environment and are never stored here:
-//   MODRINTH_API_KEY, CURSEFORGE_API_KEY
-// A missing token does not fail the build — it downgrades that platform to a dry run,
-// which writes the payload to build/publishMods/ instead of uploading. That way a
-// half-configured run cannot half-publish a release, and the release workflow needs no
-// dry-run switch of its own: it simply withholds the tokens.
-publishMods {
-    file = remapJar.archiveFile
-    displayName = "Iron Oak ${project.mod_version}"
+allprojects {
+    group = project.maven_group
     version = project.mod_version
-    // `type` is a ReleaseType enum, not a String — the property has to be converted.
-    type = me.modmuss50.mpp.ReleaseType.valueOf(project.publish_type)
-    modLoaders.add("fabric")
-
-    // Set by the release workflow from the GitHub Release body.
-    changelog = providers.environmentVariable("CHANGELOG")
-            .orElse("See https://github.com/mini-mammoth/iron-oak/releases")
-
-    def gameVersions = project.publish_game_versions.split(",").collect { it.trim() }
-
-    modrinth {
-        projectId = project.modrinth_id
-        accessToken = providers.environmentVariable("MODRINTH_API_KEY")
-        minecraftVersions.addAll(gameVersions)
-        requires("fabric-api")
-        // Per platform, not global: a missing Modrinth token must not silently stop the
-        // CurseForge upload, and vice versa.
-        dryRun = providers.environmentVariable("MODRINTH_API_KEY").getOrNull() == null
-    }
-
-    // Guarded, not commented out: until someone fills in curseforge_id, Modrinth must
-    // still publish on its own rather than the task failing on an empty project id.
-    if (project.curseforge_id) {
-        curseforge {
-            projectId = project.curseforge_id
-            projectSlug = "iron-oak"
-            accessToken = providers.environmentVariable("CURSEFORGE_API_KEY")
-            minecraftVersions.addAll(gameVersions)
-            // CurseForge rejects a release that declares neither environment.
-            client = true
-            server = true
-            requires("fabric-api")
-            dryRun = providers.environmentVariable("CURSEFORGE_API_KEY").getOrNull() == null
-        }
-    }
 }
 
-// configure the maven publication
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            from components.java
-        }
+subprojects {
+    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'architectury-plugin'
+    apply plugin: 'maven-publish'
+
+    repositories {
+        // Add repositories to retrieve artifacts from in here.
+        // You should only use this when depending on other mods because
+        // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     }
 
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
+    dependencies {
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+        mappings loom.officialMojangMappings()
+    }
+
+    java {
+        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+        // if it is present.
+        // If you remove this line, sources will not be generated.
+        withSourcesJar()
+
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release = 21
+    }
+
+    // configure the maven publication
+    publishing {
+        publications {
+            create("mavenJava", MavenPublication) {
+                from components.java
+            }
+        }
+
+        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+        repositories {
+            // Add repositories to publish to here.
+            // Notice: This block does NOT have the same function as the block in the top level.
+            // The repositories here will be used for publishing your artifact, not for
+            // retrieving dependencies.
+        }
     }
 }

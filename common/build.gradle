@@ -1,0 +1,14 @@
+architectury {
+    common(rootProject.enabled_platforms.split(","))
+}
+
+dependencies {
+    // We depend on Fabric Loader here only to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform. Do not use any other
+    // class from Fabric Loader here — that would defeat the point of a loader-neutral module.
+    //
+    // Nothing else: common carries no mod code and no other dependency this phase. See
+    // AGENTS.md's "6×3 matrix" scope note on #70 — the registration rewrite that needs
+    // Architectury API here is phase 2.
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+}

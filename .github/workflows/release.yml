@@ -156,6 +156,6 @@ jobs:
         with:
           name: publish-${{ github.run_id }}
           path: |
-            build/libs/
-            build/publishMods/
+            fabric/build/libs/
+            fabric/build/publishMods/
           if-no-files-found: warn

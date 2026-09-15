@@ -106,7 +106,7 @@ class RequirementTracingTest {
         for (String gate : requirement.tracedGates()) {
             assertTrue(layers.contains(gate),
                     () -> requirement.id() + " (" + requirement.file() + ") names `" + gate
-                            + "` as a verification gate, but no test in src/" + gate
+                            + "` as a verification gate, but no test in fabric/src/" + gate
                             + " cites it. Either add @Requirement(\"" + requirement.id()
                             + "\") to the test that proves it, or drop `" + gate
                             + "` from its acceptance criteria — the gate list is a claim, not a wish.");
