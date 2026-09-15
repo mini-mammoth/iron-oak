@@ -109,13 +109,27 @@ jobs:
           exit $fail
 
 
-      # Same JDK as the CI build. Loom does not run on JDK 22+, so this pin is load
-      # bearing, not cosmetic. 21 is what Minecraft 1.21.11 targets.
-      - name: setup jdk 21
+      # The JDK is per line, not per repo: 26.x needs 25, the 1.21.x lines need 21 because
+      # Loom does not run on JDK 22+. This workflow fires on a release from ANY branch, so a
+      # hard-coded version is wrong for every line but one — it was pinned to 21 and broke the
+      # 26.2 release with "error: release version 25 not supported".
+      #
+      # `.sdkmanrc` already records the line's JDK and is checked out with the ref, so read it
+      # instead of maintaining a second copy here. Adding a line means nothing in this file.
+      - name: resolve the JDK for this line
+        id: jdk
+        run: |
+          set -euo pipefail
+          version=$(grep '^java=' .sdkmanrc | cut -d= -f2 | cut -d. -f1)
+          [ -n "$version" ] || { echo "::error::no java= entry in .sdkmanrc"; exit 1; }
+          echo "This line builds on JDK $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: setup jdk ${{ steps.jdk.outputs.version }}
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ steps.jdk.outputs.version }}
 
       - name: setup gradle
         uses: gradle/actions/setup-gradle@v4
