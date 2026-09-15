@@ -36,7 +36,7 @@ dependencies {
     // and the 6x3 matrix tests want one named case per arm rather than one case that
     // stops at the first bad arm. The BOM keeps both halves on the version loader-junit
     // was built against.
-    testImplementation platform("org.junit:junit-bom:5.10.0")
+    testImplementation platform("org.junit:junit-bom:6.1.3")
     testImplementation "org.junit.jupiter:junit-jupiter"
 }
 
