@@ -141,6 +141,48 @@ unchanged. Run the shipped jar on a Quilt instance once; if it loads, tick the b
 
 ---
 
+## One jar for every loader: yes, and the cost depends on the line
+
+Three manifests coexist in one file because each loader reads its own and ignores the others —
+`fabric.mod.json`, `META-INF/mods.toml`, `META-INF/neoforge.mods.toml`. 111 of 150 sampled mods
+ship exactly that, and it is plainly nicer for players than three downloads.
+
+What it costs is **not** a style question. It is set by whether the Minecraft version is
+obfuscated, and we ship both kinds. Verified by disassembling Seaworthy Boats' shipped jars:
+
+**Obfuscated lines (`v1.21.11`, `v1.21.1`) — the common code must exist twice.** Fabric runs on
+**intermediary** names, Forge and NeoForge on **official** ones. The same class file cannot
+serve both:
+
+```
+1.21.1 jar, same class in three packages:
+  _common_fabric     3297 B   class_1268, method_11657        <- intermediary
+  _common_neoforge   4312 B   net/minecraft/core/BlockPos     <- official
+  _common_forge      4294 B   net/minecraft/core/BlockPos     <- official
+```
+
+So on these lines the duplication is **mandatory**, not stylistic — it is remapping, and it is
+why the relocated `…_common_<loader>` packages exist at all.
+
+**Unobfuscated lines (`main`, 26.x) — it is nearly free.** Every loader uses official names, so
+the copies are the same class:
+
+```
+26.2 jar, same class in two packages:
+  _common_fabric     4288 B   net/minecraft/core/BlockPos
+  _common_neoforge   4300 B   net/minecraft/core/BlockPos     <- 12 B apart: the package name
+```
+
+One compile of `common/` can serve all loaders there; only the manifests and the thin
+per-loader layers differ.
+
+**Consequence for us:** a single jar is cheap on `main` and needs the duplication machinery on
+the 1.21.x lines. That is an argument for doing the split first and the merge per line
+afterwards — and for not treating "one jar" as one decision. It is two, and `main` is the easy
+one.
+
+---
+
 ## Open, deliberately
 
 **Packaging** — separate jars per loader, or one jar carrying `fabric.mod.json`,
