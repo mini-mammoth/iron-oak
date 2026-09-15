@@ -1,0 +1,20 @@
+plugins {
+    // Same toolchain as fabric/ — see docs/ops/multiloader.md. Loom, not plain java,
+    // because common/ will eventually compile against vanilla Minecraft classes, which
+    // only Loom's minecraft dependency provides. Minecraft 26.1+ ships unobfuscated, so no
+    // remapping layer is needed.
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
