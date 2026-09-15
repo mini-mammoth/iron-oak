@@ -42,6 +42,17 @@ are not secret.
 
 1. **Bump `mod_version`** in `gradle.properties`. The format is `<mod>+<mc>`, e.g.
    `1.3.0+1.21.11` — bump the Minecraft half in the same commit, never separately.
+
+   Which half moves depends on what changed **for the player**:
+
+   | Change | Mod half |
+   |---|---|
+   | New feature — a mechanic, a metal or wood type, a processing step | minor, patch reset |
+   | Bug fixes only, no new functionality | patch |
+   | Pure port to another Minecraft version | **unchanged**; only `+mc` moves |
+
+   So a port ships as `1.3.0+26.2` next to `1.3.0+1.21.11` — same mod, two lines. Full rule
+   and the reasoning: [`AGENTS.md`](../../AGENTS.md#version-branches).
 2. **Check `publish_game_versions`** in `gradle.properties`. This is *not* derived from
    `minecraft_version`: a jar usually loads on more versions than it was built against,
    and the announced range is a judgement call. Comma-separated, no spaces.
