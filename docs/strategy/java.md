@@ -61,12 +61,21 @@ A block can no longer be built as a static constant and registered later, which 
 `ModBlocks.FIRE_BOWL` is now `register("fire_bowl", FireBowlBlock::new, Blocks.CAULDRON)`
 rather than a `new FireBowlBlock(...)` with a matching line further down the file.
 
-**There is no `DeferredRegister` here, and adding one is not an improvement.**
-`DeferredRegister` is a Forge/NeoForge construct: those loaders open their registries only
-during a registration event, so mods must queue their entries and let the loader flush them
-at the right moment. Fabric has no such event. Registries are simply open during mod
-initialization, so `Registry.register` at init time *is* the idiom. A tutorial that shows
-you `DeferredRegister` is a tutorial for a different loader.
+**This changed with the multiloader decision (#21 / #74). Registration is now declared once and
+performed per loader, and an entry is a supplier rather than a live object.**
+
+The reason is not taste. Forge and NeoForge open their registries **only during a registration
+event**, so an entry must be queued and flushed by the loader at the right moment. Fabric has no
+such event — its registries are open during mod initialization, which is why immediate
+`Registry.register` used to be the idiom here and still works on Fabric alone.
+
+With three platforms as the goal, keeping both idioms would mean the 6×3 matrix written out
+twice in two dialects, and a new arm touching both. So `common/` **declares** what exists and
+each loader **performs** the registration its own way. The cost is paid once, in the ~58 places
+that read a registered object and now call `.get()`.
+
+A tutorial that shows you `DeferredRegister` is still a tutorial for a different loader — do not
+copy its Forge specifics. What we take is the shape: declare, then let the platform flush.
 
 ### Class-load order is load-bearing
 

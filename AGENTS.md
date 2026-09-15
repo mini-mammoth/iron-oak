@@ -52,7 +52,7 @@ the mod works this way, and every tunable number with its source location, live 
 | Loader | Fabric | `src/main/resources/fabric.mod.json` |
 | Build | Gradle + **Fabric Loom** | `build.gradle`, `gradle.properties` |
 | Language | Java | `src/main/java/com/minimammoth/ironoak/` |
-| Registration | plain `Registry.register` in `init/Mod*.java` — no DeferredRegister (that is Forge/NeoForge) | `init/` |
+| Registration | **declared once in `common/`, performed per loader, entries are suppliers** — see [`docs/strategy/java.md`](docs/strategy/java.md#registration). Fabric-only history: it used to be immediate `Registry.register` | `common/`, `fabric/init/` |
 | Data generation | Fabric datagen API, custom `runDatagen` Gradle task — the task **inherits `client`**, because Fabric routes model providers through a client-only mixin | `init/ModDataGenerator.java` → `src/main/generated/` |
 | Hand-written resources | recipes, loot tables, tags, models, blockstates, textures, lang | `src/main/resources/{data,assets}/` |
 | Generated resources | worldgen, and the `assets/iron_oak/items/` client item definitions | `src/main/generated/` |

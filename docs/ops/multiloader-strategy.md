@@ -86,13 +86,34 @@ we use.
 
 ## What is hard, and is hard under every strategy
 
-**Registration.** Fabric is `Registry.register`; Forge and NeoForge are `DeferredRegister`.
-Every arm of the 6×3 matrix becomes a supplier rather than a live object, and the class-load
-order that `ModRecipes`' `static {}` block and `ModBlocks`/`ModItems` rely on has to be rebuilt.
+**Registration — decided 2026-09-15: declare once, perform per loader.**
 
-No strategy avoids this. Architectury would have imposed `DeferredRegister` everywhere;
-per-loader subprojects let Fabric keep `Registry.register` and NeoForge use `DeferredRegister`,
-at the cost of two registration layers instead of one.
+Fabric is `Registry.register`; Forge and NeoForge open their registries only during an event.
+Two shapes were on the table:
+
+| | Matrix written | Use sites | Cost |
+|---|---|---|---|
+| each loader in its own idiom | **twice**, two dialects | untouched | a new matrix arm touches both |
+| **declare once, suppliers everywhere** ← chosen | **once**, in `common/` | **~58 gain `.get()`** | Fabric carries a pattern it does not need alone |
+
+Chosen the second, because **Forge is a goal**: at three platforms, writing the 6×3 matrix once
+is worth more than sparing the use sites, and the all-or-nothing matrix rule makes a duplicated
+matrix the more dangerous shape.
+
+Consequences to plan for:
+
+- An entry is a supplier, read with `.get()` — about 58 places.
+- `ModRecipes`' `static {}` block goes. It registers at class load, which is exactly the timing
+  the other loaders do not allow.
+- `BlockBehaviour.Properties.ofLegacyCopy(copyFrom)` needs `copyFrom` as a real block. Fine for
+  vanilla sources; a trap wherever a mod block copies another mod block.
+- The rule this overturns lived in **four** places — `AGENTS.md`, `docs/strategy/java.md`, and
+  twice in the `java` skill. All four changed together; a worker reading one of them stale gets
+  a contradiction it cannot resolve.
+
+**What is not decided here** is the mechanism `common/` uses to reach each loader's registrar.
+That is implementation, and the worker with the code in front of it will choose better than this
+document can.
 
 **Datagen and gametests stay Fabric-only.** Architectury abstracts neither, and neither does
 this. `runDatagen` output is committed and shared with every platform; `runGametest` covers the
