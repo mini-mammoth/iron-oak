@@ -190,6 +190,13 @@ shadowJar {
 
     configurations = [project.configurations.shadowBundle]
     archiveClassifier = "dev-shadow"
+
+    // The Architectury pipeline remaps shadowJar's output, not jar's — anything jar adds
+    // (see the jar block above) never reaches the shipped artefact unless it is added
+    // here too.
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.name}" }
+    }
 }
 
 remapJar {
