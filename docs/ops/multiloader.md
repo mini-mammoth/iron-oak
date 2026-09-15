@@ -170,7 +170,7 @@ went 20.0 → 21.0, and which **this mod does not use**.
 
 So 26.1 is extra entries in `publish_game_versions` plus one `runClient` pass, not a port.
 
-**Verified in-game on 2026-08-21** (#20): the shipped `1.4.0+26.2` jar loads and plays on
+**Verified in-game on 2026-08-21** (#20): the shipped `1.3.0+26.2` jar loads and plays on
 Minecraft 26.1.2. Server reached `Done`, the client created a world and was played through the
 loop, and the log carried no mod-relevant WARN or ERROR.
 

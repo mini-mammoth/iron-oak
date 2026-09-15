@@ -10,7 +10,7 @@ related:
 
 # Version Migration — 1.20.4 → 1.21.11 + 26.2
 
-`main` now targets **Minecraft 26.2** (`mod_version=1.4.0+26.2`), migrated up from
+`main` now targets **Minecraft 26.2** (`mod_version=1.3.0+26.2`), migrated up from
 1.20.4 via 1.21.11.
 
 **The endpoint is two supported lines, not one.** 1.21.11 is released and kept on its

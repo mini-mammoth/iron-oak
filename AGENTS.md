@@ -249,6 +249,32 @@ it plainly when you did not port to one.
 `mod_version` in `gradle.properties` is `<mod>+<mc>` (e.g. `1.2.1+1.20.4`). Bump the
 Minecraft half in the same commit as the version bump, never separately.
 
+**The two halves move for different reasons.** The `+mc` half tracks Minecraft; the mod half
+tracks what the *player* gets. Decide the mod half by what changed for the player, not by how
+much work it was:
+
+| Change | Mod half | Example |
+|---|---|---|
+| **New feature** — a new mechanic, a new metal or wood type, a new processing step | bump the **minor**, reset the patch | `1.2.1` → `1.3.0` |
+| **Bug fix only** — no new functionality | bump the **patch** | `1.3.0` → `1.3.1` |
+| **Pure port** to another Minecraft version | **unchanged** — only `+mc` moves | `1.3.0+1.21.11` → `1.3.0+26.2` |
+
+A port is the case people get wrong. API renames, a reshaped recipe serializer, a render layer
+moving from code into model JSON — none of that reaches the player, so the mod half stays put
+and the `+mc` half carries the whole change. That is what the format is for.
+
+So the same mod version legitimately appears on several lines: `1.2.1` shipped as both `v1.2.1`
+and `v1.2.1+1.18.2`, and `1.3.0` ships as `1.3.0+1.21.11`, `1.3.0+1.21.1` and `1.3.0+26.2`. It
+tells a player at a glance that the three jars are the same mod, rather than implying the
+newest line got features the others lack.
+
+The major half is for a break in what a player's world or pack can rely on — a removed
+mechanic, a recipe or block id that no longer loads. There has not been one yet.
+
+Like the commit format, **this applies going forward**; the published history does not follow
+it in either direction (`v1.2.0 "MC 1.19.x Release"` was a port that took a minor bump,
+`v1.2.1 "Add all other trees"` was a feature that took a patch). Do not retag those.
+
 ---
 
 ## Scope discipline
