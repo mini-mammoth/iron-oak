@@ -180,7 +180,11 @@ java {
 }
 
 jar {
-    def projectName = project.name
+    // rootProject.name ("iron-oak"), not project.name ("fabric") -- the subproject split
+    // in #76 changed the shipped licence entry from LICENSE_iron-oak to LICENSE_fabric,
+    // a player-visible regression with nothing behind it. The mod's own name, not its
+    // build-internal subproject folder, is what belongs in the jar.
+    def projectName = rootProject.name
     inputs.property "projectName", projectName
 
     // LICENSE lives at the repo root, one directory above this subproject — not relative
