@@ -83,7 +83,11 @@ sourceSets {
     }
 
     test {
-        compileClasspath += sourceSets.testsupport.output
+        // sourceSets.main.{compile,runtime}Classpath carry common/'s output (wired in
+        // above), which is not picked up automatically since that wiring is a source-set
+        // output, not a dependency `test` inherits from `main`.
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.testsupport.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath
     }
 
     // Layers 2 and 3 of docs/strategy/testing.md. A source set of its own rather than
