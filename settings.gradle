@@ -7,3 +7,10 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+rootProject.name = 'iron-oak'
+
+// common/ is the loader-neutral subproject (empty for now — phase A moves no mod code).
+// fabric/ is everything the mod is today. See docs/ops/multiloader.md and #76.
+include('common')
+include('fabric')

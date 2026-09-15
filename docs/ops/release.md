@@ -81,8 +81,8 @@ run does three useful things:
    the tokens get exercised without publishing; a dry run withholds them from Gradle, so
    without this step an expired token would first surface during a real release.
 2. Builds the jar.
-3. Writes the payloads it *would* have uploaded to `build/publishMods/`, attached to the
-   run as an artifact.
+3. Writes the payloads it *would* have uploaded to `fabric/build/publishMods/`, attached to
+   the run as an artifact.
 
 Preflight also runs on a real release, before the upload — so a bad game version string
 fails the run instead of landing on the project page.
@@ -132,7 +132,9 @@ those live in the workflow, because they need the tokens.
   ./gradlew clean build
   # Not iron-oak-*.jar: that glob also matches the sources jar, and unzip -l over two
   # archives prints "0 files" — which reads like the empty-jar bug you are checking for.
-  unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
+  # fabric/build/libs, not build/libs: common/ and fabric/ are separate subprojects and
+  # only fabric/ produces a jar.
+  unzip -l "$(find fabric/build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
   ```
 
   Expect **hundreds** of files. The number grows with every arm of the matrix, so it is the

@@ -106,8 +106,14 @@ Add these when your change touches what they cover:
 
 ```bash
 ./gradlew runDatagen            # if you changed ModDataGenerator or anything it emits
-./gradlew runClient             # if you changed rendering, or anything the tests do not reach
+./gradlew :fabric:runClient     # if you changed rendering, or anything the tests do not reach
 ```
+
+`runClient` and `runServer` are ambiguous once you say them bare: Loom generates a
+default run pair for **every** Loom-enabled subproject, so a bare `./gradlew runClient`
+also launches `common`'s empty, mod-free client — the trap that costs someone an
+afternoon of "the mod isn't loading". `build`, `runDatagen` and `runGametest` stay bare;
+only `fabric/` declares them, so there is nothing to disambiguate.
 
 There **is** a test suite, in two layers, and
 [`docs/strategy/testing.md`](docs/strategy/testing.md) says which layer a test belongs at.
@@ -120,13 +126,14 @@ up to make.
   numbers belong, and where the 6×3 matrix guard lives.
 - **`src/gametest/`** — a headless server, a real world and actual ticking, via
   `fabric-gametest-api-v1`. Seconds, run by `./gradlew runGametest`, which writes JUnit XML
-  to `build/gametest/report.xml`. Its own source set, so none of it ships in the mod jar.
+  to `fabric/build/gametest/report.xml`. Its own source set, so none of it ships in the mod
+  jar.
 
 "Green" is a stronger signal than it was, but it is not everything. **Rendering, particles,
 sound and feel are still checked only by a human**, and so is anything the gametests do not
-reach yet — `runClient` remains the gate for those, and if you did not launch the game, say
-so in the PR instead of implying you did. Every gametest that lands is one line the human
-no longer has to walk; that list is not finished.
+reach yet — `:fabric:runClient` remains the gate for those, and if you did not launch the
+game, say so in the PR instead of implying you did. Every gametest that lands is one line
+the human no longer has to walk; that list is not finished.
 
 When you fix a bug, the fix ships with the test that catches it, and you write the test
 first — see
@@ -150,11 +157,13 @@ locally and report it in the PR; never commit red.**
   shipped **2**, so the check is an order of magnitude, not an exact count:
 
   ```bash
-  unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
+  unzip -l "$(find fabric/build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
   ```
 
   Not `build/libs/iron-oak-*.jar` — that glob also matches the sources jar, and `unzip -l`
   over two archives prints `0 files`, which reads like the very bug you are checking for.
+  Now that `common/` and `fabric/` are separate subprojects, the jar also needs a project
+  qualifier: `build/libs` at the root has nothing in it, only `fabric/build/libs` does.
   Details in [`docs/ops/release.md`](docs/ops/release.md).
 
 ---
@@ -346,13 +355,13 @@ All Gradle commands assume `JAVA_HOME` points at JDK 21 (see above).
 
 | Purpose | Command |
 |---|---|
-| Build the jar | `./gradlew build` → `build/libs/iron-oak-<version>.jar` |
-| Launch the client | `./gradlew runClient` |
-| Launch a server | `./gradlew runServer` |
+| Build the jar | `./gradlew build` → `fabric/build/libs/iron-oak-<version>.jar` |
+| Launch the client | `./gradlew :fabric:runClient` |
+| Launch a server | `./gradlew :fabric:runServer` |
 | Regenerate data | `./gradlew runDatagen` |
 | Clean | `./gradlew clean` |
 | Refresh after a version bump | `./gradlew --refresh-dependencies build` |
-| Dry-run a release upload | `./gradlew publishMods` (no tokens set = dry run) |
+| Dry-run a release upload | `./gradlew :fabric:publishMods` (no tokens set = dry run) |
 | Check available versions | https://modmuss50.me/fabric.html |
 
 ---

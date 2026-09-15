@@ -150,13 +150,13 @@ jobs:
       # for real. Two steps cannot be read wrong.
       - name: publish (dry run, no tokens)
         if: ${{ inputs.dry_run }}
-        run: ./gradlew publishMods -Ppublish_type=${{ inputs.release_type }}
+        run: ./gradlew :fabric:publishMods -Ppublish_type=${{ inputs.release_type }}
 
       # The release body becomes the changelog on both platforms. On a manual dispatch
       # there is no release, so build.gradle falls back to a link.
       - name: publish
         if: ${{ !inputs.dry_run }}
-        run: ./gradlew publishMods -Ppublish_type=${{ inputs.release_type || 'STABLE' }}
+        run: ./gradlew :fabric:publishMods -Ppublish_type=${{ inputs.release_type || 'STABLE' }}
         env:
           CHANGELOG: ${{ github.event.release.body }}
           MODRINTH_API_KEY: ${{ secrets.MODRINTH_API_KEY }}
@@ -169,7 +169,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: publish-${{ github.run_id }}
+          # common/ and fabric/ are separate subprojects (#76); only fabric/ publishes.
           path: |
-            build/libs/
-            build/publishMods/
+            fabric/build/libs/
+            fabric/build/publishMods/
           if-no-files-found: warn

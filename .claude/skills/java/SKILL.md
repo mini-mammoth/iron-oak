@@ -253,11 +253,14 @@ export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 # Not iron-oak-*.jar — that glob also matches the sources jar, and unzip -l over two
 # archives prints "0 files", which reads like the empty-jar bug you are checking for.
 # find, not `ls | grep`: ls is aliased on some machines here and the alias breaks the glob.
-unzip -l "$(find build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
+# fabric/build/libs, not build/libs — common/ and fabric/ are separate subprojects and only
+# fabric/ produces a jar.
+unzip -l "$(find fabric/build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1
 ```
 
 Hundreds of files, not 2. It is the order of magnitude that carries the signal — the count
 grows with every arm of the matrix.
 
-`runClient` is still the only gate for rendering, particles, sound and feel. **If you did not
-launch the game, say so in the PR** instead of implying you did.
+`:fabric:runClient` is still the only gate for rendering, particles, sound and feel — say
+`./gradlew runClient` bare and you also launch `common`'s empty, mod-free client. **If you
+did not launch the game, say so in the PR** instead of implying you did.
