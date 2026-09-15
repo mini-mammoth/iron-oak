@@ -19,6 +19,11 @@ repositories {
 }
 
 dependencies {
+    // common/ is the loader-neutral content moved out in #78 — recipes, blocks, block
+    // entities and items with no Fabric import. fabric/ supplies the registration that
+    // wires them into the game.
+    implementation project(':common')
+
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
