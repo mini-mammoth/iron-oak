@@ -81,10 +81,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-reports-${{ runner.os }}-java${{ matrix.java }}
+          # common/ and fabric/ are separate subprojects (#76); only fabric/ has tests.
           path: |
-            build/test-results/test/**/*.xml
-            build/reports/tests/test/**
-            build/gametest/report.xml
+            fabric/build/test-results/test/**/*.xml
+            fabric/build/reports/tests/test/**
+            fabric/build/gametest/report.xml
           if-no-files-found: warn
 
       - name: capture build artifacts
@@ -93,4 +94,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artifacts-java${{ matrix.java }}
-          path: build/libs/
+          path: fabric/build/libs/

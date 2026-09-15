@@ -175,10 +175,15 @@ did not, and "probably" is not a claim. Still open.
 
 ### Not a layer: the `runClient` checklist
 
-**A human launching `./gradlew runClient` is still the only gate that covers rendering,
-sound and feel**, and `AGENTS.md` is explicit that you must say so in the PR rather than
-imply you did it. The harness did not remove that gate; it shrank it. Seven gametests have
-retired seven of its lines. The rest of the list is still walked by hand.
+**A human launching `./gradlew :fabric:runClient` is still the only gate that covers
+rendering, sound and feel**, and `AGENTS.md` is explicit that you must say so in the PR
+rather than imply you did it. The harness did not remove that gate; it shrank it. Seven
+gametests have retired seven of its lines. The rest of the list is still walked by hand.
+
+Say `:fabric:`, not bare `runClient`. `common/` and `fabric/` are both Loom-enabled
+subprojects, so Loom generates a default client/server run for each, and a bare
+`./gradlew runClient` launches `common`'s empty, mod-free client alongside the real one —
+the trap that costs someone an afternoon of "the mod isn't loading".
 
 ---
 
@@ -207,7 +212,7 @@ built, because none of them is guessable:
 - It is **`RetentionPolicy.SOURCE`**. Nothing reads it reflectively, so it is erased at
   compile time and reaches no runtime classpath and no artefact. Check it the way
   `AGENTS.md` says to check the jar — by looking:
-  `unzip -l build/libs/iron-oak-*.jar | grep -ic requirement` must be 0.
+  `unzip -l fabric/build/libs/iron-oak-*.jar | grep -ic requirement` must be 0.
 - The citations are therefore read out of the **source text**, by
   `RequirementTracingTest`. A reflective reader would need the layer-2 classes on the
   layer-1 classpath while layer 2 already needs the annotation, and no arrangement of source
@@ -371,7 +376,7 @@ means the `jar` task — which only ever packages `main` — cannot ship any of 
 worth checking rather than assuming:
 
 ```bash
-unzip -l build/libs/iron-oak-*.jar | grep -ic gametest   # must be 0
+unzip -l fabric/build/libs/iron-oak-*.jar | grep -ic gametest   # must be 0
 ```
 
 `src/test` needs no such care: Gradle never packages a test source set.
