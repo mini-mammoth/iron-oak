@@ -140,9 +140,15 @@ adding a line.
 
 ---
 
-## Forge is not a target and cannot be
+## Forge: reachable, but not through Architectury
 
-Architectury dropped it. Every live branch declares `platforms=fabric,neoforge`:
+**Correction (2026-09-15):** this section used to say Forge was dead. It is not — LexForge
+publishes through 26.2. What is true is narrower: **Architectury** dropped it, so Forge is
+unreachable *by that route*. Under the strategy in
+[`multiloader-strategy.md`](multiloader-strategy.md) it is reachable, and it is an open
+decision there rather than a closed door here.
+
+Every live Architectury branch declares `platforms=fabric,neoforge`:
 
 | Arch branch | Forge subproject |
 |---|---|
@@ -228,6 +234,11 @@ the loader conversion.
 
 Iron Oak's Fabric coupling is thin — 15 `net.fabricmc` imports across five concerns — which
 makes it a good candidate.
+
+> **Superseded:** the table below assumes Architectury, which
+> [`multiloader-strategy.md`](multiloader-strategy.md) decided against (#74). It is kept
+> because the left-hand column — what of this mod is loader-specific — is still accurate and is
+> the work any strategy has to do.
 
 | Ours | Architectury equivalent | Status |
 |---|---|---|
