@@ -1,7 +1,6 @@
 package com.minimammoth.ironoak;
 
 import com.minimammoth.ironoak.init.ModEntityTypes;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
@@ -64,12 +63,6 @@ public class FireBowlBlock extends BaseEntityBlock implements LiquidBlockContain
                 .setValue(FireBowlBlock.LIT, false)
                 .setValue(FireBowlBlock.WATERLOGGED, false)
         );
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        // Not used yet https://fabricmc.net/2023/11/30/1203.html
-        return null;
     }
 
     @Override

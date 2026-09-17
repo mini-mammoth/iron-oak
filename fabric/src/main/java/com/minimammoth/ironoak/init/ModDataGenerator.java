@@ -22,6 +22,6 @@ public class ModDataGenerator implements DataGeneratorEntrypoint {
     @Override
     public void buildRegistry(RegistrySetBuilder registryBuilder) {
         LOGGER.info("Build registries");
-        registryBuilder.add(Registries.CONFIGURED_FEATURE, ModConfiguredFeatures::bootstrap);
+        registryBuilder.add(Registries.FEATURE, ModConfiguredFeatures::bootstrap);
     }
 }

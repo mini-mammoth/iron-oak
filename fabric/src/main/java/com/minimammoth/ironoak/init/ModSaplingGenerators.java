@@ -3,10 +3,10 @@ package com.minimammoth.ironoak.init;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.level.block.grower.TreeGrower;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.feature.Feature;
 
 public class ModSaplingGenerators {
 
@@ -23,7 +23,7 @@ public class ModSaplingGenerators {
      * Declared before the constants on purpose — static initialisers run in textual order,
      * and {@link #generator} writes to this map.
      */
-    private static final Map<String, ResourceKey<ConfiguredFeature<?, ?>>> FEATURE_BY_NAME = new LinkedHashMap<>();
+    private static final Map<String, ResourceKey<Feature>> FEATURE_BY_NAME = new LinkedHashMap<>();
 
     public static final TreeGrower COPPER_OAK = generator("copper_oak", ModConfiguredFeatures.COPPER_OAK_TREE);
     public static final TreeGrower GOLD_OAK = generator("gold_oak", ModConfiguredFeatures.GOLD_OAK_TREE);
@@ -52,12 +52,12 @@ public class ModSaplingGenerators {
     /**
      * The name each generator was built under, mapped to the feature it grows.
      */
-    public static Map<String, ResourceKey<ConfiguredFeature<?, ?>>> featureByName() {
+    public static Map<String, ResourceKey<Feature>> featureByName() {
         return Collections.unmodifiableMap(FEATURE_BY_NAME);
     }
 
-    private static TreeGrower generator(String id, ResourceKey<ConfiguredFeature<?, ?>> featureRegistryKey) {
+    private static TreeGrower generator(String id, ResourceKey<Feature> featureRegistryKey) {
         FEATURE_BY_NAME.put(id, featureRegistryKey);
-        return new TreeGrower(id, Optional.empty(), Optional.of(featureRegistryKey), Optional.empty());
+        return new TreeGrower(id, WeightedList.of(featureRegistryKey), WeightedList.of(), WeightedList.of(), featureRegistryKey);
     }
 }

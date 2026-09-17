@@ -4,5 +4,6 @@
   "result": {
     "id": "iron_oak:gold_shred"
   },
-  "experience": 0.2
+  "experience": 0.2,
+  "cookingtime": 200
 }

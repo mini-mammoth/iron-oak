@@ -78,7 +78,7 @@ There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 
 **Acceptance criteria** (verify: `runClient`, `inspect`, `test`, `gametest`)
 - [ ] All 18 combinations grow, and each yields logs of its own metal and wood type
-- [ ] `src/main/generated/data/iron_oak/worldgen/configured_feature/<metal>_<wood>_tree.json`
+- [ ] `src/main/generated/data/iron_oak/worldgen/feature/<metal>_<wood>_tree.json`
       names `iron_oak:<metal>_<wood>_log` and `minecraft:<wood>_leaves`
 - [ ] Tree silhouettes match their vanilla counterparts (dark oak thick trunk, spruce
       conifer, acacia fork)
@@ -164,8 +164,9 @@ leaves the wood in the fire bowl.
 WHEN a world generates THEN no infused tree SHALL appear — infused trees exist only where a
 player planted and grew an infused sapling.
 
-The mod emits configured features only; there are no placed features and no biome
-modifications (`ModWorldGenerator` writes `configured_feature/` only).
+The mod emits tree features only; there are no placed features and no biome
+modifications (`ModWorldGenerator` writes `feature/` only — since 26.3, `Feature` is the
+registered value itself, there is no separate `configured_feature/` directory).
 
 **Acceptance criteria** (verify: `inspect`, `runClient`)
 - [ ] `src/main/generated/data/iron_oak/worldgen/` contains no `placed_feature/` directory

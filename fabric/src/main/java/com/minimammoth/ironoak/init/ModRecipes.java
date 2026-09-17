@@ -34,14 +34,14 @@ public class ModRecipes {
 
     static {
         BURNING_RECIPE_TYPE = registerType(BurningRecipe.KEY);
-        MapCodec<BurningRecipe> burningMapCodec = AbstractCookingRecipe.cookingMapCodec(BurningRecipe::new, DEFAULT_COOKING_TIME);
+        MapCodec<BurningRecipe> burningMapCodec = AbstractCookingRecipe.cookingMapCodec(BurningRecipe::new);
         StreamCodec burningStreamCodec = AbstractCookingRecipe.cookingStreamCodec(BurningRecipe::new);
         BURNING_RECIPE_SERIALIZER = Registry.register(BuiltInRegistries.RECIPE_SERIALIZER,
                 Identifier.fromNamespaceAndPath(MOD_ID, BurningRecipe.KEY),
                 new RecipeSerializer<>(burningMapCodec, burningStreamCodec));
 
         WASHING_RECIPE_TYPE = registerType(WashingRecipe.KEY);
-        MapCodec<WashingRecipe> washingMapCodec = AbstractCookingRecipe.cookingMapCodec(WashingRecipe::new, DEFAULT_COOKING_TIME);
+        MapCodec<WashingRecipe> washingMapCodec = AbstractCookingRecipe.cookingMapCodec(WashingRecipe::new);
         StreamCodec washingStreamCodec = AbstractCookingRecipe.cookingStreamCodec(WashingRecipe::new);
         WASHING_RECIPE_SERIALIZER = Registry.register(BuiltInRegistries.RECIPE_SERIALIZER,
                 Identifier.fromNamespaceAndPath(MOD_ID, WashingRecipe.KEY),

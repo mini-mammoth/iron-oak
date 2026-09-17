@@ -83,7 +83,7 @@ public class FireBowlRenderer implements BlockEntityRenderer<FireBowlEntity, Fir
             matrices.scale(1.3f, 1.3f, 1.3f);
 
             // Rotate around the Y axis
-            matrices.mulPose(Axis.YP.rotation(state.spinDegrees));
+            matrices.rotate(Axis.YP, state.spinDegrees);
 
             state.output.submit(matrices, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
             matrices.popPose();
