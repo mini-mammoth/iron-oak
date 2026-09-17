@@ -12,7 +12,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.grower.TreeGrower;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.feature.Feature;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -73,7 +73,7 @@ class TreeMatrixTest {
                 () -> arm.saplingId() + " grows with the wrong generator");
 
         // Hop 2 — the generator must hold the feature named after it.
-        ResourceKey<ConfiguredFeature<?, ?>> feature = ModSaplingGenerators.featureByName().get(arm.prefix());
+        ResourceKey<Feature> feature = ModSaplingGenerators.featureByName().get(arm.prefix());
         assertNotNull(feature, () -> "no generator named " + arm.prefix());
         assertEquals(arm.treeFeatureId(), feature.identifier().toString(),
                 () -> "generator " + arm.prefix() + " grows the wrong feature");
