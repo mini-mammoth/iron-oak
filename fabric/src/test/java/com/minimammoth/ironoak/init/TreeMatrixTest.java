@@ -81,13 +81,12 @@ class TreeMatrixTest {
         // Hop 3 — the feature that actually ships must place this arm's log, under this
         // wood's leaves. The generated JSON is output, not authority, but it is what the
         // server reads, and it is where the metal and the wood finally meet.
-        JsonObject config = Resources
-                .jsonOrFail("data/iron_oak/worldgen/configured_feature/" + arm.prefix() + "_tree.json")
-                .getAsJsonObject("config");
+        JsonObject featureJson = Resources
+                .jsonOrFail("data/iron_oak/worldgen/feature/" + arm.prefix() + "_tree.json");
 
-        assertEquals(arm.logId(), stateName(config, "trunk_provider"),
+        assertEquals(arm.logId(), stateName(featureJson, "trunk_provider"),
                 () -> arm.prefix() + "_tree is built out of the wrong log");
-        assertEquals("minecraft:" + arm.wood() + "_leaves", stateName(config, "foliage_provider"),
+        assertEquals("minecraft:" + arm.wood() + "_leaves", stateName(featureJson, "foliage_provider"),
                 () -> arm.prefix() + "_tree has the wrong leaves — it is shaped like another wood type");
     }
 
@@ -120,7 +119,7 @@ class TreeMatrixTest {
     void everyFeatureKeyHasCommittedJson() {
         ModSaplingGenerators.featureByName().forEach((name, key) -> {
             String path = "data/" + key.identifier().getNamespace()
-                    + "/worldgen/configured_feature/" + key.identifier().getPath() + ".json";
+                    + "/worldgen/feature/" + key.identifier().getPath() + ".json";
             assertTrue(Resources.exists(path), () -> "generator " + name + " points at a feature with no JSON: " + path);
         });
     }
@@ -134,7 +133,7 @@ class TreeMatrixTest {
         return TreeGrower.CODEC.encodeStart(JsonOps.INSTANCE, grower).getOrThrow().getAsString();
     }
 
-    private static String stateName(JsonObject config, String provider) {
-        return config.getAsJsonObject(provider).getAsJsonObject("state").get("Name").getAsString();
+    private static String stateName(JsonObject feature, String provider) {
+        return feature.getAsJsonObject(provider).get("id").getAsString();
     }
 }
