@@ -60,6 +60,11 @@ are not secret.
 4. **Create a GitHub Release** against the new tag. Its **body is the changelog** that
    both platforms will show — Markdown, written for players, not a commit log.
 5. **Publish the release.** The `Release` workflow builds and uploads.
+6. **Answer the players who asked for it.** Now — this is the moment a reply is due, because
+   the jar exists and they can have it. Close the issues it resolves, and say what they get.
+   Not before: a reply mid-work promises a download that is not there yet. See
+   [`orchestration.md`](orchestration.md#answering-players-when-it-is-done-not-before) — an
+   agent drafts, a human posts.
 
 A *draft* release triggers nothing. Only *published* does. So a draft is the safe place
 to write and review notes.

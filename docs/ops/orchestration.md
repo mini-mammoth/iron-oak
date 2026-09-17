@@ -127,6 +127,25 @@ present. Establish those or set `status:needs-human` and ask. Dispatching a work
 ash doesn't work" with no version produces a worker that reads the whole recipe subsystem and
 reports it looks fine.
 
+### Answering players: when it is done, not before
+
+**Reply when the thing they asked about is finished — not while it is planned or in flight.**
+
+"Finished" means **released**, not merged. A player asking for a Minecraft version wants the
+jar, and a reply saying "merged to main" promises something they cannot download yet.
+
+Until then the issue speaks for itself: it is open, it is labelled, and the work links to it.
+Silence is not rudeness — a plan posted to a stranger is a commitment the project has not made,
+and estimates given mid-work are the ones that turn out wrong in public.
+
+This is **a human's decision to make, not an agent's.** An agent may draft a reply and put it in
+front of the maintainer; it does not post to a player's issue on its own, because that is
+speaking *as* the maintainer to a third party rather than working *for* them. Same for Modrinth,
+CurseForge, and anywhere else outside the repo.
+
+Internal traffic is not affected: issues, PR bodies, reviews and worker briefings are the
+workspace, not the shopfront.
+
 A bug against a Minecraft version `main` no longer targets is a **version-branch decision**,
 not a code task. It goes to a human.
 
