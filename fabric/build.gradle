@@ -57,6 +57,18 @@ sourceSets {
                     'src/main/generated'
             ]
         }
+
+        // common/ is the loader-neutral content moved out in #78 -- recipes, blocks,
+        // block entities and items with no Fabric import. fabric/ supplies the
+        // registration that wires them into the game. Wired as a direct source-set
+        // output rather than `implementation project(':common')`: Loom applies to both
+        // subprojects, and Loom does not support a project dependency between two of its
+        // own subprojects (FabricMC/fabric-loom#1049, closed as not planned) -- it throws
+        // a ClassCastException casting its own extension across the two subprojects'
+        // plugin classloaders. This is the same output-wiring already used below for
+        // testsupport/gametest.
+        compileClasspath += project(':common').sourceSets.main.output
+        runtimeClasspath += project(':common').sourceSets.main.output
     }
 
     // The @Requirement annotation and nothing else. It belongs to neither test layer and
@@ -71,7 +83,11 @@ sourceSets {
     }
 
     test {
-        compileClasspath += sourceSets.testsupport.output
+        // sourceSets.main.{compile,runtime}Classpath carry common/'s output (wired in
+        // above), which is not picked up automatically since that wiring is a source-set
+        // output, not a dependency `test` inherits from `main`.
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.testsupport.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath
     }
 
     // Layers 2 and 3 of docs/strategy/testing.md. A source set of its own rather than
@@ -168,7 +184,11 @@ java {
 }
 
 jar {
-    def projectName = project.name
+    // rootProject.name ("iron-oak"), not project.name ("fabric") -- the subproject split
+    // in #76 changed the shipped licence entry from LICENSE_iron-oak to LICENSE_fabric,
+    // a player-visible regression with nothing behind it. The mod's own name, not its
+    // build-internal subproject folder, is what belongs in the jar.
+    def projectName = rootProject.name
     inputs.property "projectName", projectName
 
     // LICENSE lives at the repo root, one directory above this subproject — not relative
@@ -177,6 +197,11 @@ jar {
     from(rootProject.file("LICENSE")) {
         rename { "${it}_$projectName" }
     }
+
+    // common/'s classes are wired in as a source-set output above, not a project
+    // dependency, so they need to be packaged into this jar explicitly -- there is no
+    // separate common/ mod jar for Fabric to load them from.
+    from(project(':common').sourceSets.main.output)
 }
 
 // Uploads the remapped jar to Modrinth and CurseForge. Run with `./gradlew :fabric:publishMods`;
