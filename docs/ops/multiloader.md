@@ -26,7 +26,8 @@ Migration mechanics for a single line: [`version-migration.md`](version-migratio
 | Line | Announced as | Branch | Loaders |
 |---|---|---|---|
 | 1.21.11 | 1.21.11 | `v1.21.11` | Fabric |
-| 26.x | 26.1, 26.1.1, 26.1.2, **26.2** | `main` | Fabric, then NeoForge |
+| 26.3 | 26.3 | `main` | Fabric, then NeoForge |
+| 26.1–26.2 | 26.1, 26.1.1, 26.1.2, 26.2 | `v26.2` | Fabric |
 | 1.21.1 | 1.21.1 | `v1.21.1` | Fabric; NeoForge via #21 |
 
 Three trees for four lines, because **26.1 and 26.2 share one**. Reach: **~60 %
@@ -45,7 +46,8 @@ version's release tag when `main` moves past it.
 
 | Track | Branch | CI | Releases |
 |---|---|---|---|
-| 26.x | `main` | yes | yes |
+| 26.3 | `main` | yes | yes |
+| 26.1–26.2 | `v26.2` | yes | yes |
 | 1.21.11 | `v1.21.11` | yes | yes |
 | 1.21.1 | `v1.21.1` | yes | yes |
 | 1.20.4 | — | — | archived |
