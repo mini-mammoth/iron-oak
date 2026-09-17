@@ -339,11 +339,25 @@ then template it** — converting three trees in parallel is how this becomes un
 
 ## The ongoing cost
 
-- **3 source trees** — one moving, two maintenance.
-- **Up to 6 published artefacts** (3 lines × 2 loaders, where both apply).
+- **4 source trees** — one moving, three maintenance.
 - **Cherry-picks that do not apply** between the 26.x and 1.21.1 trees.
 - **A CI gate covering half the artefacts** — `runGametest` is Fabric-only.
 
-#21 asks whether that is acceptable. As of 2026-08-21: **yes, for these four lines and these
-two loaders** — and the number of lines is now capped. A fifth needs a new decision and a
-fresh measurement, not an extrapolation from this one.
+#21 asks whether that is acceptable. As of 2026-08-21: **yes, for four lines and two loaders** —
+and the number of lines was capped there, with a fifth requiring a new decision and a fresh
+measurement.
+
+**That decision came on 2026-09-17, and the answer was to keep 26.2.** 26.3 arrived as a hard
+break rather than a widening: the 26.3 jar references `TreeFeature` as a type and `TreeGrower`'s
+new constructor, both differently shaped on 26.2, so it fails at load rather than degrading.
+There was no range to widen, unlike the 26.1 ride-along.
+
+And 26.2 was worth keeping on the numbers — **141,964** Fabric API downloads/day against
+110,357 for 1.21.11 and 47,120 for 1.21.1, the largest single line, while 26.3 was three days
+old with no measurable base. Dropping it would have left the biggest share of the user base
+without further fixes.
+
+So the maintained lines are `main` (26.3), `v26.2`, `v1.21.11`, `v1.21.1`. **This is a ceiling,
+not a new normal — re-measure in four to six weeks.** Once 26.3 has taken over, `v26.2` is
+archived the way 1.18.2 and 1.19 were and the count returns to three. A line kept past its
+audience is the expensive kind of mistake, because nothing forces the question again.
