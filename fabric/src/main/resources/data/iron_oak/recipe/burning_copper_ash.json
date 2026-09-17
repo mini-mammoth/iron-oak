@@ -4,5 +4,6 @@
   "result": {
     "id": "iron_oak:copper_ash"
   },
-  "experience": 0.2
+  "experience": 0.2,
+  "cookingtime": 200
 }

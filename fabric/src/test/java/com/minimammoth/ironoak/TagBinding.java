@@ -2,8 +2,8 @@ package com.minimammoth.ironoak;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -63,11 +63,10 @@ public final class TagBinding {
         return RegistryOps.create(com.mojang.serialization.JsonOps.INSTANCE, new RegistryOps.RegistryInfoLookup() {
             @SuppressWarnings("unchecked")
             @Override
-            public <T> Optional<RegistryOps.RegistryInfo<T>> lookup(ResourceKey<? extends Registry<? extends T>> key) {
+            public <T> Optional<HolderGetter<T>> lookup(ResourceKey<? extends Registry<? extends T>> key) {
                 return BuiltInRegistries.REGISTRY.getOptional(key.identifier())
                         .map(registry -> (WritableRegistry<T>) registry)
-                        .map(registry -> new RegistryOps.RegistryInfo<>(
-                                registry, registry.createRegistrationLookup(), Lifecycle.stable()));
+                        .map(WritableRegistry::createRegistrationLookup);
             }
         });
     }
