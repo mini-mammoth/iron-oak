@@ -9,7 +9,7 @@ on:
     # `v1.21.1` is listed before its branch exists on purpose: a `push` filter for a missing
     # branch simply never fires, so declaring the supported set here means the line is already
     # wired the moment #54 cuts it. Do not "clean this up".
-    branches: [ main, v1.21.11, v1.21.1 ]
+    branches: [ main, v26.2, v1.21.11, v1.21.1 ]
     # A docs-only change cannot break the build, so don't spend a runner on it.
     # `.github/**` is deliberately NOT ignored — a workflow change must run the workflow.
     # The list is duplicated below on purpose: GitHub Actions does not reliably support
@@ -23,7 +23,7 @@ on:
       - 'LICENSE'
   pull_request:
     # Keep in sync with the `push` list above by hand — see the note there.
-    branches: [ main, v1.21.11, v1.21.1 ]
+    branches: [ main, v26.2, v1.21.11, v1.21.1 ]
     paths-ignore:
       - '**.md'
       - 'docs/**'

@@ -232,7 +232,8 @@ soon as one Minecraft family holds two supported lines, which is exactly the cas
 
 | Track | Branch | State |
 |---|---|---|
-| 26.x | `main` | frontier |
+| 26.3 | `main` | frontier |
+| 26.1–26.2 | `v26.2` | supported |
 | 1.21.11 | `v1.21.11` | supported |
 | 1.21.1 | `v1.21.1` | supported |
 | 1.20.4, 1.19, 1.18.2 | none, `1.19`, `v1.18.x` | **archived** — no CI, no releases, no backports |
