@@ -49,6 +49,14 @@ public class ModSaplingGenerators {
     public static final TreeGrower GOLD_DARK_OAK = generator("gold_dark_oak", ModConfiguredFeatures.GOLD_DARK_OAK_TREE);
     public static final TreeGrower IRON_DARK_OAK = generator("iron_dark_oak", ModConfiguredFeatures.IRON_DARK_OAK_TREE);
 
+    public static final TreeGrower COPPER_CHERRY = generator("copper_cherry", ModConfiguredFeatures.COPPER_CHERRY_TREE);
+    public static final TreeGrower GOLD_CHERRY = generator("gold_cherry", ModConfiguredFeatures.GOLD_CHERRY_TREE);
+    public static final TreeGrower IRON_CHERRY = generator("iron_cherry", ModConfiguredFeatures.IRON_CHERRY_TREE);
+
+    public static final TreeGrower COPPER_PALE_OAK = generator("copper_pale_oak", ModConfiguredFeatures.COPPER_PALE_OAK_TREE);
+    public static final TreeGrower GOLD_PALE_OAK = generator("gold_pale_oak", ModConfiguredFeatures.GOLD_PALE_OAK_TREE);
+    public static final TreeGrower IRON_PALE_OAK = generator("iron_pale_oak", ModConfiguredFeatures.IRON_PALE_OAK_TREE);
+
     /**
      * The name each generator was built under, mapped to the feature it grows.
      */

@@ -42,7 +42,9 @@ public class ModItems {
             Blocks.BIRCH_SAPLING, ModBlocks.COPPER_BIRCH_SAPLING,
             Blocks.JUNGLE_SAPLING, ModBlocks.COPPER_JUNGLE_SAPLING,
             Blocks.SPRUCE_SAPLING, ModBlocks.COPPER_SPRUCE_SAPLING,
-            Blocks.DARK_OAK_SAPLING, ModBlocks.COPPER_DARK_OAK_SAPLING
+            Blocks.DARK_OAK_SAPLING, ModBlocks.COPPER_DARK_OAK_SAPLING,
+            Blocks.CHERRY_SAPLING, ModBlocks.COPPER_CHERRY_SAPLING,
+            Blocks.PALE_OAK_SAPLING, ModBlocks.COPPER_PALE_OAK_SAPLING
     )));
 
     public static final Item GOLD_ASH = register("gold_ash", OreInfusedAsh::new);
@@ -53,7 +55,9 @@ public class ModItems {
             Blocks.BIRCH_SAPLING, ModBlocks.GOLD_BIRCH_SAPLING,
             Blocks.JUNGLE_SAPLING, ModBlocks.GOLD_JUNGLE_SAPLING,
             Blocks.SPRUCE_SAPLING, ModBlocks.GOLD_SPRUCE_SAPLING,
-            Blocks.DARK_OAK_SAPLING, ModBlocks.GOLD_DARK_OAK_SAPLING
+            Blocks.DARK_OAK_SAPLING, ModBlocks.GOLD_DARK_OAK_SAPLING,
+            Blocks.CHERRY_SAPLING, ModBlocks.GOLD_CHERRY_SAPLING,
+            Blocks.PALE_OAK_SAPLING, ModBlocks.GOLD_PALE_OAK_SAPLING
     )));
 
     public static final Item IRON_ASH = register("iron_ash", OreInfusedAsh::new);
@@ -64,7 +68,9 @@ public class ModItems {
             Blocks.BIRCH_SAPLING, ModBlocks.IRON_BIRCH_SAPLING,
             Blocks.JUNGLE_SAPLING, ModBlocks.IRON_JUNGLE_SAPLING,
             Blocks.SPRUCE_SAPLING, ModBlocks.IRON_SPRUCE_SAPLING,
-            Blocks.DARK_OAK_SAPLING, ModBlocks.IRON_DARK_OAK_SAPLING
+            Blocks.DARK_OAK_SAPLING, ModBlocks.IRON_DARK_OAK_SAPLING,
+            Blocks.CHERRY_SAPLING, ModBlocks.IRON_CHERRY_SAPLING,
+            Blocks.PALE_OAK_SAPLING, ModBlocks.IRON_PALE_OAK_SAPLING
     )));
 
     // The fire bowl is a block you place, so it does not stack.
@@ -111,6 +117,20 @@ public class ModItems {
     public static final Item GOLD_DARK_OAK_SAPLING = registerBlockItem("gold_dark_oak_sapling", ModBlocks.GOLD_DARK_OAK_SAPLING);
     public static final Item IRON_DARK_OAK_LOG = registerBlockItem("iron_dark_oak_log", ModBlocks.IRON_DARK_OAK_LOG);
     public static final Item IRON_DARK_OAK_SAPLING = registerBlockItem("iron_dark_oak_sapling", ModBlocks.IRON_DARK_OAK_SAPLING);
+
+    public static final Item COPPER_CHERRY_LOG = registerBlockItem("copper_cherry_log", ModBlocks.COPPER_CHERRY_LOG);
+    public static final Item COPPER_CHERRY_SAPLING = registerBlockItem("copper_cherry_sapling", ModBlocks.COPPER_CHERRY_SAPLING);
+    public static final Item GOLD_CHERRY_LOG = registerBlockItem("gold_cherry_log", ModBlocks.GOLD_CHERRY_LOG);
+    public static final Item GOLD_CHERRY_SAPLING = registerBlockItem("gold_cherry_sapling", ModBlocks.GOLD_CHERRY_SAPLING);
+    public static final Item IRON_CHERRY_LOG = registerBlockItem("iron_cherry_log", ModBlocks.IRON_CHERRY_LOG);
+    public static final Item IRON_CHERRY_SAPLING = registerBlockItem("iron_cherry_sapling", ModBlocks.IRON_CHERRY_SAPLING);
+
+    public static final Item COPPER_PALE_OAK_LOG = registerBlockItem("copper_pale_oak_log", ModBlocks.COPPER_PALE_OAK_LOG);
+    public static final Item COPPER_PALE_OAK_SAPLING = registerBlockItem("copper_pale_oak_sapling", ModBlocks.COPPER_PALE_OAK_SAPLING);
+    public static final Item GOLD_PALE_OAK_LOG = registerBlockItem("gold_pale_oak_log", ModBlocks.GOLD_PALE_OAK_LOG);
+    public static final Item GOLD_PALE_OAK_SAPLING = registerBlockItem("gold_pale_oak_sapling", ModBlocks.GOLD_PALE_OAK_SAPLING);
+    public static final Item IRON_PALE_OAK_LOG = registerBlockItem("iron_pale_oak_log", ModBlocks.IRON_PALE_OAK_LOG);
+    public static final Item IRON_PALE_OAK_SAPLING = registerBlockItem("iron_pale_oak_sapling", ModBlocks.IRON_PALE_OAK_SAPLING);
 
     private static Item register(String name, Function<Item.Properties, Item> factory) {
         return register(name, factory, new Item.Properties());
