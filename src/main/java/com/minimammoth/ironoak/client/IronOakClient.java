@@ -41,6 +41,10 @@ public class IronOakClient implements ClientModInitializer {
                 ModBlocks.GOLD_DARK_OAK_SAPLING,
                 ModBlocks.IRON_DARK_OAK_SAPLING,
 
+                ModBlocks.COPPER_CHERRY_SAPLING,
+                ModBlocks.GOLD_CHERRY_SAPLING,
+                ModBlocks.IRON_CHERRY_SAPLING,
+
                 ModBlocks.FIRE_BOWL);
 
         BlockEntityRendererRegistry.register(ModEntityTypes.FIRE_BOWL_ENTITY, FireBowlRenderer::new);
