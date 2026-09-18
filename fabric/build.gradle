@@ -29,13 +29,19 @@ repositories {
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+    // An obfuscated line needs mappings, and every mod dependency on it has to go through
+    // Loom's remapping configuration -- plain `implementation` leaves the artefact on
+    // intermediary names and every call into it fails to compile with `class_1234`.
+    // 26.1+ ships unobfuscated, where there is nothing to remap.
+    def modDep = project.obfuscated.toBoolean() ? 'modImplementation' : 'implementation'
     if (project.obfuscated.toBoolean()) {
         mappings loom.officialMojangMappings()
     }
-    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    add(modDep, "net.fabricmc:fabric-loader:${project.loader_version}")
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    add(modDep, "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
 
     // Layer 1 of docs/strategy/testing.md: plain JUnit with the loader booted and no
     // world. The version is pinned to loader_version on purpose — loader-junit boots the
@@ -53,11 +59,15 @@ dependencies {
 
 processResources {
     def version = project.version
+    // The Minecraft range the jar declares. It is the one line of fabric.mod.json that is
+    // genuinely per-version, so it comes from the version node rather than forking the file.
+    def minecraftDependency = project.minecraft_dependency
     inputs.property "version", version
+    inputs.property "minecraft_dependency", minecraftDependency
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {
-        expand "version": version
+        expand "version": version, "minecraft_dependency": minecraftDependency
     }
 }
 
@@ -67,6 +77,11 @@ sourceSets {
             srcDirs += [
                     'src/main/generated'
             ]
+
+            // Datagen's own bookkeeping directory. It is gitignored, but Stonecutter's copy
+            // of the shared tree carries it into every inactive node, and from there into
+            // the jar -- the active node never shows this, so it has to be excluded here.
+            exclude '.cache/**'
         }
 
         // common/ is the loader-neutral content moved out in #78 -- recipes, blocks,
@@ -109,6 +124,28 @@ sourceSets {
         compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output + sourceSets.testsupport.output
         runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
     }
+}
+
+// Client item definitions (assets/<ns>/items/) arrived in 1.21.4, and so did the Fabric
+// datagen provider that emits them. On an older node the whole generator is meaningless,
+// and a file cannot be conditionalised away from inside, because Stonecutter cannot comment
+// out a region that already contains a block comment. Excluding it from the source set is
+// the node's equivalent of the file simply not existing there.
+//
+// Note it is NOT stonecutter.filters: those only decide what the preprocessor rewrites, and
+// the generate step copies the raw shared tree alongside the processed one regardless.
+if (stonecutter.eval(stonecutter.current.version, '<1.21.4')) {
+    sourceSets.main.java.exclude '**/ModModelGenerator.java'
+
+    // The client item definitions this generator emits do not exist here either.
+    sourceSets.main.resources.exclude 'assets/iron_oak/items/**'
+}
+
+// Datagen wrote configured features to worldgen/configured_feature/ until 1.21.11 renamed
+// the directory to worldgen/feature/. The node carries its own copy under the old name, so
+// the shared tree's copy has to be kept out of it.
+if (stonecutter.eval(stonecutter.current.version, '<1.21.11')) {
+    sourceSets.main.resources.exclude 'data/iron_oak/worldgen/feature/**'
 }
 
 loom {
