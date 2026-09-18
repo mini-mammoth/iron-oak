@@ -2,8 +2,8 @@
 domain: Infusion
 domain_code: INF
 status: active
-last_updated: 2026-08-21
-version: 2
+last_updated: 2026-09-18
+version: 3
 related:
   - README.md
   - trees.md
@@ -51,15 +51,17 @@ WHEN the player right-clicks a **placed vanilla sapling** with infused bone meal
 metal THEN the system SHALL replace that block with the infused sapling of the same metal
 and wood type, in its default state.
 
-**Accepted saplings:** oak, birch, acacia, jungle, spruce, dark oak — declared explicitly
-per metal as a `Map<Block, Block>` in `ModItems`, not by tag.
+**Accepted saplings:** oak, birch, acacia, jungle, spruce, dark oak, cherry, pale oak (on
+this line; see `Matrix.WOODS`) — declared explicitly per metal as a `Map<Block, Block>` in
+`ModItems`, not by tag.
 
 **Acceptance criteria** (verify: `runClient`, `test`)
-- [ ] Each of the 6 vanilla saplings converts, for each of the 3 metals (18 combinations)
+- [ ] Each vanilla sapling in `Matrix.WOODS` converts, for each of the 3 metals (24
+      combinations on this line)
 - [ ] The resulting block is the infused sapling of the *same* wood type
 - [ ] An **already infused** sapling is not converted again and consumes nothing (it is not
       a key in any infusion map)
-- [ ] A sapling of a wood type outside the six is unaffected
+- [ ] A sapling of a wood type outside `Matrix.WOODS` is unaffected
 
 ---
 
@@ -130,5 +132,6 @@ raw-ore-backed item on a vanilla effect.
 |------|---------|---------|
 | 2026-08-20 | 1 | Initial, from the shipped 1.20.4 behaviour. |
 | 2026-08-21 | 2 | INF-02 names `test` as a gate (#43): `OreInfusedBoneMealTest` pins all eighteen bone-meal pairings on every build. |
+| 2026-09-18 | 3 | Cherry and pale oak land on this line (#88): INF-02's accepted saplings grow from 6 to 8, 18 to 24 combinations. `OreInfusedBoneMealTest` re-derives its expectations from `Matrix.WOODS`, so it needed no change of its own. |
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-09-18*
