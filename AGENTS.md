@@ -144,9 +144,10 @@ where that rule applies and, just as importantly, where it does not. **Observe t
 locally and report it in the PR; never commit red.**
 
 - Done means `gh pr checks <pr>` is green. A green local build is not proof — CI also
-  builds on Windows, and the workflow pins JDK 21 on the older lines to match the JDK
-  those players' launchers use, not because Loom needs it (see the JDK section above).
-  Both layers run on Linux and Windows, and CI uploads the JUnit XML of each.
+  builds on Windows, and the workflow still pins JDK 21 on the older lines even though
+  Loom does not require it (see the JDK section above). Why that pin is there is an open
+  question — nobody has established a reason, so do not "fix" it on a guess. Both layers
+  run on Linux and Windows, and CI uploads the JUnit XML of each.
 - `./gradlew build` is incremental and Loom caches Minecraft; the first run after a
   version bump re-downloads and decompiles and can take several minutes. That is normal,
   not a hang.
