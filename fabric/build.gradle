@@ -1,11 +1,19 @@
 plugins {
-    // Minecraft 26.1+ ships unobfuscated, so no remapping layer is needed.
-    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    // Both variants on the classpath, one applied: 26.1+ ships unobfuscated and uses the
+    // plain plugin, the 1.21.x line is obfuscated and needs the remapping one.
+    id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
     id 'maven-publish'
     id 'me.modmuss50.mod-publish-plugin' version '2.2.0'
 }
 
-version = project.mod_version
+apply plugin: project.obfuscated.toBoolean()
+        ? 'net.fabricmc.fabric-loom-remap'
+        : 'net.fabricmc.fabric-loom'
+
+// `<mod>+<mc>` -- the mod half is version-neutral and lives in the root gradle.properties,
+// the +mc half comes from the version node. See AGENTS.md on version numbering.
+version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 base {
@@ -21,6 +29,9 @@ repositories {
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    if (project.obfuscated.toBoolean()) {
+        mappings loom.officialMojangMappings()
+    }
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
@@ -67,8 +78,8 @@ sourceSets {
         // a ClassCastException casting its own extension across the two subprojects'
         // plugin classloaders. This is the same output-wiring already used below for
         // testsupport/gametest.
-        compileClasspath += project(':common').sourceSets.main.output
-        runtimeClasspath += project(':common').sourceSets.main.output
+        compileClasspath += project(":common:${stonecutter.current.version}").sourceSets.main.output
+        runtimeClasspath += project(":common:${stonecutter.current.version}").sourceSets.main.output
     }
 
     // The @Requirement annotation and nothing else. It belongs to neither test layer and
@@ -154,7 +165,7 @@ loom {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 25
+    it.options.release = project.java_release.toInteger()
 }
 
 // `./gradlew build` runs this, so a failing test fails the build — which is the whole
@@ -179,8 +190,8 @@ java {
     // If you remove this line, sources will not be generated.
     withSourcesJar()
 
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.toVersion(project.java_release)
+    targetCompatibility = JavaVersion.toVersion(project.java_release)
 }
 
 jar {
@@ -201,7 +212,7 @@ jar {
     // common/'s classes are wired in as a source-set output above, not a project
     // dependency, so they need to be packaged into this jar explicitly -- there is no
     // separate common/ mod jar for Fabric to load them from.
-    from(project(':common').sourceSets.main.output)
+    from(project(":common:${stonecutter.current.version}").sourceSets.main.output)
 }
 
 // Uploads the remapped jar to Modrinth and CurseForge. Run with `./gradlew :fabric:publishMods`;
@@ -216,7 +227,13 @@ jar {
 publishMods {
     file = jar.archiveFile
     displayName = "Iron Oak ${project.mod_version}"
-    version = project.mod_version
+    apply plugin: project.obfuscated.toBoolean()
+        ? 'net.fabricmc.fabric-loom-remap'
+        : 'net.fabricmc.fabric-loom'
+
+// `<mod>+<mc>` -- the mod half is version-neutral and lives in the root gradle.properties,
+// the +mc half comes from the version node. See AGENTS.md on version numbering.
+version = "${project.mod_version}+${project.minecraft_version}"
     // `type` is a ReleaseType enum, not a String — the property has to be converted.
     type = me.modmuss50.mpp.ReleaseType.valueOf(project.publish_type)
     modLoaders.add("fabric")

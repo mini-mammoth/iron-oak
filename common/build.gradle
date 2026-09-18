@@ -3,18 +3,28 @@ plugins {
     // because common/ will eventually compile against vanilla Minecraft classes, which
     // only Loom's minecraft dependency provides. Minecraft 26.1+ ships unobfuscated, so no
     // remapping layer is needed.
-    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    // Both variants on the classpath, one applied: 26.1+ ships unobfuscated and uses the
+    // plain plugin, the 1.21.x line is obfuscated and needs the remapping one.
+    id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
 }
+
+apply plugin: project.obfuscated.toBoolean()
+        ? 'net.fabricmc.fabric-loom-remap'
+        : 'net.fabricmc.fabric-loom'
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    if (project.obfuscated.toBoolean()) {
+        mappings loom.officialMojangMappings()
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 25
+    it.options.release = project.java_release.toInteger()
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.toVersion(project.java_release)
+    targetCompatibility = JavaVersion.toVersion(project.java_release)
 }

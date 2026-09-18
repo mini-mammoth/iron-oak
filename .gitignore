@@ -125,3 +125,6 @@ logs/
 
 # Claude Code — personal, machine-specific overrides (JAVA_HOME etc.)
 .claude/settings.local.json
+
+# Stonecutter spike: generated per-version build dirs
+versions/*/build/

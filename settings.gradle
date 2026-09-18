@@ -4,13 +4,30 @@ pluginManagement {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
         }
+        maven {
+            name = 'Stonecutter'
+            url = 'https://maven.kikugie.dev/releases'
+        }
         gradlePluginPortal()
     }
 }
 
+plugins {
+    id 'dev.kikugie.stonecutter' version '0.9.8'
+}
+
 rootProject.name = 'iron-oak'
 
-// common/ is the loader-neutral subproject (empty for now — phase A moves no mod code).
-// fabric/ is everything the mod is today. See docs/ops/multiloader.md and #76.
 include('common')
 include('fabric')
+
+stonecutter {
+    centralScript = 'build.gradle'
+    kotlinController = false
+
+    create(rootProject) {
+        branch('common') { versions('1.21.1', '26.3') }
+        branch('fabric') { versions('1.21.1', '26.3') }
+        vcsVersion = '26.3'
+    }
+}
