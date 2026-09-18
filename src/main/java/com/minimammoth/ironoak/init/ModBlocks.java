@@ -70,6 +70,20 @@ public class ModBlocks {
     public static final Block IRON_DARK_OAK_LOG = log("iron_dark_oak_log", Blocks.DARK_OAK_LOG);
     public static final Block IRON_DARK_OAK_SAPLING = sapling("iron_dark_oak_sapling", ModSaplingGenerators.IRON_DARK_OAK, Blocks.DARK_OAK_SAPLING);
 
+    public static final Block COPPER_CHERRY_LOG = log("copper_cherry_log", Blocks.CHERRY_LOG);
+    public static final Block COPPER_CHERRY_SAPLING = sapling("copper_cherry_sapling", ModSaplingGenerators.COPPER_CHERRY, Blocks.CHERRY_SAPLING);
+    public static final Block GOLD_CHERRY_LOG = log("gold_cherry_log", Blocks.CHERRY_LOG);
+    public static final Block GOLD_CHERRY_SAPLING = sapling("gold_cherry_sapling", ModSaplingGenerators.GOLD_CHERRY, Blocks.CHERRY_SAPLING);
+    public static final Block IRON_CHERRY_LOG = log("iron_cherry_log", Blocks.CHERRY_LOG);
+    public static final Block IRON_CHERRY_SAPLING = sapling("iron_cherry_sapling", ModSaplingGenerators.IRON_CHERRY, Blocks.CHERRY_SAPLING);
+
+    public static final Block COPPER_PALE_OAK_LOG = log("copper_pale_oak_log", Blocks.PALE_OAK_LOG);
+    public static final Block COPPER_PALE_OAK_SAPLING = sapling("copper_pale_oak_sapling", ModSaplingGenerators.COPPER_PALE_OAK, Blocks.PALE_OAK_SAPLING);
+    public static final Block GOLD_PALE_OAK_LOG = log("gold_pale_oak_log", Blocks.PALE_OAK_LOG);
+    public static final Block GOLD_PALE_OAK_SAPLING = sapling("gold_pale_oak_sapling", ModSaplingGenerators.GOLD_PALE_OAK, Blocks.PALE_OAK_SAPLING);
+    public static final Block IRON_PALE_OAK_LOG = log("iron_pale_oak_log", Blocks.PALE_OAK_LOG);
+    public static final Block IRON_PALE_OAK_SAPLING = sapling("iron_pale_oak_sapling", ModSaplingGenerators.IRON_PALE_OAK, Blocks.PALE_OAK_SAPLING);
+
     private static Block log(String name, Block copyFrom) {
         return register(name, RotatedPillarBlock::new, copyFrom);
     }
