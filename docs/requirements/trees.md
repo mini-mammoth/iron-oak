@@ -2,8 +2,8 @@
 domain: Trees
 domain_code: TRE
 status: active
-last_updated: 2026-08-21
-version: 2
+last_updated: 2026-09-18
+version: 4
 related:
   - README.md
   - infusion.md
@@ -77,7 +77,8 @@ Jungle trees keep their vanilla decorators (cocoa beans 0.2, trunk and leaf vine
 There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 
 **Acceptance criteria** (verify: `runClient`, `inspect`, `test`, `gametest`)
-- [ ] All 18 combinations grow, and each yields logs of its own metal and wood type
+- [ ] All combinations in `Matrix.arms()` (24 on this line) grow, and each yields logs of
+      its own metal and wood type
 - [ ] `src/main/generated/data/iron_oak/worldgen/configured_feature/<metal>_<wood>_tree.json`
       names `iron_oak:<metal>_<wood>_log` and `minecraft:<wood>_leaves`
 - [ ] Tree silhouettes match their vanilla counterparts (dark oak thick trunk, spruce
@@ -100,10 +101,10 @@ committed JSON was correct, so nothing was inconsistent and every arm compiled �
 saplings would have started growing each other's trees.
 
 The fix renamed the constants to match the keys they hold, leaving the ids, the generated JSON
-and existing worlds untouched. `TreeMatrixTest` now walks all 18 arms from the metal and wood
-strings rather than from the constants, and `InfusedSaplingGameTest` grows three of them in a
-real world; both were seen red against a deliberately re-broken tree. `./gradlew runDatagen`
-is a clean no-op on `main`.
+and existing worlds untouched. `TreeMatrixTest` now walks every arm in `Matrix.arms()` from
+the metal and wood strings rather than from the constants, and `InfusedSaplingGameTest` grows
+three of them in a real world; both were seen red against a deliberately re-broken tree.
+`./gradlew runDatagen` is a clean no-op on this line.
 
 **So both gates below are green, and the status still says `broken`.** That is not an
 oversight: this entry is a build-reproducibility invariant rather than something a player can
@@ -133,7 +134,8 @@ axes, stripping-adjacent recipes and — deliberately — the planks recipe work
 intended (concept principle 4) and is a *consequence* of tag membership, not a separate rule.
 
 **Acceptance criteria** (verify: `inspect`, `runClient`)
-- [ ] Each of the six `data/minecraft/tags/blocks/<wood>_logs.json` lists all three metals
+- [ ] Each of the eight `data/minecraft/tags/block/<wood>_logs.json` (on this line) lists all
+      three metals
 - [ ] The matching item tags do the same
 - [ ] Crafting an infused log into planks yields **vanilla** planks and no shred, ash or ore
 - [ ] An axe is the effective tool, at the vanilla log speed
@@ -151,7 +153,7 @@ There is no ore loss on breaking, no fortune interaction and no shred drop — t
 leaves the wood in the fire bowl.
 
 **Acceptance criteria** (verify: `runClient`, `inspect`, `test`)
-- [ ] All 36 loot tables exist (18 logs, 18 saplings) and each drops its own block
+- [ ] All loot tables exist (24 logs, 24 saplings on this line) and each drops its own block
 - [ ] Fortune does not change the drop
 - [ ] Blowing up a log may destroy it (vanilla explosion behaviour)
 
@@ -189,5 +191,6 @@ modifications (`ModWorldGenerator` writes `configured_feature/` only).
 | 2026-08-20 | 1 | Initial. Records the datagen/source divergence for jungle, spruce and dark oak as TRE-04 (`broken`, #30), verified against the committed generated JSON. |
 | 2026-08-21 | 2 | TRE-03 names `test` and `gametest`, TRE-04 and TRE-06 name `test` (#43). `TreeMatrixTest` walks all eighteen arms and `InfusedSaplingGameTest` grows three of them in a real world — the two halves of #30, one per layer. |
 | 2026-08-21 | 3 | TRE-04 describes the fixed tree (#47). #30 was fixed before this catalogue merged, so "this is currently false" had never been true here. Both its gates are green — `runDatagen` is a clean no-op and `TreeMatrixTest` covers the pairing — and the entry now says plainly that the status is held by #48, not by the code. |
+| 2026-09-18 | 4 | Cherry and pale oak land on this line (#88): TRE-03, TRE-05 and TRE-06 grow from 6 to 8 woods, 18 to 24/36 to 48 combinations, and now point at `Matrix.arms()`/`Matrix.WOODS` instead of a fixed count. Fixes a stale `tags/blocks` path name to the `tags/block` directory this line's resources actually use. |
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-09-18*

@@ -2,8 +2,8 @@
 domain: Requirements Index
 domain_code: REQ
 status: active
-last_updated: 2026-08-21
-version: 2
+last_updated: 2026-09-18
+version: 4
 related:
   - ../concept/README.md
   - ../concept/balance.md
@@ -30,7 +30,7 @@ the numbers, read [`../concept/balance.md`](../concept/balance.md). This index i
 | Burning | [burning.md](burning.md) | `BRN` | The fire bowl: lighting, cooking, afterburn, hoppers, hazards |
 | Washing | [washing.md](washing.md) | `WSH` | Ash → shreds in water, and the automation that does not exist yet |
 | Refining | [refining.md](refining.md) | `REF` | Shreds → raw ore and nuggets; closing the loop |
-| Matrix | [matrix.md](matrix.md) | `MAT` | The 6 woods × 3 metals completeness rules |
+| Matrix | [matrix.md](matrix.md) | `MAT` | The 8 woods × 3 metals completeness rules (this line) |
 
 ## How to read a requirement
 
@@ -167,7 +167,7 @@ they name. Treat an unticked criterion on a `done` requirement as unverified, no
 | [REF-04](refining.md#ref-04-the-loop-closes-at-raw-ore) | The loop closes at raw ore | done | — |
 | [MAT-01](matrix.md#mat-01-every-combination-exists-in-every-arm) | Every combination exists in every arm | done | — |
 | [MAT-02](matrix.md#mat-02-a-partial-matrix-is-not-shipped) | A partial matrix is not shipped | done | — |
-| [MAT-03](matrix.md#mat-03-metal-scoped-log-tags-list-all-six-woods) | Metal-scoped log tags list all six woods | done | — |
+| [MAT-03](matrix.md#mat-03-metal-scoped-log-tags-list-every-wood-on-the-line) | Metal-scoped log tags list every wood on the line | done | — |
 | [MAT-04](matrix.md#mat-04-vanilla-wood-tags-list-all-three-metals) | Vanilla wood tags list all three metals | done | — |
 | [MAT-05](matrix.md#mat-05-every-registered-object-has-an-english-name) | Every registered object has an English name | done | — |
 
@@ -222,5 +222,6 @@ sit in their own file. Neither is a work item until someone answers it.
 | 2026-08-20 | 1 | Initial baseline: 36 requirements across six domains, read out of `1.2.1+1.20.4`. Wires #15, #27, #28 and the newly filed #30 to the requirements they break. |
 | 2026-08-21 | 2 | `verify:` gains `test` and `gametest` (#43), now that #40 has built both layers. Thirteen requirements name one of them, and the claim is checked in both directions by `RequirementTracingTest` — a test cites its requirement with `@Requirement`. MAT-Q1 answered: the matrix counts are enforced mechanically. |
 | 2026-08-21 | 3 | Re-baselined onto the tree it describes (#47). The version anchor pointed at 1.20.4 and `1.2.1+1.20.4`; `main` had moved to 1.21.11 the day before this catalogue merged, and four entries still described code the fixes for #27, #28 and #30 had already deleted. Statuses and the tally are untouched — a status moves at the gate it names — and #48 asks whether TRE-04 and the MAT domain belong here at all. |
+| 2026-09-18 | 4 | Cherry and pale oak land on this line (#88): the Matrix row and MAT-03's title/anchor move from six woods to "every wood on the line", matching the per-line matrix rule in `AGENTS.md`. |
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-09-18*

@@ -18,6 +18,12 @@
     "iron_oak:iron_jungle_sapling",
     "iron_oak:copper_dark_oak_sapling",
     "iron_oak:gold_dark_oak_sapling",
-    "iron_oak:iron_dark_oak_sapling"
+    "iron_oak:iron_dark_oak_sapling",
+    "iron_oak:copper_cherry_sapling",
+    "iron_oak:gold_cherry_sapling",
+    "iron_oak:iron_cherry_sapling",
+    "iron_oak:copper_pale_oak_sapling",
+    "iron_oak:gold_pale_oak_sapling",
+    "iron_oak:iron_pale_oak_sapling"
   ]
 }
