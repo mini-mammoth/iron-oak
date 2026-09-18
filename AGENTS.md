@@ -26,9 +26,11 @@ The gameplay loop the mod implements, in order — know it before you touch a re
 5. Wash the ash with water → **shreds** (`WashingRecipe`).
 6. 9 shreds → one raw ore; or smelt a shred into a nugget.
 
-Six wood types are covered (oak, acacia, birch, jungle, spruce, dark oak) × three metals
-(iron, copper, gold). That 6×3 matrix is why `ModBlocks`/`ModItems` are long and
-repetitive — when you add a metal or a wood type you touch every arm of it.
+Seven wood types are covered on this line (oak, acacia, birch, jungle, spruce, dark oak,
+cherry) × three metals (iron, copper, gold) — see `Matrix.java` for the wood set this line
+declares, since that set is no longer the same on every line (#88). Pale oak is not among
+them: it does not exist in Minecraft 1.21.1. That matrix is why `ModBlocks`/`ModItems` are
+long and repetitive — when you add a metal or a wood type you touch every arm of it.
 
 **Before you change behaviour, read the requirement for it.**
 [`docs/requirements/README.md`](docs/requirements/README.md) states what each mechanic must
@@ -119,7 +121,7 @@ up to make.
 - **`src/test/`** — plain JUnit with the loader booted and no world, via
   `fabric-loader-junit`. Milliseconds, and `./gradlew build` runs it, so a failing unit
   test fails the build. This is where names, ids, maps, committed resource files and
-  numbers belong, and where the 6×3 matrix guard lives.
+  numbers belong, and where the matrix guard lives.
 - **`src/gametest/`** — a headless server, a real world and actual ticking, via
   `fabric-gametest-api-v1`. Seconds, run by `./gradlew runGametest`, which writes JUnit XML
   to `build/gametest/report.xml`. Its own source set, so none of it ships in the mod jar.
@@ -236,10 +238,29 @@ Minecraft half in the same commit as the version bump, never separately.
   Gradle wrapper and `.github/` belong to `area:build` tickets. If your feature seems to
   need a newer Minecraft or Loom, stop and report it — do not carry a toolchain change in
   a feature PR. It makes the PR unreviewable and unrevertable.
-- **The 6×3 matrix is all-or-nothing.** Adding a wood type or a metal means every arm:
-  block, block item, sapling generator, configured feature, loot table, tag, model,
-  blockstate, texture, lang entry, recipe. A half-filled matrix ships a mod that crashes
-  on the missing entry. If you cannot complete the matrix, report instead of shipping part.
+- **The matrix is all-or-nothing.** Adding a wood type or a metal means every arm: block,
+  block item, sapling generator, configured feature, loot table, tag, model, blockstate,
+  texture, lang entry, recipe. A half-filled matrix ships a mod that crashes on the missing
+  entry. If you cannot complete the matrix, report instead of shipping part.
+- **The matrix may differ per line — but only in `Matrix.java`.** Since #88, the wood set is
+  no longer uniform across version lines: pale oak exists on `main` and other lines but not
+  on `v1.21.1`, because it doesn't exist in that version's vanilla jar. That is why this line
+  carries **seven** woods, not six and not eight. What may differ between lines is exactly
+  the *contents* of `Matrix.WOODS` (and, in principle, `Matrix.METALS`) — nothing else.
+  - `src/test/java/com/minimammoth/ironoak/Matrix.java` is the single place this line
+    declares its own wood set. Adding or removing a wood happens there and nowhere else;
+    the guard test (`TreeMatrixTest`) re-derives the expected arm count from that list, so
+    this line's 7 woods expect 21 arms without anyone editing an assertion by hand.
+  - What may **not** differ: the shape of an arm. Every wood present in `Matrix.WOODS` still
+    needs every piece in the bullet above — block, item, generator, feature, loot table,
+    tag, model, blockstate, texture, lang entry, tag membership. Shipping a wood with, say,
+    no loot table is the same bug as a matrix that ships without one.
+  - **Porting is a subtraction, not a rewrite.** When porting matrix work down from a line
+    with more woods, remove the wood this line cannot have from every location in the
+    bullet above on this line's copy of the files, starting with `Matrix.java`; do not port
+    the code for a wood this line cannot have, and do not leave `Matrix.java` overstating
+    what this line actually ships — that mismatch is exactly what made #88 necessary to
+    write down.
 - Minimal changes: change what the ticket needs, match the surrounding style, and remove
   debug code before committing.
 
@@ -327,5 +348,6 @@ away — and do not ask only to have your understanding confirmed. Test it inste
 | 2026-08-21 | 1.2 | There is a test suite (#40). The quality gates now name `./gradlew build` for the loader-JUnit layer and `./gradlew runGametest` for the server layer, and the "no test suite" passage is gone. `runClient` stays the gate for rendering and for anything the gametests do not reach. |
 | 2026-08-21 | 1.4 | Staleness sweep (#47). The file and line counts and the jar's "~347 files" are gone — all three had drifted, and the empty-jar bug shipped 2 files, so the check is an order of magnitude. The jar command no longer uses a glob that matches the sources jar too. |
 | 2026-08-21 | 1.3 | Points at the `java` skill for the code rules and at `docs/requirements/` for what a test proves (#43). Tests cite their requirement with `@Requirement`. |
+| 2026-09-18 | 1.5 | Cherry backport from `main` PR #90 (#88). This line's matrix grows from 6×3 to 7×3 — pale oak is excluded because it doesn't exist in Minecraft 1.21.1. Records the per-line matrix rule: the wood set may differ between version lines, but only in `Matrix.java`. |
 
-*Last updated: 2026-08-21*
+*Last updated: 2026-09-18*
