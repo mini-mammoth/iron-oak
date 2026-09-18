@@ -75,21 +75,22 @@ first: https://mappings.dev
 
 ---
 
-## The JDK is the single most common way to waste an hour here
+## The JDK does not change per line — the build regime does
 
-**Fabric Loom has line-specific JDK requirements.** This machine's default is JDK 25 (sdkman).
+**Fabric Loom 1.17 launches Gradle fine on this machine's default JDK 25 for every
+line.** No `JAVA_HOME` override is needed, on 26.x or on 1.21.x and earlier.
 
-- **26.x line (main):** Loom 1.17 runs on JDK 25. No setup needed; the default is correct.
-- **1.21.x line and earlier:** Loom does not run on JDK 22+, so every Gradle command needs JDK 21:
+What actually differs per line is what Loom produces, not which JDK runs it:
 
-```bash
-export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
-./gradlew build
-```
+- **26.x line (main):** the plain `net.fabricmc.fabric-loom` plugin, no `mappings`
+  block, compiles at `options.release = 25`.
+- **1.21.x line and earlier:** `net.fabricmc.fabric-loom-remap`, needs
+  `mappings loom.officialMojangMappings()`, compiles at `options.release = 21`.
 
-Or `sdk use java 21.0.3-ms` for the shell. `.sdkmanrc` in the repo root records the
-current line's JDK, so `sdk env` picks it up. If a build fails and you have not checked
-`java -version`, check it before you debug anything else.
+`.sdkmanrc` in the repo root records the current line's toolchain JDK for `sdk env`,
+but that is convenience, not a requirement the build enforces. If a build fails, check
+`java -version` before you debug anything else — but do not assume switching it is the
+fix.
 
 ---
 
@@ -99,7 +100,6 @@ This list is a **copy of `.github/workflows/main.yml`** and is the only definiti
 "green" in this repo:
 
 ```bash
-export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 ./gradlew build                 # compiles, remaps, builds the jar, runs the unit tests
 ./gradlew runGametest           # headless server, real world — the second CI gate
 ```
@@ -144,8 +144,9 @@ where that rule applies and, just as importantly, where it does not. **Observe t
 locally and report it in the PR; never commit red.**
 
 - Done means `gh pr checks <pr>` is green. A green local build is not proof — CI also
-  builds on Windows, and the workflow pins JDK 21 for the same reason you have to. Both
-  layers run on Linux and Windows, and CI uploads the JUnit XML of each.
+  builds on Windows, and the workflow pins JDK 21 on the older lines to match the JDK
+  those players' launchers use, not because Loom needs it (see the JDK section above).
+  Both layers run on Linux and Windows, and CI uploads the JUnit XML of each.
 - `./gradlew build` is incremental and Loom caches Minecraft; the first run after a
   version bump re-downloads and decompiles and can take several minutes. That is normal,
   not a hang.
@@ -251,8 +252,11 @@ not `git cherry-pick`, because it crosses two real boundaries:
 
 - **Renames.** `Identifier` on 26.x and 1.21.11 is `ResourceLocation` on 1.21.1;
   `ChunkSectionLayer` is `RenderType`. A cherry-pick across that does not apply.
-- **Build regime.** `main` is unobfuscated on JDK 25; the 1.21.x lines are obfuscated on
-  JDK 21 with a different Loom plugin id. Anything touching the build never cherry-picks.
+- **Build regime.** `main` applies the plain `net.fabricmc.fabric-loom` plugin and
+  compiles at `options.release = 25`; the 1.21.x lines apply
+  `net.fabricmc.fabric-loom-remap`, need `mappings loom.officialMojangMappings()`, and
+  compile at `options.release = 21` — a different Loom plugin id and mappings, not a
+  different JDK to launch Gradle with. Anything touching the build never cherry-picks.
 
 So budget a hand-port per backport, and expect that a change written against 26.x may need
 reworking — or rejecting — on an older line. Say which lines you ported to in the PR, and say
@@ -373,7 +377,8 @@ is cheap and you should not be shy about it. The expensive mistakes in this repo
 
 ## Useful commands
 
-All Gradle commands assume `JAVA_HOME` points at JDK 21 (see above).
+All Gradle commands run under this machine's default JDK 25 — no `JAVA_HOME` override
+is needed on any line (see above).
 
 | Purpose | Command |
 |---|---|
