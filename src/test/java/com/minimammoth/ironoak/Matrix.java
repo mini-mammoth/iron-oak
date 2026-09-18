@@ -6,7 +6,7 @@ import java.util.List;
 import static com.minimammoth.ironoak.IronOak.MOD_ID;
 
 /**
- * The 6x3 matrix, as strings.
+ * The 7x3 matrix, as strings.
  *
  * <p>Deliberately not derived from {@code ModBlocks}, {@code ModSaplingGenerators} or
  * {@code ModConfiguredFeatures}. Those constants <em>were</em> the bug in #30 — their names
@@ -14,12 +14,17 @@ import static com.minimammoth.ironoak.IronOak.MOD_ID;
  * would have restated the bug and passed. The expected set is written out here instead, and
  * every arm is looked up.
  *
- * <p>Adding a metal or a wood type means adding it here too, and then watching eighteen
+ * <p>Adding a metal or a wood type means adding it here too, and then watching twenty-one
  * more assertions tell you which of the twelve places you forgot.
+ *
+ * <p>This is also the single place this version line declares its own wood set — see
+ * "The matrix may differ per line" in {@code AGENTS.md}. {@code pale_oak} does not exist
+ * on {@code v1.21.1}, so this line's copy of this file does not carry it.
  */
 public final class Matrix {
     public static final List<String> METALS = List.of("copper", "gold", "iron");
-    public static final List<String> WOODS = List.of("oak", "acacia", "birch", "jungle", "spruce", "dark_oak");
+    public static final List<String> WOODS =
+            List.of("oak", "acacia", "birch", "jungle", "spruce", "dark_oak", "cherry");
 
     private Matrix() {
     }
@@ -51,7 +56,7 @@ public final class Matrix {
         }
     }
 
-    /** All eighteen arms, in a stable order. */
+    /** All twenty-one arms, in a stable order. */
     public static List<Arm> arms() {
         List<Arm> arms = new ArrayList<>(METALS.size() * WOODS.size());
         for (String metal : METALS) {
