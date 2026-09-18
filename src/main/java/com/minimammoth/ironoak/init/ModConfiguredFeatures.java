@@ -8,8 +8,11 @@ import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.util.valueproviders.WeightedListInt;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -19,12 +22,14 @@ import net.minecraft.world.level.levelgen.feature.featuresize.ThreeLayersFeature
 import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSize;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.AcaciaFoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.BlobFoliagePlacer;
+import net.minecraft.world.level.levelgen.feature.foliageplacers.CherryFoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.DarkOakFoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.SpruceFoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.treedecorators.CocoaDecorator;
 import net.minecraft.world.level.levelgen.feature.treedecorators.LeaveVineDecorator;
 import net.minecraft.world.level.levelgen.feature.treedecorators.TrunkVineDecorator;
+import net.minecraft.world.level.levelgen.feature.trunkplacers.CherryTrunkPlacer;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.DarkOakTrunkPlacer;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.ForkingTrunkPlacer;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
@@ -60,6 +65,14 @@ public class ModConfiguredFeatures {
     public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_DARK_OAK_TREE = registerKey("gold_dark_oak_tree");
     public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_DARK_OAK_TREE = registerKey("iron_dark_oak_tree");
 
+    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_CHERRY_TREE = registerKey("copper_cherry_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_CHERRY_TREE = registerKey("gold_cherry_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_CHERRY_TREE = registerKey("iron_cherry_tree");
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> COPPER_PALE_OAK_TREE = registerKey("copper_pale_oak_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> GOLD_PALE_OAK_TREE = registerKey("gold_pale_oak_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> IRON_PALE_OAK_TREE = registerKey("iron_pale_oak_tree");
+
     private static TreeConfiguration.TreeConfigurationBuilder oreOak(Block oreLog) {
         return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new StraightTrunkPlacer(4, 2, 0), BlockStateProvider.simple(Blocks.OAK_LEAVES), new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3), Optional.empty(), new TwoLayersFeatureSize(1, 0, 1), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
     }
@@ -91,6 +104,32 @@ public class ModConfiguredFeatures {
         ).decorators(List.of(new CocoaDecorator(0.2F), TrunkVineDecorator.INSTANCE, new LeaveVineDecorator(0.25F))).ignoreVines();
     }
 
+    /**
+     * Matches vanilla's own {@code cherry} configured feature shape (see
+     * {@code net.minecraft.data.worldgen.features.TreeFeatures}) — cherry is the one wood
+     * type here whose trunk and foliage placers take more than a handful of scalar args.
+     */
+    private static TreeConfiguration.TreeConfigurationBuilder oreCherry(Block oreLog) {
+        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new CherryTrunkPlacer(7, 1, 0,
+                new WeightedListInt(WeightedList.<IntProvider>builder()
+                        .add(ConstantInt.of(1), 1)
+                        .add(ConstantInt.of(2), 1)
+                        .add(ConstantInt.of(3), 1)
+                        .build()),
+                UniformInt.of(2, 4), UniformInt.of(-4, -3), UniformInt.of(-1, 0)),
+                BlockStateProvider.simple(Blocks.CHERRY_LEAVES),
+                new CherryFoliagePlacer(ConstantInt.of(4), ConstantInt.of(0), ConstantInt.of(5), 0.25F, 0.5F, 0.16666667F, 0.33333334F),
+                Optional.empty(), new TwoLayersFeatureSize(1, 0, 2), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
+    }
+
+    /**
+     * Pale oak reuses dark oak's trunk and foliage placers with pale oak's own blocks — the
+     * same shape vanilla's own {@code pale_oak} configured feature uses, minus the moss
+     * decorator this mod does not replicate for any wood type.
+     */
+    private static TreeConfiguration.TreeConfigurationBuilder orePaleOak(Block oreLog) {
+        return new TreeConfiguration.TreeConfigurationBuilder(BlockStateProvider.simple(oreLog), new DarkOakTrunkPlacer(6, 2, 1), BlockStateProvider.simple(Blocks.PALE_OAK_LEAVES), new DarkOakFoliagePlacer(ConstantInt.of(0), ConstantInt.of(0)), Optional.empty(), new ThreeLayersFeatureSize(1, 1, 0, 1, 2, OptionalInt.empty()), BlockStateProvider.simple(Blocks.DIRT)).ignoreVines();
+    }
 
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
         FeatureUtils.register(context, COPPER_OAK_TREE, Feature.TREE, oreOak(ModBlocks.COPPER_OAK_LOG).build());
@@ -116,6 +155,14 @@ public class ModConfiguredFeatures {
         FeatureUtils.register(context, COPPER_DARK_OAK_TREE, Feature.TREE, oreDarkOak(ModBlocks.COPPER_DARK_OAK_LOG).build());
         FeatureUtils.register(context, GOLD_DARK_OAK_TREE, Feature.TREE, oreDarkOak(ModBlocks.GOLD_DARK_OAK_LOG).build());
         FeatureUtils.register(context, IRON_DARK_OAK_TREE, Feature.TREE, oreDarkOak(ModBlocks.IRON_DARK_OAK_LOG).build());
+
+        FeatureUtils.register(context, COPPER_CHERRY_TREE, Feature.TREE, oreCherry(ModBlocks.COPPER_CHERRY_LOG).build());
+        FeatureUtils.register(context, GOLD_CHERRY_TREE, Feature.TREE, oreCherry(ModBlocks.GOLD_CHERRY_LOG).build());
+        FeatureUtils.register(context, IRON_CHERRY_TREE, Feature.TREE, oreCherry(ModBlocks.IRON_CHERRY_LOG).build());
+
+        FeatureUtils.register(context, COPPER_PALE_OAK_TREE, Feature.TREE, orePaleOak(ModBlocks.COPPER_PALE_OAK_LOG).build());
+        FeatureUtils.register(context, GOLD_PALE_OAK_TREE, Feature.TREE, orePaleOak(ModBlocks.GOLD_PALE_OAK_LOG).build());
+        FeatureUtils.register(context, IRON_PALE_OAK_TREE, Feature.TREE, orePaleOak(ModBlocks.IRON_PALE_OAK_LOG).build());
     }
 
     public static ResourceKey<ConfiguredFeature<?, ?>> registerKey(String name) {
