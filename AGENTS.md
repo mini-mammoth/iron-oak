@@ -26,9 +26,11 @@ The gameplay loop the mod implements, in order — know it before you touch a re
 5. Wash the ash with water → **shreds** (`WashingRecipe`).
 6. 9 shreds → one raw ore; or smelt a shred into a nugget.
 
-Six wood types are covered (oak, acacia, birch, jungle, spruce, dark oak) × three metals
-(iron, copper, gold). That 6×3 matrix is why `ModBlocks`/`ModItems` are long and
-repetitive — when you add a metal or a wood type you touch every arm of it.
+Eight wood types are covered on `main` (oak, acacia, birch, jungle, spruce, dark oak,
+cherry, pale oak) × three metals (iron, copper, gold) — see `Matrix.java` for the wood set a
+given line actually declares, since that set is no longer the same on every line (#88). That
+matrix is why `ModBlocks`/`ModItems` are long and repetitive — when you add a metal or a
+wood type you touch every arm of it.
 
 **Before you change behaviour, read the requirement for it.**
 [`docs/requirements/README.md`](docs/requirements/README.md) states what each mechanic must
@@ -123,7 +125,7 @@ up to make.
 - **`src/test/`** — plain JUnit with the loader booted and no world, via
   `fabric-loader-junit`. Milliseconds, and `./gradlew build` runs it, so a failing unit
   test fails the build. This is where names, ids, maps, committed resource files and
-  numbers belong, and where the 6×3 matrix guard lives.
+  numbers belong, and where the matrix guard lives.
 - **`src/gametest/`** — a headless server, a real world and actual ticking, via
   `fabric-gametest-api-v1`. Seconds, run by `./gradlew runGametest`, which writes JUnit XML
   to `fabric/build/gametest/report.xml`. Its own source set, so none of it ships in the mod
@@ -296,10 +298,29 @@ it in either direction (`v1.2.0 "MC 1.19.x Release"` was a port that took a mino
   Gradle wrapper and `.github/` belong to `area:build` tickets. If your feature seems to
   need a newer Minecraft or Loom, stop and report it — do not carry a toolchain change in
   a feature PR. It makes the PR unreviewable and unrevertable.
-- **The 6×3 matrix is all-or-nothing.** Adding a wood type or a metal means every arm:
-  block, block item, sapling generator, configured feature, loot table, tag, model,
-  blockstate, texture, lang entry, recipe. A half-filled matrix ships a mod that crashes
-  on the missing entry. If you cannot complete the matrix, report instead of shipping part.
+- **The matrix is all-or-nothing.** Adding a wood type or a metal means every arm: block,
+  block item, sapling generator, configured feature, loot table, tag, model, blockstate,
+  texture, lang entry, recipe. A half-filled matrix ships a mod that crashes on the missing
+  entry. If you cannot complete the matrix, report instead of shipping part.
+- **The matrix may differ per line — but only in `Matrix.java`.** Since #88, the wood set is
+  no longer uniform: pale oak exists on `main`, `v26.2` and `v1.21.11` but not on `v1.21.1`,
+  because it doesn't exist in that version's vanilla jar. What may differ between lines is
+  exactly the *contents* of `Matrix.WOODS` (and, in principle, `Matrix.METALS`) —
+  nothing else.
+  - `fabric/src/test/java/com/minimammoth/ironoak/Matrix.java` is the single place a line
+    declares its own wood set. A backport drops or adds a wood there and nowhere else; the
+    guard test (`TreeMatrixTest`) then re-derives the expected arm count from that list, so
+    a line with 7 woods expects 21 arms without anyone editing an assertion by hand.
+  - What may **not** differ: the shape of an arm. Every wood present in a line's
+    `Matrix.WOODS` still needs every piece in the bullet above — block, item, generator,
+    feature, loot table, tag, model, blockstate, texture, lang entry, tag membership. A line
+    that ships pale oak with, say, no loot table is the same bug as a 6×3 matrix that ships
+    without one.
+  - **Porting is a subtraction, not a rewrite.** When porting the matrix work down to a line
+    missing a wood, remove that wood's arm from every location in the bullet above on that
+    line's copy of the files, starting with `Matrix.java`; do not port the code for a wood
+    that line cannot have, and do not leave `Matrix.java` overstating what the line actually
+    ships — that mismatch is exactly what made #88 necessary to write down.
 - Minimal changes: change what the ticket needs, match the surrounding style, and remove
   debug code before committing.
 

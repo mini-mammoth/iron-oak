@@ -30,7 +30,7 @@ the numbers, read [`../concept/balance.md`](../concept/balance.md). This index i
 | Burning | [burning.md](burning.md) | `BRN` | The fire bowl: lighting, cooking, afterburn, hoppers, hazards |
 | Washing | [washing.md](washing.md) | `WSH` | Ash → shreds in water, and the automation that does not exist yet |
 | Refining | [refining.md](refining.md) | `REF` | Shreds → raw ore and nuggets; closing the loop |
-| Matrix | [matrix.md](matrix.md) | `MAT` | The 6 woods × 3 metals completeness rules |
+| Matrix | [matrix.md](matrix.md) | `MAT` | The 8 woods × 3 metals completeness rules (`main`) |
 
 ## How to read a requirement
 
@@ -167,7 +167,7 @@ they name. Treat an unticked criterion on a `done` requirement as unverified, no
 | [REF-04](refining.md#ref-04-the-loop-closes-at-raw-ore) | The loop closes at raw ore | done | — |
 | [MAT-01](matrix.md#mat-01-every-combination-exists-in-every-arm) | Every combination exists in every arm | done | — |
 | [MAT-02](matrix.md#mat-02-a-partial-matrix-is-not-shipped) | A partial matrix is not shipped | done | — |
-| [MAT-03](matrix.md#mat-03-metal-scoped-log-tags-list-all-six-woods) | Metal-scoped log tags list all six woods | done | — |
+| [MAT-03](matrix.md#mat-03-metal-scoped-log-tags-list-every-wood-on-the-line) | Metal-scoped log tags list every wood on the line | done | — |
 | [MAT-04](matrix.md#mat-04-vanilla-wood-tags-list-all-three-metals) | Vanilla wood tags list all three metals | done | — |
 | [MAT-05](matrix.md#mat-05-every-registered-object-has-an-english-name) | Every registered object has an English name | done | — |
 

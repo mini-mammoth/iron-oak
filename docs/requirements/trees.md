@@ -2,8 +2,8 @@
 domain: Trees
 domain_code: TRE
 status: active
-last_updated: 2026-08-21
-version: 2
+last_updated: 2026-09-18
+version: 3
 related:
   - README.md
   - infusion.md
@@ -77,7 +77,8 @@ Jungle trees keep their vanilla decorators (cocoa beans 0.2, trunk and leaf vine
 There is no infused-leaves block; leaves are `minecraft:<wood>_leaves`.
 
 **Acceptance criteria** (verify: `runClient`, `inspect`, `test`, `gametest`)
-- [ ] All 18 combinations grow, and each yields logs of its own metal and wood type
+- [ ] All combinations in `Matrix.arms()` (24 on `main`) grow, and each yields logs of its
+      own metal and wood type
 - [ ] `src/main/generated/data/iron_oak/worldgen/feature/<metal>_<wood>_tree.json`
       names `iron_oak:<metal>_<wood>_log` and `minecraft:<wood>_leaves`
 - [ ] Tree silhouettes match their vanilla counterparts (dark oak thick trunk, spruce
@@ -100,10 +101,10 @@ committed JSON was correct, so nothing was inconsistent and every arm compiled â
 saplings would have started growing each other's trees.
 
 The fix renamed the constants to match the keys they hold, leaving the ids, the generated JSON
-and existing worlds untouched. `TreeMatrixTest` now walks all 18 arms from the metal and wood
-strings rather than from the constants, and `InfusedSaplingGameTest` grows three of them in a
-real world; both were seen red against a deliberately re-broken tree. `./gradlew runDatagen`
-is a clean no-op on `main`.
+and existing worlds untouched. `TreeMatrixTest` now walks every arm in `Matrix.arms()` from
+the metal and wood strings rather than from the constants, and `InfusedSaplingGameTest` grows
+three of them in a real world; both were seen red against a deliberately re-broken tree.
+`./gradlew runDatagen` is a clean no-op on `main`.
 
 **So both gates below are green, and the status still says `broken`.** That is not an
 oversight: this entry is a build-reproducibility invariant rather than something a player can
@@ -151,7 +152,7 @@ There is no ore loss on breaking, no fortune interaction and no shred drop â€” t
 leaves the wood in the fire bowl.
 
 **Acceptance criteria** (verify: `runClient`, `inspect`, `test`)
-- [ ] All 36 loot tables exist (18 logs, 18 saplings) and each drops its own block
+- [ ] All loot tables exist (24 logs, 24 saplings on `main`) and each drops its own block
 - [ ] Fortune does not change the drop
 - [ ] Blowing up a log may destroy it (vanilla explosion behaviour)
 
