@@ -76,9 +76,12 @@ parallel.
 
 1. **Renames** — `Identifier` on 26.x and 1.21.11 is `ResourceLocation` on 1.21.1;
    `ChunkSectionLayer` is `RenderType`.
-2. **Build regime** — `main` is unobfuscated on JDK 25 with the plain Loom plugin; the 1.21.x
-   lines are obfuscated on JDK 21 with `-remap`. Anything touching the build never
-   cherry-picks at all.
+2. **Build regime** — `main` applies the plain `net.fabricmc.fabric-loom` plugin and
+   compiles at `options.release = 25`; the 1.21.x lines apply
+   `net.fabricmc.fabric-loom-remap`, need `mappings loom.officialMojangMappings()`, and
+   compile at `options.release = 21`. None of that requires launching Gradle itself on
+   JDK 21 — this machine's default JDK 25 builds every line. Anything touching the build
+   never cherry-picks at all.
 
 So a change is not done everywhere because it merged to `main`. Budget a hand-port per line,
 expect that a change written against 26.x occasionally has to be reworked or rejected on an

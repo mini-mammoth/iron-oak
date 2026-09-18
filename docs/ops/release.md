@@ -95,7 +95,6 @@ fails the run instead of landing on the project page.
 Locally the same thing, since no tokens are set in your shell:
 
 ```bash
-export JAVA_HOME=~/.sdkman/candidates/java/21.0.3-ms
 ./gradlew publishMods
 ```
 
