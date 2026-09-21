@@ -67,6 +67,25 @@ version's release tag when `main` moves past it.
 - **Archived lines keep their published jars and history and get nothing else** — no CI, no
   releases, no backports. Dropped 2026-08-21.
 
+### Documentation lives on `main` only
+
+`docs/`, `AGENTS.md` and `CLAUDE.md` are version-independent — they describe the product,
+the requirements, the strategy and the process, none of which differ per line. They are
+maintained on `main` alone.
+
+A supported version branch does not carry that set. Instead it carries a short `AGENTS.md`
+stub: that line's own version facts (read from its `gradle.properties`) and its toolchain,
+then a pointer back to `main` for everything else. `origin/v1.21.1:AGENTS.md` is the shape to
+copy — don't invent a new one.
+
+**Documentation changes are never made on a version branch.** A doc fix found while working
+on an old line goes to `main`, not to the branch you found it on.
+
+**Cutting a new line includes writing its stub.** The branch-cut step is not finished when CI
+is green and the toolchain compiles; it is finished when the new branch's `AGENTS.md` has
+been replaced with its stub. Skipping this is exactly how the fork this rule exists to
+prevent grows back.
+
 ### Implement forward, port backward
 
 New work lands on `main`, then moves down the tracks. Never develop the same change twice in

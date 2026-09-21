@@ -247,6 +247,14 @@ Which lines are supported and why is [`docs/ops/multiloader.md`](docs/ops/multil
 `.github/workflows/main.yml` are exactly that set. An archive keeps its published jars and
 its history, and gets no further work.
 
+**Documentation lives on `main` only.** `docs/`, `AGENTS.md` and `CLAUDE.md` are maintained
+here and nowhere else; a supported version branch carries a short `AGENTS.md` stub instead —
+that line's own version facts and toolchain, then a pointer back to `main` for everything
+else (see `origin/v1.21.1:AGENTS.md` for the shape). A doc fix found while working on an old
+line goes to `main`, never to the branch. Cutting a new line includes writing its stub — see
+[`docs/ops/multiloader.md`](docs/ops/multiloader.md#branches-and-how-work-flows) for the full
+rule.
+
 **Work goes forward first, then backwards.** Implement on `main`, then port down to the older
 lines — never develop the same change twice in parallel. But here "backport" means **port**,
 not `git cherry-pick`, because it crosses two real boundaries:
