@@ -2,7 +2,7 @@
 domain: Operations
 domain_code: OPS
 status: active
-last_updated: 2026-09-15
+last_updated: 2026-09-18
 related:
   - multiloader.md
   - ../../AGENTS.md
@@ -148,17 +148,49 @@ It is also current: Quilt's meta knows game versions up to `26.3-pre-2` and load
 `0.31.0-beta.4`, so it is ahead of everything we ship. And it is standard practice — **81 of
 100** sampled Fabric+NeoForge mods tag Quilt.
 
-We do not. `modLoaders.add("fabric")` is the whole declaration in `build.gradle`.
+**Declared as of #85: `modLoaders.add("quilt")` sits alongside `modLoaders.add("fabric")` in
+`fabric/build.gradle`'s `publishMods` block.** That is the whole change — Quilt has no manifest
+of its own to write and no subproject to add.
 
 **The failure mode is metadata, not the loader.** #11 — our only Quilt report — is a player on
 Quilt 0.17.4 whose log said the mod wanted 1.19 while the Modrinth file was marked
 1.18-compatible. That is a version-declaration mismatch, the same class of bug as the unbounded
 `"minecraft": ">=26.1"` corrected before the 26.2 release. Quilt surfaces it earlier than Fabric
-because it validates harder.
+because it validates harder — so the thing that would make this announcement dishonest is not
+the loader, it is `fabric.mod.json`'s `minecraft` range being wrong or unbounded. Checked for
+#85: `"minecraft": "~26.3"` matches `gradle.properties`' `minecraft_version=26.3` and is bounded,
+so this is not the same bug recurring.
 
-So: adding Quilt is one line, and it is worth **verifying rather than asserting** — the
-ride-along recipe in [`multiloader.md`](multiloader.md#how-to-verify-a-ride-along-line) applies
-unchanged. Run the shipped jar on a Quilt instance once; if it loads, tick the box.
+**Declaring is not announcing.** The declaration only makes `publishMods` upload the jar as
+Quilt-compatible; nobody has run it on Quilt yet. The ride-along recipe in
+[`multiloader.md`](multiloader.md#how-to-verify-a-ride-along-line) applies unchanged, adapted to
+what Quilt needs verified:
+
+### How to verify the Quilt declaration before announcing
+
+1. Build the jar that will actually ship: `./gradlew build`, then confirm it with
+   `unzip -l "$(find fabric/build/libs -name '*.jar' ! -name '*-sources.jar')" | tail -1`
+   (hundreds of files, not two — see `AGENTS.md`'s Gradle-wrapper note for why that check
+   exists).
+2. Get a Quilt launcher profile for Minecraft **26.3** — outside this repo, e.g. via the
+   official Quilt installer. Note the exact Quilt loader version it resolves to.
+3. Install **Fabric API `0.160.7+26.3`** (this line's `fabric_version`, from
+   `gradle.properties`) into that profile's mods folder. Quilt loads Fabric API mods
+   unmodified; do not substitute QSL.
+4. Drop the jar from step 1 into the same mods folder and launch.
+5. If it loads, walk the gameplay loop far enough to know the mod's data (recipes, tags,
+   registration) actually resolved, not just that the jar was accepted:
+   - Craft ore-infused bone meal (iron, copper, or gold — one is enough).
+   - Apply it to a vanilla sapling and confirm it becomes infused.
+   - Let it grow, cut the infused tree, and confirm the log drops.
+   - Burn a log in a fire bowl for infused ash, then wash the ash for shreds.
+6. Record: the Quilt loader version from step 2, whether it loaded, and whether the loop in
+   step 5 completed. If it does not load, or the loop breaks somewhere Fabric alone does not,
+   drop the Quilt declaration and report why instead of announcing — do not investigate blind,
+   since the ride-along principle is to test the shipped artefact, not a rebuild against Quilt.
+7. Only after a passing run: revisit #11 with the result, and only a human posts the
+   announcement (Modrinth, CurseForge, or a reply to #11) — that step is deliberately outside
+   what a declaration change in this repo does.
 
 ---
 

@@ -220,6 +220,10 @@ publishMods {
     // `type` is a ReleaseType enum, not a String — the property has to be converted.
     type = me.modmuss50.mpp.ReleaseType.valueOf(project.publish_type)
     modLoaders.add("fabric")
+    // Quilt reads fabric.mod.json directly -- no manifest, no subproject, no code of its
+    // own. See docs/ops/multiloader-strategy.md's Quilt section for the verification this
+    // declaration still needs before an announcement.
+    modLoaders.add("quilt")
 
     // Set by the release workflow from the GitHub Release body.
     changelog = providers.environmentVariable("CHANGELOG")
