@@ -56,6 +56,9 @@ sourceSets {
             srcDirs += [
                     'src/main/generated'
             ]
+            // datagen's own hash list lands in src/main/generated/.cache. .gitignore keeps
+            // it out of git but says nothing to processResources (#81).
+            exclude '.cache/**'
         }
 
         // common/ is the loader-neutral content moved out in #78 -- recipes, blocks,
